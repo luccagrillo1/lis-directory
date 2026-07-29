@@ -1,0 +1,52 @@
+.lis-pv-ticker {
+	overflow: hidden;
+	width: 100%;
+	position: relative;
+}
+
+.lis-pv-ticker-track {
+	display: flex;
+	width: max-content;
+	animation: lis-pv-ticker-scroll 40s linear infinite;
+}
+
+.lis-pv-ticker-group {
+	display: flex;
+	gap: 16px;
+	padding-right: 16px;
+}
+
+.lis-pv-ticker:hover .lis-pv-ticker-track,
+.lis-pv-ticker:focus-within .lis-pv-ticker-track {
+	animation-play-state: paused;
+}
+
+.lis-pv-ticker .lis-pv-card {
+	flex-shrink: 0;
+	width: 320px;
+	max-width: 320px;
+}
+
+@keyframes lis-pv-ticker-scroll {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
+}
+
+/* The second group is an exact aria-hidden duplicate that makes the loop seamless.
+   Under reduced motion, drop the animation AND the duplicate — showing the same
+   vendors twice in a static, non-scrolling list would just be confusing. */
+@media (prefers-reduced-motion: reduce) {
+	.lis-pv-ticker-track {
+		animation: none;
+	}
+	.lis-pv-ticker {
+		overflow-x: auto;
+	}
+	.lis-pv-ticker-copy {
+		display: none;
+	}
+}

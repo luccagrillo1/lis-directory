@@ -1,0 +1,19 @@
+/* Extra rules for [lis_preferred_vendor_ticker style="logos"] — the base
+   .lis-pv-ticker / .lis-pv-ticker-track / .lis-pv-ticker-group rules in
+   vendor-ticker.css already handle the scroll/loop mechanics; this file only
+   covers the logo-only item, which doesn't use .lis-pv-card at all. */
+
+.lis-pv-ticker-logo-item {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100px;
+	padding: 0 16px;
+}
+
+.lis-pv-ticker-logo {
+	max-height: 100px;
+	max-width: 220px;
+	object-fit: contain;
+}

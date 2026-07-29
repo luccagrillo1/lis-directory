@@ -1,0 +1,13 @@
+# Built artifacts — releases are attached to GitHub Releases, not committed
+*.zip
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Never commit secrets
+*.secret
+.env

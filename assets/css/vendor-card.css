@@ -1,0 +1,47 @@
+.lis-pv-card {
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 16px;
+	max-width: 420px;
+	background: #fff;
+	box-sizing: border-box;
+}
+
+.lis-pv-card-inner {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	text-decoration: none;
+	color: inherit;
+}
+
+.lis-pv-card-logo {
+	max-width: 96px;
+	max-height: 96px;
+	object-fit: contain;
+	flex-shrink: 0;
+}
+
+.lis-pv-card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.lis-pv-card-name {
+	font-weight: 600;
+	font-size: 1.05em;
+}
+
+.lis-pv-card-tagline {
+	font-size: 0.9em;
+	color: #555;
+}
+
+@media (max-width: 480px) {
+	.lis-pv-card-inner {
+		flex-direction: column;
+		text-align: center;
+	}
+}
