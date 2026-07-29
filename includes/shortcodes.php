@@ -103,6 +103,48 @@ function lis_directory_get_card_styles_once() {
 }
 
 /**
+ * [lis_preferred_vendor_heading] — the "LIS Partners" branding treatment,
+ * meant to sit above a card or ticker wherever they're placed on the site.
+ * Uses the pre-built "LIS Partners" lockup image supplied directly by the
+ * client rather than this plugin recreating the pairing from a separate
+ * icon + text — that lockup was already designed and kerned as one unit,
+ * so reassembling it in CSS was solving a problem that didn't need solving.
+ * Still wrapped in a real heading tag by default (h2) for document
+ * structure — `tag="h3"` etc. to fit a page's own heading hierarchy.
+ */
+add_shortcode( 'lis_preferred_vendor_heading', 'lis_directory_render_heading_shortcode' );
+
+function lis_directory_render_heading_shortcode( $atts ) {
+	$atts = shortcode_atts( array( 'tag' => 'h2' ), $atts, 'lis_preferred_vendor_heading' );
+	$tag  = in_array( $atts['tag'], array( 'h1', 'h2', 'h3', 'h4', 'div' ), true ) ? $atts['tag'] : 'h2';
+
+	$styles = lis_directory_get_heading_styles_once();
+
+	ob_start();
+	?>
+	<<?php echo esc_html( $tag ); ?> class="lis-pv-heading">
+		<img class="lis-pv-heading-lockup" src="<?php echo esc_url( LIS_DIRECTORY_URL . 'assets/img/lis-partners-lockup.png?ver=' . LIS_DIRECTORY_VERSION ); ?>" alt="LIS Partners" />
+	</<?php echo esc_html( $tag ); ?>>
+	<?php
+	return $styles . ob_get_clean();
+}
+
+/** See lis_directory_get_card_styles_once() — same "return, don't echo" reasoning. */
+function lis_directory_get_heading_styles_once() {
+	static $printed = false;
+	if ( $printed ) {
+		return '';
+	}
+	$printed = true;
+
+	$css_path = LIS_DIRECTORY_PATH . 'assets/css/vendor-heading.css';
+	if ( ! file_exists( $css_path ) ) {
+		return '';
+	}
+	return '<style id="lis-pv-heading-style">' . file_get_contents( $css_path ) . '</style>'; // phpcs:ignore -- static local asset, not user input.
+}
+
+/**
  * [lis_preferred_vendor_ticker] — horizontally auto-scrolling row of every
  * active vendor, across all categories. Two display styles:
  * `style="cards"` (default) — the same card as [lis_preferred_vendor_card].

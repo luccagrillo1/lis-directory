@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.9.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -35,6 +35,8 @@ variations is a wp-admin task, not something this plugin does for you).
 * `[lis_preferred_vendor_ticker]` — auto-scrolling row of every active vendor,
   pauses on hover, respects reduced-motion; `style="logos"` for a logos-only
   variant (default is full cards)
+* `[lis_preferred_vendor_heading]` — "LIS Partners" branded heading (logomark
+  + text) to sit above a card or ticker; `tag="h3"` etc. to fit the page
 * `[lis_preferred_vendor_submit]` — logged-in-only front-end submission form;
   submissions always land as Pending for admin review
 * WooCommerce Subscriptions integration: tag a product variation with a
@@ -57,6 +59,11 @@ variations is a wp-admin task, not something this plugin does for you).
   larger, with no name or tagline (a vendor with no logo uploaded is skipped
   in this mode rather than leaving an empty slot). Placement is manual (no
   auto-injection into Directorist pages).
+* `[lis_preferred_vendor_heading]` — renders the "LIS Partners" brand
+  treatment: the LIS logomark icon followed by the word "Partners", as a
+  real heading element (`<h2>` by default) so it inherits the theme's own
+  heading typography, color, and spacing rather than the plugin guessing
+  fonts. `tag="h1"`/`"h3"`/`"h4"`/`"div"` to fit wherever it's placed.
 * `[lis_preferred_vendor_submit]` — vendor submission form. Requires a
   WordPress account (shows a log in / register prompt otherwise). Requires a
   Local Directory Listing URL — the vendor must already have a real,
@@ -103,6 +110,73 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.9.0 =
+* Added GitHub-based auto-update (same mechanism as LIS Events) — one-click
+  "Update available" in Plugins straight from the private GitHub repo,
+  instead of manual zip installs going forward. Requires a
+  `LIS_DIRECTORY_UPDATE_TOKEN` constant in `wp-config.php` (see README.md);
+  without it the plugin works exactly as before, just with no update
+  banner.
+
+= 0.8.5 =
+* The 0.8.3 heading-to-card margin fix wasn't actually taking effect live —
+  the theme's own CSS (`.entry-content h2`) has higher selector specificity
+  than the plugin's plain `.lis-pv-heading` class, so it kept winning.
+  Added `!important` so the override actually applies. Confirmed via
+  computed styles: margin-bottom was still 19.6px before this, now 8px.
+
+= 0.8.4 =
+* Reverted the "LIS Partners" lockup image to the exact original file as
+  supplied — no cropping/spacing edits. The only gap that was ever supposed
+  to change is the space between the heading and the card/ticker below it
+  (fixed in 0.8.3), not the spacing baked into the logo itself.
+
+= 0.8.3 =
+* Reduced the space between the "LIS Partners" heading and the card/ticker
+  underneath it — was inheriting the theme's default `<h2>` bottom margin
+  (~20px), now a tight 8px.
+* 0.8.1 trimmed the gap between the logomark and "Partners" too far (they
+  read as crowded together); widened it back out to a middle ground.
+
+= 0.8.2 =
+* The heading lockup image URL now carries `?ver=<plugin version>` so
+  browser/host caching can't keep serving a stale copy of the image across
+  plugin updates.
+
+= 0.8.1 =
+* Tightened the whitespace baked into the "LIS Partners" lockup image
+  between the logomark and "Partners" — was too wide as originally supplied.
+
+= 0.8.0 =
+* `[lis_preferred_vendor_heading]` now renders the client-supplied, pre-built
+  "LIS Partners" lockup image instead of assembling the icon and "Partners"
+  text separately — fixes the alignment issues in 0.7.1–0.7.3 by construction
+  (it's one already-designed image, not two pieces this plugin was trying to
+  line up).
+
+= 0.7.3 =
+* `[lis_preferred_vendor_heading]` — 0.7.2's alignment fix wasn't enough.
+  Switched to top-aligning the icon with the text (instead of centering)
+  and tightened the icon size and gap so it reads as one solid lockup.
+
+= 0.7.2 =
+* `[lis_preferred_vendor_heading]` — the icon was optically misaligned with
+  the "Partners" text (its own internal weight sits low in its box) and the
+  whole heading read too large next to a compact card. Nudged the icon up
+  and shrunk the heading to a fixed, smaller size so it reads as a label
+  above the card/ticker instead of a full section title.
+
+= 0.7.1 =
+* `[lis_preferred_vendor_heading]` now forces the "Partners" text to a bold
+  sans-serif font instead of inheriting the theme's serif heading font —
+  matches the brand's own "Lis" logotype instead of clashing with it.
+
+= 0.7.0 =
+* Added `[lis_preferred_vendor_heading]` — the "LIS Partners" branded
+  heading (LIS logomark + "Partners" text) meant to sit above a card or
+  ticker. Renders as a real `<h2>` (or `tag="h3"` etc.) for layout/spacing,
+  with its own bold sans-serif type treatment for the text.
 
 = 0.6.0 =
 * Added: a vendor must have a real, published Local Directory (Directorist)

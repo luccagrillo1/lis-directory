@@ -7,6 +7,332 @@ This file is the authoritative project history.
 
 ---
 
+## [0.9.0] — 2026-07-29 — GitHub-based auto-update
+
+### Context
+
+Requested directly: wire up one-click updates the same way LIS Events
+already works, instead of continuing to hand-deliver zips for every fix.
+
+### Added
+
+- **`lib/plugin-update-checker/`**: the same bundled copy of
+  YahnisElsts/plugin-update-checker (MIT) used by LIS Events, copied in
+  unmodified.
+- **`includes/updater.php`**: new — same structure as LIS Events'
+  `includes/updater.php`, adapted to `LIS_DIRECTORY_*` naming. Points at
+  `https://github.com/luccagrillo1/lis-directory/`, authenticates via an
+  optional `LIS_DIRECTORY_UPDATE_TOKEN` constant (only defined if set — the
+  plugin runs identically without it, just with no update banner), and is
+  required from `lis-directory.php` at plugin-load time rather than from a
+  hook (constructing it later means some of PUC's own hook registrations,
+  e.g. the periodic check and the "Check for updates" link, never wire up —
+  same lesson already documented in LIS Events' updater.php).
+
+### Requires (one-time, done outside this repo)
+
+A fine-grained GitHub personal access token scoped to just this repo,
+**Contents: read-only**, added to `wp-config.php` as
+`LIS_DIRECTORY_UPDATE_TOKEN`. LIS Events uses a separately-scoped token for
+its own repo — per that plugin's own documented practice this should be a
+new token scoped only to `lis-directory`, not a reuse of the LIS Events one.
+
+### Not yet done
+
+No GitHub Actions lint workflow or top-level README.md yet (LIS Events has
+both) — out of scope for this change, which was specifically about the
+update mechanism.
+
+---
+
+## [0.8.5] — 2026-07-29 — Fix: the 0.8.3 margin fix was silently losing the cascade
+
+### Found by
+
+Client reported the heading-to-card gap looked unchanged despite 0.8.3/0.8.4
+being installed. Checked computed styles directly on the live page again
+(`getComputedStyle` on `.lis-pv-heading`) instead of assuming the CSS in the
+file was taking effect: `margin-bottom` was still `19.6px`, not the `8px`
+set in 0.8.3's `vendor-heading.css`. The plugin's own `<style>` tag with the
+override was confirmed present and loaded on the page — the rule was there,
+it just wasn't winning.
+
+### Root cause
+
+The theme has its own rule for headings inside post content, keyed off a
+class + type selector like `.entry-content h2` — specificity (0,1,1). This
+plugin's override used a bare class selector, `.lis-pv-heading` —
+specificity (0,1,0). Lower specificity loses regardless of source order, so
+the theme's ~20px default margin was winning every time, silently, with no
+error or warning.
+
+### Fixed
+
+- **`assets/css/vendor-heading.css`**: added `!important` to
+  `.lis-pv-heading`'s `margin` declaration. Verified live by patching the
+  page's actual `<style id="lis-pv-heading-style">` tag in the browser and
+  re-checking `getComputedStyle` before shipping — confirmed `8px` this
+  time, then took a screenshot showing the visibly tighter gap.
+
+---
+
+## [0.8.4] — 2026-07-29 — Revert: lockup image back to the exact original file
+
+### Found by
+
+Direct correction from the client: the request was only ever to reduce the
+space between the heading and the card/ticker underneath it (0.8.3) — never
+to touch the spacing inside the pre-built logo file itself. 0.8.1 and 0.8.3
+both edited the image's internal icon/text gap based on a misreading of
+"less gap" that never should have touched the asset at all.
+
+### Fixed
+
+- **`assets/img/lis-partners-lockup.png`**: replaced with a direct,
+  unmodified copy of the original supplied file
+  (`specialty/lis-logomark-black-v1-LISPARTNERS.png`) — verified identical
+  via `shasum` (matching SHA-1 on both files) rather than eyeballing it, so
+  there's no ambiguity left about whether this copy is untouched.
+- No CSS or PHP changed in this version — only the asset file.
+
+---
+
+## [0.8.3] — 2026-07-29 — Fix: gap was between the heading and the card, not inside it
+
+### Found by
+
+Follow-up on the "less gap" feedback that led to 0.8.1 — that fix was for
+the wrong gap. The client meant the space between the "LIS Partners"
+heading and the card/ticker sitting below it, not the space inside the
+lockup image between the icon and the word "Partners". Checked the live
+page's computed styles directly (`getComputedStyle` on `.lis-pv-heading`)
+rather than guessing again: `margin-bottom: 19.6px`, coming entirely from
+the theme's default `<h2>` spacing, since this plugin had never set its own
+margin on the heading.
+
+### Fixed
+
+- **`assets/css/vendor-heading.css`**: `.lis-pv-heading` now sets
+  `margin: 0 0 8px 0`, overriding the theme's default heading margin
+  instead of inheriting it.
+- Verified by injecting the same CSS live on the preview page and
+  screenshotting before committing the change, same as prior fixes.
+
+### Fixed: icon/text gap overcorrected in 0.8.1
+
+Same message that reported the heading-to-card margin also flagged that the
+logomark and "Partners" now read as too crowded — 0.8.1's trim (484px down
+to 150px) went further than intended.
+
+- **`assets/img/lis-partners-lockup.png`**: regenerated again from the
+  original, untouched source asset (not from the already-trimmed 0.8.1
+  file, to avoid compounding rounding/quality loss across re-encodes),
+  this time trimming the gap to ~280px instead of 150px.
+
+---
+
+## [0.8.2] — 2026-07-29 — Fix: stale cache kept serving the old lockup image
+
+### Found by
+
+After installing 0.8.1, the live preview page still showed the wide-gap
+version of the lockup. Checked wp-admin directly — the plugin's active
+version was already 0.8.1, so the PHP/markup was current. Checked for a
+page-caching plugin (LiteSpeed Cache is installed on this site but
+confirmed inactive), ruling that out — this was a plain browser/host
+static-asset cache: the `<img src>` URL is identical across versions (same
+filename, `lis-partners-lockup.png`), so nothing signaled that the file
+behind that URL had changed, and it kept serving the previously cached
+bytes.
+
+### Fixed
+
+- **`includes/shortcodes.php`**: the lockup `<img src>` now appends
+  `?ver=<?php echo LIS_DIRECTORY_VERSION; ?>`. Every version bump changes
+  the URL, so a stale cached copy of the old image can never be served
+  again by mistake — each version gets its own cache entry.
+
+---
+
+## [0.8.1] — 2026-07-29 — Fix: gap between icon and "Partners" too wide
+
+### Found by
+
+Live feedback right after installing 0.8.0 — the whitespace baked into the
+supplied lockup PNG between the logomark and "Partners" was wider than it
+should read at heading size.
+
+### Fixed
+
+- **`assets/img/lis-partners-lockup.png`**: regenerated from the original
+  supplied asset — found the whitespace column run between the icon and
+  text (columns 1143–1627 of 5065px wide, ~484px), and cut it down to
+  ~150px by trimming equally from both sides of that gap and re-compositing
+  the two halves, rather than attempting to fake a tighter gap with CSS
+  over a flattened image (not possible — the gap is baked into the pixels).
+  No other part of the image (icon shape, letterforms, inter-letter spacing
+  within "Partners") was touched.
+
+---
+
+## [0.8.0] — 2026-07-29 — Heading uses the pre-built "LIS Partners" lockup
+
+### Context
+
+Two rounds of alignment fixes (0.7.1, 0.7.2, 0.7.3) tried to compose the
+logomark icon and "Partners" text into a matching lockup with CSS, and still
+didn't look right — the client pointed out a ready-made asset already
+existed in the supplied brand export
+(`specialty/lis-logomark-black-v1-LISPARTNERS.png`): the full "LIS Partners"
+lockup, already designed, kerned, and aligned as one image. Using it outright
+replaces three versions of CSS guesswork with the actual designed asset.
+
+### Changed
+
+- **`assets/img/lis-partners-lockup.png`**: new — copied directly from the
+  brand export, unmodified.
+- **`includes/shortcodes.php`**: `lis_directory_render_heading_shortcode()`
+  now renders a single `<img>` (alt text "LIS Partners") inside the heading
+  tag, instead of an icon `<img>` plus a "Partners" text node.
+- **`assets/css/vendor-heading.css`**: collapsed to just sizing the one
+  image (`height: 28px`) — no more flex layout, gap, or icon-vs-text
+  alignment rules, since there's nothing left to align.
+- `lis-logomark-green.svg` (the standalone icon asset added in 0.7.0) is no
+  longer used by this shortcode but left in place — unused-asset cleanup
+  wasn't asked for and the file may still be useful elsewhere.
+
+### Not yet verified
+
+Not yet checked against the live site — next step is installing this build
+and confirming the lockup image renders at a reasonable size and legibility
+next to the card/ticker.
+
+---
+
+## [0.7.3] — 2026-07-29 — Fix: heading icon still misaligned after 0.7.2
+
+### Found by
+
+0.7.2's center-align + translateY compensation wasn't enough — the icon
+still read as sitting low/disconnected from "Partners" once installed.
+
+### Fixed
+
+- **`assets/css/vendor-heading.css`**: dropped the center-align +
+  translateY hack. `.lis-pv-heading` now uses `align-items: flex-start`
+  (icon top and text top share the same edge, avoiding the need to guess
+  where the icon's internal "baseline" is at all) with a tighter
+  `height: 0.8em` and `gap: 0.15em` on the icon so the lockup reads as one
+  connected mark instead of two floating pieces.
+- Chosen by rendering seven side-by-side candidates (varying align, icon
+  height, translateY, and gap) directly in the browser against the live
+  page's own logomark asset, rather than reasoning about it abstractly.
+
+---
+
+## [0.7.2] — 2026-07-29 — Fix: heading icon misaligned, heading too large next to a card
+
+### Found by
+
+Live feedback after installing v0.7.1: the logomark icon sat visibly lower
+than the "Partners" text baseline, and the whole heading (still sized off
+the theme's `<h2>`) dwarfed the compact card sitting right underneath it.
+
+### Fixed
+
+- **`assets/css/vendor-heading.css`**: the logomark SVG has more visual
+  weight low in its bounding box (the "S" swoop dips below the "L"/"i"
+  baseline, with headroom above), so centering its box against the text's
+  line box (`align-items: center`) left it reading low. Added
+  `transform: translateY(-14%)` on `.lis-pv-heading-icon` and trimmed its
+  height to `0.95em` to compensate. Also gave `.lis-pv-heading` a fixed
+  `font-size: 1.15rem` instead of inheriting the theme's `<h2>` size, so it
+  reads as a small label sitting above the card/ticker rather than a
+  full-width section title competing with it for attention.
+- Confirmed by cloning the live `.lis-pv-heading` node into an isolated
+  full-viewport overlay in the browser to test icon alignment in isolation,
+  then testing the final font-size against the real card in place on the
+  preview page, before committing the values to the CSS file.
+
+---
+
+## [0.7.1] — 2026-07-28 — Fix: heading text used theme's serif font, clashed with brand
+
+### Found by
+
+Live check of the preview page right after installing v0.7.0: the theme's
+`<h2>` uses a light serif face, so "Partners" rendered in that serif style
+next to the bold sans-serif LIS logomark icon — it didn't read as one brand
+mark, and the actual "Lis" logotype (`lis-alt-green-v1.png` in the supplied
+brand export) is a clean geometric sans-serif, not a serif.
+
+### Fixed
+
+- **`assets/css/vendor-heading.css`**: `.lis-pv-heading` now sets its own
+  `font-family` (system sans-serif stack) and `font-weight: 700` instead of
+  purely inheriting the theme's heading font. The element is still a real
+  `<h2>`/`<h3>`/etc. for semantic structure, sizing (`1em`-relative icon),
+  and spacing — only the typeface is overridden, not the tag choice from
+  v0.7.0's original design.
+
+---
+
+## [0.7.0] — 2026-07-28 — "LIS Partners" branded heading shortcode
+
+### Context
+
+With Talus Rock Retreat live and both a card and a logo-only ticker to place
+it in, the remaining gap was a title for those components — the brief asked
+for "LIS Partners" as the heading, built from the LIS logomark plus the word
+"Partners", using brand assets supplied directly (a logo export folder
+containing both a "logomark" icon-only SVG and a separate "wordmark" script
+SVG reading "Living in Sandpoint"). The logomark was the correct asset for
+this — the wordmark is a full cursive rendering of the site name, not "LIS,"
+and would have made the shortcode's own "Partners" text redundant or
+mismatched in style.
+
+### Added
+
+`[lis_preferred_vendor_heading]` — renders the LIS logomark icon followed by
+the text "Partners," meant to sit above a `[lis_preferred_vendor_card]` or
+`[lis_preferred_vendor_ticker]` wherever they're placed on a page.
+
+- **`includes/shortcodes.php`**: new `lis_directory_render_heading_shortcode()`
+  and `lis_directory_get_heading_styles_once()` (same "return, don't echo"
+  pattern as every other style-loader in this file, per the v0.5.2 lesson).
+  Takes a `tag` attribute (`h1`/`h2`/`h3`/`h4`/`div`, default `h2`) via
+  `shortcode_atts()`, validated against a whitelist rather than trusted
+  directly.
+- **`assets/img/lis-logomark-green.svg`**: new — copied from the supplied
+  brand export (`svg/lis-logomark-green-v1.svg`), the icon-only mark, not the
+  full wordmark.
+- **`assets/css/vendor-heading.css`**: new, small — flexbox row for the icon
+  + text, `height: 1em` on the icon so it scales with whatever font-size the
+  surrounding heading tag ends up at (this plugin doesn't set its own heading
+  font-size; it renders a real `<h2>` etc. so the active theme's own heading
+  styles apply, and the icon needs to track that, not a hardcoded pixel size).
+
+### Technical decision: real heading tag, not a styled `<div>`
+
+Renders as an actual `<h1>`–`<h4>` (or `div` if explicitly requested) so it
+inherits the theme's existing heading typography, color, and spacing instead
+of the plugin guessing fonts to match. The icon is nested inside the heading
+tag (not a sibling before it) specifically so its `height: 1em` sizing
+resolves against the heading's own computed font-size — this makes the icon
+automatically scale correctly across whatever breakpoints the theme applies
+to its headings, without this plugin needing to know or duplicate those
+breakpoints. `alt="LIS"` on the icon combined with the following text node
+lets a screen reader announce it as "LIS Partners."
+
+### Not yet verified
+
+Not yet checked against the live site — next step is installing this build
+and confirming the icon renders at a reasonable size next to the theme's
+actual `<h2>` styling, and that the whole line reads correctly as "LIS
+Partners."
+
+---
+
 ## [0.6.0] — 2026-07-28 — Directorist-listing requirement, logo-only ticker
 
 ### Context
