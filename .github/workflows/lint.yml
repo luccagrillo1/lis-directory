@@ -1,0 +1,38 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      - name: php -l on all plugin PHP files (excluding bundled library)
+        run: |
+          set -e
+          find . -type f -name '*.php' -not -path './lib/*' -print0 \
+            | xargs -0 -n1 -P4 php -l
+
+  js-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: node --check on all plugin JS
+        run: |
+          set -e
+          find ./assets -type f -name '*.js' -print0 \
+            | xargs -0 -n1 node --check
