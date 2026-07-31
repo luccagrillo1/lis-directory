@@ -7,6 +7,67 @@ This file is the authoritative project history.
 
 ---
 
+## [0.13.0] — 2026-07-31 — Listings: gallery, price, hours, features, video
+
+### Context
+
+Client shared a reference screenshot (a polished listing page: photo
+gallery, rating badge, price, category, open/closed status, description,
+features checklist, business hours sidebar, appointment booking, video)
+and asked to build toward it. Scoped down deliberately: reviews/ratings
+need a real submission+moderation data model, and appointment booking
+needs a real slots/reservation system — both are separate features to
+design properly, not fields to bolt on here. Everything else in the
+reference is now built.
+
+### Added
+
+- **`includes/listings-hours.php`**: new — per-day open/close time meta
+  (`_lis_listing_hours_{day}_open/close`), `lis_directory_is_listing_open_now()`
+  (uses `current_time()`, which resolves against Settings > General's site
+  timezone rather than a hardcoded one — LIS Events hardcoded Pacific for a
+  documented reason that doesn't apply here), and
+  `lis_directory_get_listing_week_hours()`. A listing with no hours set at
+  all returns `null` (unknown) from the open-now check, not `false` — the
+  template omits the badge entirely rather than confidently showing
+  "Closed" for a listing that just never configured hours.
+- **`includes/listings-meta.php`**: added Price (free text — "$150.00" or
+  "$$" both work), Video URL (YouTube/Vimeo, converted to an embeddable URL
+  via `lis_directory_video_embed_url()`, empty string on no match so
+  nothing embeds rather than embedding something wrong), and a multi-image
+  Gallery field (`_lis_listing_gallery_ids`, comma-separated attachment
+  IDs — chose a single delimited string over `single: false` postmeta
+  rows for simplicity, matching the same pattern already used for the
+  contact fields).
+- **`includes/listings-cpt.php`**: new `lis_listing_feature` taxonomy
+  (non-hierarchical/tag-style — "Air Conditioning", "Free WiFi" — reuses
+  WordPress's own tag-input admin UI rather than a custom checkbox field).
+- **`assets/js/admin.js`**: gallery picker — `wp.media` in multi-select
+  mode, same interaction pattern as the existing single-logo picker
+  (select → thumbnail preview → individual remove buttons), extended
+  rather than duplicated.
+- **`templates/single-listing.php`**: rebuilt to match the reference's
+  structure — gallery strip, header row (title + price + category badge +
+  open/closed badge), two-column body (description/features/video in the
+  main column, business hours table in the sidebar).
+- **`templates/archive-listing.php`**: cards now show the same
+  category/price/open-status badges, and use the first gallery image as
+  the thumbnail when one exists (falling back to the featured image).
+- **`assets/css/listings.css`**: full rewrite — card hover states, pill
+  badges for category/price/open-status, gallery grid, two-column
+  responsive layout (stacks under 720px), hours table styling, plus the
+  admin-side gallery-thumbnail styles.
+
+### Deliberately not built
+
+Reviews/ratings and appointment booking, both present in the reference
+image — flagged explicitly rather than silently omitted. Each needs its
+own data model and submission flow (review moderation queue; booking
+slots/availability/conflict handling), not a field addition to this
+pass.
+
+---
+
 ## [0.12.0] — 2026-07-31 — Framework for a self-hosted Directorist replacement
 
 ### Context

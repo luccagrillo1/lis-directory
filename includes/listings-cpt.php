@@ -56,10 +56,34 @@ function lis_directory_register_listing_cpt() {
 		'supports'           => array( 'title', 'editor', 'thumbnail', 'author', 'revisions', 'excerpt' ),
 		'capability_type'    => 'post',
 		'hierarchical'       => false,
-		'taxonomies'         => array( 'lis_listing_category' ),
+		'taxonomies'         => array( 'lis_listing_category', 'lis_listing_feature' ),
 	) );
 }
 add_action( 'init', 'lis_directory_register_listing_cpt' );
+
+/**
+ * Non-hierarchical (tag-style) — "Air Conditioning", "Free WiFi", etc. Reuses
+ * WordPress's own tag-input admin UI (comes free with a non-hierarchical
+ * taxonomy) rather than a custom checkbox field.
+ */
+function lis_directory_register_listing_feature_taxonomy() {
+	register_taxonomy( 'lis_listing_feature', array( 'lis_listing' ), array(
+		'labels'            => array(
+			'name'          => 'Features',
+			'singular_name' => 'Feature',
+			'menu_name'     => 'Features',
+			'search_items'  => 'Search Features',
+			'add_new_item'  => 'Add New Feature',
+		),
+		'hierarchical'      => false,
+		'show_ui'           => true,
+		'show_admin_column' => false,
+		'show_in_rest'      => true,
+		'query_var'         => true,
+		'rewrite'           => array( 'slug' => 'listing-feature' ),
+	) );
+}
+add_action( 'init', 'lis_directory_register_listing_feature_taxonomy' );
 
 function lis_directory_register_listing_taxonomy() {
 	$labels = array(

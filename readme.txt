@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.12.0
+Stable tag: 0.13.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -110,6 +110,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.13.0 =
+* Listings gained: photo gallery, price, business hours with a live "Open
+  now"/"Closed" badge, a Features taxonomy (checklist), and video embed
+  (YouTube/Vimeo). Archive cards now show category/price/open-status too.
+  Reviews/ratings and appointment booking are NOT included — those need a
+  real data model, not a template addition.
 
 = 0.12.0 =
 * New `lis_listing` post type + `lis_listing_category` taxonomy — the start

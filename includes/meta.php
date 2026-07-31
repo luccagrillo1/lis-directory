@@ -206,7 +206,7 @@ function lis_directory_save_meta_box( $post_id ) {
 
 function lis_directory_admin_enqueue( $hook ) {
 	global $post_type;
-	if ( 'lis_preferred_vendor' !== $post_type ) {
+	if ( ! in_array( $post_type, array( 'lis_preferred_vendor', 'lis_listing' ), true ) ) {
 		return;
 	}
 	if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
