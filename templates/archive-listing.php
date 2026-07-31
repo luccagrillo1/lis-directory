@@ -46,7 +46,6 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 						</div>
 						<div class="lis-listing-card-meta-row">
 							<?php if ( $category ) : ?><span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span><?php endif; ?>
-							<?php if ( $price ) : ?><span class="lis-listing-price"><?php echo esc_html( $price ); ?></span><?php endif; ?>
 						</div>
 						<p class="lis-listing-card-excerpt"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 16 ) ); ?></p>
 					</div>

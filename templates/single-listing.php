@@ -59,7 +59,6 @@ while ( have_posts() ) :
 		<div class="lis-listing-header">
 			<h1 class="lis-listing-title"><?php the_title(); ?></h1>
 			<div class="lis-listing-header-meta">
-				<?php if ( $price ) : ?><span class="lis-listing-price"><?php echo esc_html( $price ); ?></span><?php endif; ?>
 				<?php if ( $category ) : ?><a class="lis-listing-category-badge" href="<?php echo esc_url( get_term_link( $category ) ); ?>"><?php echo esc_html( $category->name ); ?></a><?php endif; ?>
 				<?php if ( null !== $is_open ) : ?>
 					<span class="lis-listing-open-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>">

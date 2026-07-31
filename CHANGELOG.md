@@ -7,6 +7,19 @@ This file is the authoritative project history.
 
 ---
 
+## [0.13.2] — 2026-07-31 — Price display hidden for now
+
+### Changed
+
+- **`templates/single-listing.php`** / **`templates/archive-listing.php`**:
+  removed the price badge from both the single-page header and archive
+  cards, per direct request. The `_lis_listing_price` meta field, its
+  admin input, and REST registration are untouched — this is a display
+  change only, easy to re-enable by adding the badge markup back if price
+  comes back into scope later.
+
+---
+
 ## [0.13.1] — 2026-07-31 — Fix: theme's default table borders bled into hours table
 
 ### Found by
