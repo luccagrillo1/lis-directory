@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.10.0
+Stable tag: 0.11.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -110,6 +110,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.11.0 =
+* Preferred vendor cards can now appear automatically on Directorist's own
+  category and single-listing pages — map a `lis_vendor_category` term to a
+  Directorist category (new dropdown on the category edit screen) and its
+  card shows up there once it has an active vendor. Unmapped categories are
+  unaffected.
 
 = 0.10.0 =
 * Vendors now upload one logo instead of two. Removed the separate "Logo —

@@ -7,6 +7,60 @@ This file is the authoritative project history.
 
 ---
 
+## [0.11.0] — 2026-07-31 — Auto-place vendor cards on Directorist pages
+
+### Context
+
+Ticker/card placement was flagged open since v0.5.2. Client wanted the
+preferred vendor card to actually show up where people are browsing —
+Directorist's own category and single-listing pages, not just this
+plugin's own shortcode pages. Directorist's category tree (~230
+hierarchical terms, e.g. "Travel & Hospitality > Hotels & Lodging") has no
+slug overlap with this plugin's flat `lis_vendor_category` terms (e.g.
+"Lodging") — confirmed by pulling the real term list from
+`edit-tags.php?taxonomy=at_biz_dir-category`, not assumed. That's the
+decoupling trade-off already noted in readme.txt, not a bug. So automatic
+matching wasn't possible; an explicit mapping was needed.
+
+### Added
+
+- **`includes/directorist-integration.php`**: new file, hooks into
+  Directorist's own front-end templates (hook names and exact `do_action()`
+  signatures confirmed against the real Directorist 8.9.2 source, not
+  guessed from docs — `directorist_before_grid_listings_loop`,
+  `directorist_before_list_listings_loop`, `directorist_before_map_listings_loop`
+  fire with no arguments; `directorist_single_listing_after_title` fires
+  with only the listing ID).
+  - New term meta `_lis_pv_directorist_category_id` on `lis_vendor_category`
+    terms — a dropdown (via core `wp_dropdown_categories()`, so Directorist's
+    hierarchy renders indented) on the category add/edit screens, admin-set
+    per vendor category.
+  - `lis_directory_get_vendor_category_for_directorist_term()` — reverse
+    lookup, Directorist term ID → mapped `lis_vendor_category` term.
+  - On a Directorist category archive: resolves the current category the
+    same way Directorist's own `category_archive()` does (`is_tax()` +
+    `get_queried_object()` on a real taxonomy archive, falling back to
+    `$_GET['category']` / `get_query_var('atbdp_category')` for the
+    shortcode-rendered case) — matters because `get_queried_object()` alone
+    is wrong when the archive is rendered via shortcode on an arbitrary
+    page rather than a real `/at_biz_dir-category/{slug}/` URL.
+  - On a single listing page: `get_the_terms( $listing_id, 'at_biz_dir-category' )`,
+    renders one card for the first mapped category found (a listing with
+    multiple mapped categories doesn't get duplicate cards).
+  - Either case renders via `do_shortcode( '[lis_preferred_vendor_card
+    category="..."]' )` — reuses the existing shortcode's own "no active
+    vendor yet" / "bad category" handling rather than duplicating it.
+
+### Known limitation
+
+Directorist's list-view template fires `directorist_after_grid_listings_loop`
+instead of a (non-existent) `directorist_after_list_listings_loop` — a
+copy-paste bug in Directorist itself. Not routed around here since this
+integration only uses the "before" hooks; noted in the file's own docblock
+in case a future "after" placement is ever wanted.
+
+---
+
 ## [0.10.0] — 2026-07-30 — Single logo upload, CSS-recolored; WooCommerce fix
 
 ### Context
