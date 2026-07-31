@@ -7,6 +7,50 @@ This file is the authoritative project history.
 
 ---
 
+## [0.12.0] — 2026-07-31 — Framework for a self-hosted Directorist replacement
+
+### Context
+
+Direct request: same motivation and approach as LIS Events (built to
+eventually replace EventON) — "paying for something that doesn't look
+great, wish I had more control." Rather than a new plugin, this is built
+into LIS Directory itself, growing its scope from "Preferred Vendor
+Program overlay" to also being the general listings base layer it
+currently sits on top of Directorist for. Framework only, explicitly:
+CPT + taxonomy + minimal fields + minimal templates. No migration of
+Directorist's ~230 categories/listings yet, no feature parity attempt
+(no hours, gallery, map, reviews, claim-listing, booking) — those are
+real design decisions for later passes, not gaps to silently patch.
+
+### Added
+
+- **`includes/listings-cpt.php`**: `lis_listing` CPT (`/listings/` archive)
+  and `lis_listing_category` taxonomy, registered the same way as LIS
+  Events' `includes/cpt.php` — same structure, same labels pattern, for
+  consistency across both plugins.
+- **`includes/listings-meta.php`**: "Listing Details" meta box — address,
+  phone, website, email. `show_in_rest: true` (unlike this plugin's
+  existing `lis_preferred_vendor` meta, which is REST-disabled) since
+  there's no XSS-sensitive file upload involved here.
+- **`includes/listings-template.php`**: routes `single_template` /
+  `archive_template` / `taxonomy_template` to this plugin's own templates —
+  same theme-override-first pattern as LIS Events' `includes/template.php`
+  (`locate_template()` checked first, so a theme can still win).
+- **`templates/single-listing.php`**, **`templates/archive-listing.php`**,
+  **`assets/css/listings.css`**: basic but real templates — `get_header()`/
+  `get_footer()` (inherits the theme's own site chrome), a card grid for
+  archives, contact-info block on single pages.
+- **`lis-directory.php`**: added a one-time-per-version rewrite-rule flush
+  (`init` hook comparing a stored `lis_directory_flushed_version` option
+  against `LIS_DIRECTORY_VERSION`) — the new CPT's rewrite rules
+  (`/listings/`, `/listing-category/...`) don't exist until something
+  flushes them, and `register_activation_hook` only fires on fresh
+  install/reactivate, not on an in-place version update via the
+  auto-updater. Plugin header `Description` updated to reflect the
+  expanded scope.
+
+---
+
 ## [0.11.0] — 2026-07-31 — Auto-place vendor cards on Directorist pages
 
 ### Context

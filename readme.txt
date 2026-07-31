@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.11.0
+Stable tag: 0.12.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -110,6 +110,14 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.12.0 =
+* New `lis_listing` post type + `lis_listing_category` taxonomy — the start
+  of a self-hosted listings framework meant to eventually replace
+  Directorist (same approach as LIS Events replacing EventON). Framework
+  only: CPT, basic contact-info fields, and basic archive/single templates
+  at `/listings/`. No migration of Directorist's existing categories or
+  listings yet — that's a deliberate later step.
 
 = 0.11.0 =
 * Preferred vendor cards can now appear automatically on Directorist's own
