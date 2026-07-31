@@ -1,9 +1,9 @@
 /* ---------- Archive / grid ---------- */
 
 .lis-listing-archive {
-	max-width: 1100px;
+	max-width: 1400px;
 	margin: 0 auto;
-	padding: 24px 16px 48px;
+	padding: 24px 32px 48px;
 }
 
 .lis-listing-archive-title {
@@ -72,6 +72,21 @@
 	margin: 4px 0 0 0;
 }
 
+.lis-listing-card-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.lis-listing-tag {
+	font-size: 0.74em;
+	color: #666;
+	background: #f2f2f0;
+	padding: 3px 8px;
+	border-radius: 6px;
+}
+
 .lis-listing-empty {
 	color: #666;
 	padding: 40px 0;
@@ -126,9 +141,9 @@
 /* ---------- Single listing ---------- */
 
 .lis-listing-single {
-	max-width: 1000px;
+	max-width: 1300px;
 	margin: 0 auto;
-	padding: 24px 16px 56px;
+	padding: 24px 32px 56px;
 }
 
 .lis-listing-gallery-strip {
@@ -195,7 +210,7 @@
 .lis-listing-meta {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 10px;
 	margin: 0 0 24px 0;
 	padding: 16px;
 	border: 1px solid #eee;
@@ -203,8 +218,30 @@
 	background: #fafafa;
 }
 
+.lis-listing-meta-row {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	font-size: 0.94em;
+}
+
+.lis-listing-meta-label {
+	flex-shrink: 0;
+	width: 64px;
+	font-size: 0.78em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: #888;
+}
+
 .lis-listing-meta a {
-	color: inherit;
+	color: #333;
+	word-break: break-word;
+}
+
+.lis-listing-meta a:hover {
+	color: #576846;
 }
 
 .lis-listing-section {
@@ -294,6 +331,12 @@
 .lis-listing-hours-table-display thead,
 .lis-listing-hours-table-display tbody {
 	border: none;
+}
+
+.lis-listing-hours-table-display tr,
+.lis-listing-hours-table-display tr:nth-child(even),
+.lis-listing-hours-table-display tr:nth-child(odd) {
+	background: transparent;
 }
 
 .lis-listing-hours-table-display tr:not(:last-child) td {

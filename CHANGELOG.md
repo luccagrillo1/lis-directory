@@ -7,6 +7,37 @@ This file is the authoritative project history.
 
 ---
 
+## [0.14.0] — 2026-07-31 — Contact labels+maps, tags, wider layout, no stripes
+
+### Context
+
+A round of direct feedback on the live test listing: contact fields had
+no labels, category wasn't obviously visible, features weren't visible
+on cards, the layout looked squished on a wide screen, and the theme's
+zebra-striped table rows on Business Hours weren't wanted.
+
+### Changed
+
+- **`templates/single-listing.php`**: contact block now has a small caps
+  label (Address/Phone/Website/Email) per row via `.lis-listing-meta-row`
+  + `.lis-listing-meta-label`. Address now links to Google Maps
+  (`google.com/maps/search/?api=1&query=...`) instead of being plain text
+  — a universal link that works across devices/map apps, not tied to one
+  provider's app.
+- **`templates/archive-listing.php`**: cards now show up to 3 feature
+  taxonomy terms as small tag pills (`array_slice( $features, 0, 3 )`).
+  Category badge was already present here and on the single page's
+  header — confirmed, not re-added.
+- **`assets/css/listings.css`**: `.lis-listing-single` max-width
+  1000px→1300px, `.lis-listing-archive` 1100px→1400px (both were reading
+  as squished with too much empty margin on wide screens). Explicit
+  `background: transparent` on hours-table rows to override the theme's
+  own zebra-striping, which was never something this plugin's CSS added
+  in the first place. New `.lis-listing-card-tags` / `.lis-listing-tag`
+  styles for the card-level feature pills.
+
+---
+
 ## [0.13.3] — 2026-07-31 — Fix: leftover table border on hours box
 
 ### Found by

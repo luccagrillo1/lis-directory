@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.13.3
+Stable tag: 0.14.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -110,6 +110,14 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.14.0 =
+* Contact block now labels each field (Address/Phone/Website/Email) and
+  links the address to Google Maps.
+* Business Hours zebra striping removed (theme default, now explicitly off).
+* Archive cards show up to 3 feature tags.
+* Single/archive layouts widened (1000px/1100px → 1300px/1400px) — was
+  reading as squished on wide screens.
 
 = 0.13.3 =
 * Fixed a leftover top/left border on the Business Hours box — 0.13.1 reset

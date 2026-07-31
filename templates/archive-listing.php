@@ -28,6 +28,8 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 				$price       = get_post_meta( $post_id, '_lis_listing_price', true );
 				$categories  = get_the_terms( $post_id, 'lis_listing_category' );
 				$category    = ( $categories && ! is_wp_error( $categories ) ) ? $categories[0] : null;
+				$features    = get_the_terms( $post_id, 'lis_listing_feature' );
+				$features    = ( $features && ! is_wp_error( $features ) ) ? array_slice( $features, 0, 3 ) : array();
 				$is_open     = lis_directory_is_listing_open_now( $post_id );
 				$gallery_raw = get_post_meta( $post_id, '_lis_listing_gallery_ids', true );
 				$gallery_ids = $gallery_raw ? array_filter( array_map( 'absint', explode( ',', $gallery_raw ) ) ) : array();
@@ -48,6 +50,13 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 							<?php if ( $category ) : ?><span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span><?php endif; ?>
 						</div>
 						<p class="lis-listing-card-excerpt"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 16 ) ); ?></p>
+						<?php if ( ! empty( $features ) ) : ?>
+							<div class="lis-listing-card-tags">
+								<?php foreach ( $features as $feature ) : ?>
+									<span class="lis-listing-tag"><?php echo esc_html( $feature->name ); ?></span>
+								<?php endforeach; ?>
+							</div>
+						<?php endif; ?>
 					</div>
 				</a>
 			<?php endwhile; ?>

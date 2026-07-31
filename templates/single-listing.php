@@ -73,10 +73,30 @@ while ( have_posts() ) :
 
 				<?php if ( $address || $phone || $website || $email ) : ?>
 					<div class="lis-listing-meta">
-						<?php if ( $address ) : ?><div><?php echo esc_html( $address ); ?></div><?php endif; ?>
-						<?php if ( $phone ) : ?><div><a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a></div><?php endif; ?>
-						<?php if ( $website ) : ?><div><a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $website ); ?></a></div><?php endif; ?>
-						<?php if ( $email ) : ?><div><a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a></div><?php endif; ?>
+						<?php if ( $address ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Address</span>
+								<a href="<?php echo esc_url( 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $address ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $address ); ?></a>
+							</div>
+						<?php endif; ?>
+						<?php if ( $phone ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Phone</span>
+								<a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a>
+							</div>
+						<?php endif; ?>
+						<?php if ( $website ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Website</span>
+								<a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $website ); ?></a>
+							</div>
+						<?php endif; ?>
+						<?php if ( $email ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Email</span>
+								<a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a>
+							</div>
+						<?php endif; ?>
 					</div>
 				<?php endif; ?>
 
