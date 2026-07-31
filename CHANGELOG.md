@@ -7,6 +7,24 @@ This file is the authoritative project history.
 
 ---
 
+## [0.13.1] — 2026-07-31 — Fix: theme's default table borders bled into hours table
+
+### Found by
+
+Client screenshot of the live Business Hours box — a full grid of borders
+around every cell, not the clean bordered-card-with-row-dividers look the
+CSS intended. `assets/css/listings.css` never explicitly reset `border` on
+the table/td elements, so the active theme's own default `<table>` styling
+(Astra applies borders to content tables site-wide) won out.
+
+### Fixed
+
+- **`assets/css/listings.css`**: `.lis-listing-hours-table-display td`
+  now explicitly sets `border: none`, with a single `border-bottom` added
+  back only on non-last rows for a subtle divider instead of a full grid.
+
+---
+
 ## [0.13.0] — 2026-07-31 — Listings: gallery, price, hours, features, video
 
 ### Context

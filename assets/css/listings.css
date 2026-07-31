@@ -289,14 +289,25 @@
 	font-size: 0.9em;
 }
 
+.lis-listing-hours-table-display tr {
+	border: none;
+}
+
+.lis-listing-hours-table-display tr:not(:last-child) td {
+	border-bottom: 1px solid #f0f0ee;
+}
+
 .lis-listing-hours-table-display td {
-	padding: 5px 0;
+	border: none;
+	padding: 9px 4px;
 	color: #444;
+	font-weight: 500;
 }
 
 .lis-listing-hours-table-display td:last-child {
 	text-align: right;
-	color: #666;
+	color: #777;
+	font-weight: 400;
 }
 
 /* ---------- Admin: gallery picker (post edit screen) ---------- */
