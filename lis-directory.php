@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
- * Version:           0.9.0
+ * Version:           0.10.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.9.0 (GitHub-based auto-update, same as LIS Events)
+ * LIS Directory — v0.10.0 (single logo upload, CSS-recolored to black/white)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.9.0' );
+define( 'LIS_DIRECTORY_VERSION', '0.10.0' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );

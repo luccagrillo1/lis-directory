@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.0
+Stable tag: 0.10.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -23,7 +23,7 @@ variations is a wp-admin task, not something this plugin does for you).
 
 * Custom post type `lis_preferred_vendor` for vendor data
 * Taxonomy `lis_vendor_category`, independent of Directorist's own categories
-* Admin meta box: tagline, Directorist Listing URL, color/B&W logo uploads,
+* Admin meta box: tagline, Directorist Listing URL, logo upload,
   status, term start/end, linked WooCommerce order/subscription ID, contact email
 * Only one `active` vendor allowed per category, enforced server-side
 * A vendor must already have a real, published listing on the site's Local
@@ -110,6 +110,17 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.10.0 =
+* Vendors now upload one logo instead of two. Removed the separate "Logo —
+  Black & White" upload entirely; a black or white version is derived from
+  the single logo via CSS when needed (used by
+  `[lis_preferred_vendor_ticker style="logos" tone="black|white"]`). The
+  logo upload is now PNG-only (was PNG or JPG) — required for the recolor
+  effect to look clean instead of showing a solid box.
+* WooCommerce: disabled "customers can buy without subscribing" on the LIS
+  Partner product — a one-time purchase would never enter the subscription
+  lifecycle the auto-expire logic depends on.
 
 = 0.9.0 =
 * Added GitHub-based auto-update (same mechanism as LIS Events) — one-click

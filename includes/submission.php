@@ -118,13 +118,9 @@ function lis_directory_render_submission_form_shortcode() {
 		</p>
 
 		<p>
-			<label for="lis_pv_logo_color">Logo — Color (PNG or JPG, required)</label><br />
-			<input type="file" id="lis_pv_logo_color" name="lis_pv_logo_color" accept="image/png,image/jpeg" required />
-		</p>
-
-		<p>
-			<label for="lis_pv_logo_bw">Logo — Black &amp; White (PNG or JPG, optional)</label><br />
-			<input type="file" id="lis_pv_logo_bw" name="lis_pv_logo_bw" accept="image/png,image/jpeg" />
+			<label for="lis_pv_logo_color">Logo (PNG with a transparent background, required)</label><br />
+			<input type="file" id="lis_pv_logo_color" name="lis_pv_logo_color" accept="image/png" required />
+			<br /><small>Used as-is on cards, and recolored to black or white automatically wherever that's needed — a transparent PNG is what makes that recoloring look clean instead of showing a solid box.</small>
 		</p>
 
 		<p>
@@ -144,13 +140,10 @@ function lis_directory_submission_error_message( $key ) {
 		'category'                          => 'Please select a valid category.',
 		'contact_email'                     => 'A valid contact email is required.',
 		'link_url'                          => 'Please provide the link to your existing, published Local Directory listing — approval requires one.',
-		'lis_pv_logo_color'                 => 'A color logo is required.',
-		'lis_pv_logo_color_type'            => 'Color logo must be a real PNG or JPG file.',
-		'lis_pv_logo_color_too_large'       => 'Color logo must be under 2MB.',
-		'lis_pv_logo_color_upload_failed'   => 'Color logo failed to upload — please try again.',
-		'lis_pv_logo_bw_type'               => 'B&W logo must be a real PNG or JPG file.',
-		'lis_pv_logo_bw_too_large'          => 'B&W logo must be under 2MB.',
-		'lis_pv_logo_bw_upload_failed'      => 'B&W logo failed to upload — please try again.',
+		'lis_pv_logo_color'                 => 'A logo is required.',
+		'lis_pv_logo_color_type'            => 'Logo must be a real PNG file with a transparent background.',
+		'lis_pv_logo_color_too_large'       => 'Logo must be under 2MB.',
+		'lis_pv_logo_color_upload_failed'   => 'Logo failed to upload — please try again.',
 		'save_failed'                       => 'Something went wrong saving your submission — please try again.',
 	);
 	return isset( $messages[ $key ] ) ? $messages[ $key ] : 'Please check your submission and try again.';
@@ -206,7 +199,6 @@ function lis_directory_handle_vendor_submission() {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
 	$logo_color_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', true, $errors );
-	$logo_bw_id    = lis_directory_handle_logo_upload( 'lis_pv_logo_bw', false, $errors );
 
 	if ( ! empty( $errors ) ) {
 		wp_safe_redirect( add_query_arg( 'lis_pv_error', implode( ',', $errors ), $redirect_base ) );
@@ -237,9 +229,6 @@ function lis_directory_handle_vendor_submission() {
 	if ( $logo_color_id ) {
 		update_post_meta( $post_id, '_lis_pv_logo_color_id', $logo_color_id );
 	}
-	if ( $logo_bw_id ) {
-		update_post_meta( $post_id, '_lis_pv_logo_bw_id', $logo_bw_id );
-	}
 
 	// Present when the vendor arrived via the WooCommerce thank-you page link
 	// (includes/woocommerce.php) — ties this submission back to what they paid for.
@@ -254,9 +243,13 @@ function lis_directory_handle_vendor_submission() {
 /**
  * Validates and sideloads one logo field into the media library.
  *
- * Restricts to PNG/JPEG via a temporary `upload_mimes` filter (scoped to this
+ * Restricts to PNG via a temporary `upload_mimes` filter (scoped to this
  * call only — never widened globally, and SVG is deliberately never allowed
- * here per the build brief's XSS warning), enforces a 2MB cap, and confirms
+ * here per the build brief's XSS warning). PNG-only (not PNG-or-JPEG) is
+ * deliberate: the CSS recolor trick used to derive black/white logo variants
+ * from this one file (`filter: brightness(0)` / `brightness(0) invert(1)`)
+ * only looks right against a transparent background, which JPEG can't have.
+ * Enforces a 2MB cap, and confirms
  * the file is actually an image (not just a renamed extension) via
  * getimagesize() before handing it to media_handle_upload().
  *
@@ -284,7 +277,7 @@ function lis_directory_handle_logo_upload( $field_name, $required, array &$error
 	}
 
 	$filetype = wp_check_filetype_and_ext( $_FILES[ $field_name ]['tmp_name'], $_FILES[ $field_name ]['name'] );
-	if ( empty( $filetype['ext'] ) || ! in_array( $filetype['ext'], array( 'jpg', 'jpeg', 'png' ), true ) ) {
+	if ( empty( $filetype['ext'] ) || 'png' !== $filetype['ext'] ) {
 		$errors[] = $field_name . '_type';
 		return 0;
 	}
@@ -309,7 +302,6 @@ function lis_directory_handle_logo_upload( $field_name, $required, array &$error
 
 function lis_directory_restrict_logo_mimes( $mimes ) {
 	return array(
-		'jpg|jpeg|jpe' => 'image/jpeg',
-		'png'          => 'image/png',
+		'png' => 'image/png',
 	);
 }

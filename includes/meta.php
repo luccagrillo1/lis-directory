@@ -27,7 +27,6 @@ function lis_directory_register_meta() {
 		'_lis_pv_tagline'        => 'string',
 		'_lis_pv_link_url'       => 'string',
 		'_lis_pv_logo_color_id'  => 'integer',
-		'_lis_pv_logo_bw_id'     => 'integer',
 		'_lis_pv_status'         => 'string',
 		'_lis_pv_term_start'     => 'string',
 		'_lis_pv_term_end'       => 'string',
@@ -64,7 +63,6 @@ function lis_directory_render_meta_box( $post ) {
 	$tagline    = get_post_meta( $post->ID, '_lis_pv_tagline', true );
 	$link_url   = get_post_meta( $post->ID, '_lis_pv_link_url', true );
 	$logo_color = (int) get_post_meta( $post->ID, '_lis_pv_logo_color_id', true );
-	$logo_bw    = (int) get_post_meta( $post->ID, '_lis_pv_logo_bw_id', true );
 	$status     = get_post_meta( $post->ID, '_lis_pv_status', true );
 	$term_start = get_post_meta( $post->ID, '_lis_pv_term_start', true );
 	$term_end   = get_post_meta( $post->ID, '_lis_pv_term_end', true );
@@ -94,12 +92,8 @@ function lis_directory_render_meta_box( $post ) {
 			</td>
 		</tr>
 		<tr>
-			<th>Logo — Color</th>
+			<th>Logo</th>
 			<td><?php lis_directory_render_logo_field( 'lis_pv_logo_color_id', $logo_color ); ?></td>
-		</tr>
-		<tr>
-			<th>Logo — Black &amp; White</th>
-			<td><?php lis_directory_render_logo_field( 'lis_pv_logo_bw_id', $logo_bw ); ?></td>
 		</tr>
 		<tr>
 			<th><label for="lis_pv_status">Status</label></th>
@@ -142,7 +136,7 @@ function lis_directory_render_logo_field( $field_id, $attachment_id ) {
 		<br />
 		<button type="button" class="button lis-pv-upload-logo" data-target="<?php echo esc_attr( $field_id ); ?>">Select Image</button>
 		<button type="button" class="button lis-pv-remove-logo" data-target="<?php echo esc_attr( $field_id ); ?>" style="<?php echo $image_url ? '' : 'display:none;'; ?>">Remove</button>
-		<p class="description">PNG or JPG only.</p>
+		<p class="description">PNG only, transparent background — recolored to black/white automatically wherever that's needed.</p>
 	</div>
 	<?php
 }
@@ -166,10 +160,8 @@ function lis_directory_save_meta_box( $post_id ) {
 		update_post_meta( $post_id, '_lis_pv_link_url', esc_url_raw( wp_unslash( $_POST['lis_pv_link_url'] ) ) );
 	}
 
-	foreach ( array( 'lis_pv_logo_color_id' => '_lis_pv_logo_color_id', 'lis_pv_logo_bw_id' => '_lis_pv_logo_bw_id' ) as $field => $meta_key ) {
-		if ( isset( $_POST[ $field ] ) ) {
-			update_post_meta( $post_id, $meta_key, absint( $_POST[ $field ] ) );
-		}
+	if ( isset( $_POST['lis_pv_logo_color_id'] ) ) {
+		update_post_meta( $post_id, '_lis_pv_logo_color_id', absint( $_POST['lis_pv_logo_color_id'] ) );
 	}
 
 	if ( isset( $_POST['lis_pv_status'] ) && array_key_exists( $_POST['lis_pv_status'], LIS_DIRECTORY_STATUSES ) ) {

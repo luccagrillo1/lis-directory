@@ -17,3 +17,17 @@
 	max-width: 220px;
 	object-fit: contain;
 }
+
+/* Derives a black or white version of the single uploaded (transparent PNG)
+   logo instead of requiring a separate upload per tone. brightness(0) turns
+   every non-transparent pixel solid black; stacking invert(1) after it flips
+   that to solid white. Looks wrong against a logo without transparency —
+   the upload is enforced PNG-only in includes/submission.php specifically
+   so this always has something clean to work with. */
+.lis-pv-ticker-logo--black {
+	filter: brightness(0);
+}
+
+.lis-pv-ticker-logo--white {
+	filter: brightness(0) invert(1);
+}

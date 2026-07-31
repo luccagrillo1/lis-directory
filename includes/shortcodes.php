@@ -149,14 +149,18 @@ function lis_directory_get_heading_styles_once() {
  * active vendor, across all categories. Two display styles:
  * `style="cards"` (default) — the same card as [lis_preferred_vendor_card].
  * `style="logos"` — logos only, no name/tagline text (added after v0.5.2 as
- * a second display option, alongside the original card version).
+ * a second display option, alongside the original card version). In logos
+ * mode, `tone="black"` / `tone="white"` recolors each vendor's single
+ * uploaded logo via CSS instead of requiring a separate upload per tone —
+ * default `tone="color"` shows the logo as uploaded.
  * Placement is manual; there is no auto-injection into Directorist pages.
  */
 add_shortcode( 'lis_preferred_vendor_ticker', 'lis_directory_render_vendor_ticker_shortcode' );
 
 function lis_directory_render_vendor_ticker_shortcode( $atts ) {
-	$atts  = shortcode_atts( array( 'style' => 'cards' ), $atts, 'lis_preferred_vendor_ticker' );
+	$atts  = shortcode_atts( array( 'style' => 'cards', 'tone' => 'color' ), $atts, 'lis_preferred_vendor_ticker' );
 	$style = ( 'logos' === $atts['style'] ) ? 'logos' : 'cards';
+	$tone  = in_array( $atts['tone'], array( 'black', 'white' ), true ) ? $atts['tone'] : 'color';
 
 	$vendors = lis_directory_get_all_active_vendors();
 
@@ -167,7 +171,7 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 	$items = array();
 	foreach ( $vendors as $vendor ) {
 		$items[] = ( 'logos' === $style )
-			? lis_directory_render_vendor_logo_html( $vendor )
+			? lis_directory_render_vendor_logo_html( $vendor, $tone )
 			: lis_directory_render_vendor_card_html( $vendor );
 	}
 	$items = array_filter( $items ); // A vendor with no logo renders '' in logos mode — drop it, not an empty slot.
@@ -196,11 +200,17 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 }
 
 /**
- * Logo-only ticker item — no card, no name/tagline, just the color logo
- * (linked if the vendor has a Directorist listing URL). Returns '' for a
- * vendor with no logo uploaded, since there's nothing sensible to show.
+ * Logo-only ticker item — no card, no name/tagline, just the logo (linked if
+ * the vendor has a Directorist listing URL). Returns '' for a vendor with no
+ * logo uploaded, since there's nothing sensible to show.
+ *
+ * `$tone` recolors the single uploaded logo instead of requiring a second
+ * upload: `brightness(0)` turns every non-transparent pixel solid black,
+ * and `brightness(0) invert(1)` flips that to solid white. Only looks right
+ * against a transparent PNG, which is why the logo upload is PNG-only (see
+ * includes/submission.php).
  */
-function lis_directory_render_vendor_logo_html( $vendor ) {
+function lis_directory_render_vendor_logo_html( $vendor, $tone = 'color' ) {
 	$logo_id  = (int) get_post_meta( $vendor->ID, '_lis_pv_logo_color_id', true );
 	$logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
 	if ( ! $logo_url ) {
@@ -210,11 +220,12 @@ function lis_directory_render_vendor_logo_html( $vendor ) {
 	$link_url = get_post_meta( $vendor->ID, '_lis_pv_link_url', true );
 	$name     = get_the_title( $vendor );
 	$tag      = $link_url ? 'a' : 'div';
+	$tone_class = in_array( $tone, array( 'black', 'white' ), true ) ? ' lis-pv-ticker-logo--' . $tone : '';
 
 	ob_start();
 	?>
 	<<?php echo esc_html( $tag ); ?> class="lis-pv-ticker-logo-item"<?php if ( $link_url ) : ?> href="<?php echo esc_url( $link_url ); ?>" target="_blank" rel="noopener noreferrer"<?php endif; ?>>
-		<img class="lis-pv-ticker-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy" />
+		<img class="lis-pv-ticker-logo<?php echo esc_attr( $tone_class ); ?>" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy" />
 	</<?php echo esc_html( $tag ); ?>>
 	<?php
 	return ob_get_clean();

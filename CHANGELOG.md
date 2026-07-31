@@ -7,6 +7,66 @@ This file is the authoritative project history.
 
 ---
 
+## [0.10.0] — 2026-07-30 — Single logo upload, CSS-recolored; WooCommerce fix
+
+### Context
+
+Two loose ends flagged after the auto-update work: the "Logo — Black &
+White" field was collected and editable but never rendered by any
+shortcode, and the LIS Partner product still allowed a one-time purchase
+that would bypass the subscription lifecycle the vendor auto-expire logic
+depends on. Client confirmed: derive black/white from the one logo via CSS
+instead of a second upload, and turn off one-time purchases.
+
+### Changed: one logo, recolored via CSS instead of two uploads
+
+- **`includes/submission.php`**: removed the "Logo — Black & White" field,
+  its validation, and its upload handling entirely. The remaining logo
+  upload (`lis_pv_logo_color`, meta key `_lis_pv_logo_color_id` — left
+  unrenamed to avoid a data migration for the one real vendor already using
+  it) is now **PNG-only** (was PNG or JPG), enforced both in the `accept`
+  attribute and server-side (`wp_check_filetype_and_ext` whitelist,
+  `upload_mimes` filter). PNG-only is deliberate, not incidental: the
+  recolor effect only looks right against a transparent background, which
+  JPEG can't have.
+- **`includes/meta.php`**: removed the `_lis_pv_logo_bw_id` meta
+  registration, its admin meta-box row, and its save handling. Existing
+  `_lis_pv_logo_bw_id` postmeta (none exists on any real vendor) is simply
+  orphaned, not migrated — nothing ever read it.
+- **`includes/shortcodes.php`**: `[lis_preferred_vendor_ticker style="logos"]`
+  gained a `tone` attribute (`color` default, `black`, `white`).
+  `lis_directory_render_vendor_logo_html()` now takes `$tone` and adds a
+  `lis-pv-ticker-logo--black`/`--white` modifier class.
+- **`assets/css/vendor-ticker-logos.css`**: new `.lis-pv-ticker-logo--black`
+  (`filter: brightness(0)`) and `--white`
+  (`filter: brightness(0) invert(1)`) rules. `brightness(0)` turns every
+  non-transparent pixel solid black regardless of its original color;
+  stacking `invert(1)` after it flips that to solid white. Verified in the
+  browser against the real "LIS Partners" lockup PNG (which does have real
+  alpha transparency, confirmed via a PIL alpha-channel sample) before
+  committing — screenshotted all three tones side by side, white checked
+  against a dark background specifically since that's the case that would
+  otherwise be invisible if the filter didn't work.
+
+### Fixed: WooCommerce one-time purchase bypass
+
+- Disabled "Customers can buy this product without subscribing" on the LIS
+  Partner product (WCSATT setting, `data-allow-one-off`). A one-time
+  purchase would let someone acquire an Active vendor slot that never
+  entered the subscription lifecycle `includes/woocommerce.php` hooks into
+  for auto-expiring a vendor on cancellation — the slot would just never
+  expire. No plugin code changed for this; it's a WooCommerce product
+  setting, not plugin behavior.
+- Caught and immediately corrected a mistake while making this change: the
+  product's own "Publish"/"Update" submit button briefly published it
+  live (it's meant to stay Draft — a $1/mo placeholder, not a real
+  purchasable listing yet) as a side effect of saving the WCSATT toggle.
+  Reverted the post status back to Draft in the same session before ending
+  the turn; confirmed via `post-status-display` text reading "Draft" again
+  and `data-allow-one-off` reading "no".
+
+---
+
 ## [0.9.0] — 2026-07-29 — GitHub-based auto-update
 
 ### Context
