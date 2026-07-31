@@ -7,6 +7,25 @@ This file is the authoritative project history.
 
 ---
 
+## [0.13.3] — 2026-07-31 — Fix: leftover table border on hours box
+
+### Found by
+
+Client screenshot after 0.13.1 — a thin border still visible along the
+top and left edge of the Business Hours table, forming a partial frame.
+0.13.1 reset `border` on `td`/`tr` but never on the `<table>` element
+itself, so the theme's own default table border was still rendering on
+the two edges `border-collapse: collapse` didn't otherwise cover.
+
+### Fixed
+
+- **`assets/css/listings.css`**: `.lis-listing-hours-table-display` now
+  also sets `border: none` on the table element (and `thead`/`tbody`),
+  not just on `td`. Verified live by injecting the fix directly on the
+  page and screenshotting before shipping.
+
+---
+
 ## [0.13.2] — 2026-07-31 — Price display hidden for now
 
 ### Changed

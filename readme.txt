@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.13.2
+Stable tag: 0.13.3
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -110,6 +110,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.13.3 =
+* Fixed a leftover top/left border on the Business Hours box — 0.13.1 reset
+  the border on individual table cells but not the `<table>` element
+  itself, so the theme's own outer table border was still showing through.
 
 = 0.13.2 =
 * Price is no longer displayed on cards or single listing pages — the
