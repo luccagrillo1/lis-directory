@@ -1,6 +1,6 @@
 <?php
 /**
- * Custom post type + taxonomy registration for the Preferred Vendor Program.
+ * Custom post type + taxonomy registration for the Vendor Showcase program.
  *
  * Deliberately its own CPT/taxonomy, not a hook into Directorist's `at_biz_dir` —
  * keeps this decoupled from Directorist's internal slugs and hooks (see build brief).
@@ -19,17 +19,17 @@ add_action( 'init', 'lis_directory_register_taxonomy' );
 function lis_directory_register_cpt() {
 	register_post_type( 'lis_preferred_vendor', array(
 		'labels'       => array(
-			'name'               => 'Preferred Vendors',
-			'singular_name'      => 'Preferred Vendor',
-			'add_new_item'       => 'Add New Preferred Vendor',
-			'edit_item'          => 'Edit Preferred Vendor',
-			'new_item'           => 'New Preferred Vendor',
-			'view_item'          => 'View Preferred Vendor',
-			'search_items'       => 'Search Preferred Vendors',
-			'not_found'          => 'No preferred vendors found',
-			'not_found_in_trash' => 'No preferred vendors found in Trash',
-			'all_items'          => 'Preferred Vendors',
-			'menu_name'          => 'Preferred Vendors',
+			'name'               => 'Vendor Showcase',
+			'singular_name'      => 'Vendor Showcase',
+			'add_new_item'       => 'Add New Vendor Showcase Entry',
+			'edit_item'          => 'Edit Vendor Showcase Entry',
+			'new_item'           => 'New Vendor Showcase Entry',
+			'view_item'          => 'View Vendor Showcase Entry',
+			'search_items'       => 'Search Vendor Showcase',
+			'not_found'          => 'No vendor showcase entries found',
+			'not_found_in_trash' => 'No vendor showcase entries found in Trash',
+			'all_items'          => 'Vendor Showcase',
+			'menu_name'          => 'Vendor Showcase',
 		),
 		'public'       => false,
 		'show_ui'      => true,

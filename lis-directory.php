@@ -2,22 +2,22 @@
 /**
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
- * Description:       Preferred Vendor Program + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.16.1
+ * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
+ * Version:           0.16.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.16.1 (fix: fatal from a nonexistent register_comment_meta() call)
+ * LIS Directory — v0.16.2 (renamed "Preferred Vendor" to "Vendor Showcase" throughout admin and customer-facing copy)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.16.1' );
+define( 'LIS_DIRECTORY_VERSION', '0.16.2' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );

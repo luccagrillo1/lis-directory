@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin list-table columns for Preferred Vendors — status and category at a glance.
+ * Admin list-table columns for the Vendor Showcase — status and category at a glance.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

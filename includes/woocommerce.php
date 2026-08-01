@@ -7,11 +7,11 @@
  * livinginsandpoint.com by inspecting wp-admin > Plugins directly.
  *
  * Recommended setup (done by hand in wp-admin, NOT by this plugin): one
- * variable WooCommerce Subscription product ("Preferred Vendor"), with one
+ * variable WooCommerce Subscription product ("Vendor Showcase"), with one
  * variation per lis_vendor_category term. Each variation is tagged with the
  * category it represents via the "LIS Vendor Category" field this file adds
  * to the variation admin UI — that tag is how the rest of this file finds
- * "the Preferred Vendor variation for category X" without a dedicated
+ * "the Vendor Showcase variation for category X" without a dedicated
  * settings screen naming the product itself.
  */
 
@@ -58,7 +58,7 @@ function lis_directory_render_settings_page() {
 							'show_option_none' => '— Select the page with [lis_preferred_vendor_submit] —',
 						) );
 						?>
-						<p class="description">Used to build the "submit your details" link shown on the WooCommerce thank-you page after a Preferred Vendor purchase.</p>
+						<p class="description">Used to build the "submit your details" link shown on the WooCommerce thank-you page after a Vendor Showcase purchase.</p>
 					</td>
 				</tr>
 			</table>
@@ -95,14 +95,14 @@ function lis_directory_render_variation_category_field( $loop, $variation_data, 
 		<p class="form-field">
 			<label for="lis_pv_category_term_id_<?php echo esc_attr( $loop ); ?>">LIS Vendor Category</label>
 			<select id="lis_pv_category_term_id_<?php echo esc_attr( $loop ); ?>" name="lis_pv_category_term_id[<?php echo esc_attr( $loop ); ?>]">
-				<option value="">— Not a Preferred Vendor variation —</option>
+				<option value="">— Not a Vendor Showcase variation —</option>
 				<?php foreach ( (array) $terms as $term ) : ?>
 					<option value="<?php echo esc_attr( $term->term_id ); ?>" <?php selected( (int) $current, $term->term_id ); ?>>
 						<?php echo esc_html( $term->name ); ?>
 					</option>
 				<?php endforeach; ?>
 			</select>
-			<span class="description">If set, this variation's stock is kept in sync with whether the category currently has an active Preferred Vendor.</span>
+			<span class="description">If set, this variation's stock is kept in sync with whether the category currently has an active Vendor Showcase entry.</span>
 		</p>
 	</div>
 	<?php
@@ -177,7 +177,7 @@ function lis_directory_sync_stock_on_status_change( $post_id, $new_status ) {
 }
 
 /**
- * Thank-you page: if this order is for a tagged Preferred Vendor variation,
+ * Thank-you page: if this order is for a tagged Vendor Showcase variation,
  * link straight to the submission form (includes/submission.php), locked to
  * that category and carrying the subscription ID — so the vendor doesn't have
  * to hunt for the form, and the resulting post is tied back to what they paid
@@ -226,10 +226,10 @@ function lis_directory_maybe_show_submission_link( $order_id ) {
 		), get_permalink( $page_id ) );
 		?>
 		<div class="lis-pv-thankyou-link" style="margin:16px 0;padding:16px;border:1px solid #7ad03a;background:#f7fff0;">
-			<p>Your Preferred Vendor slot is reserved! <a href="<?php echo esc_url( $link ); ?>">Click here to submit your business details</a> so we can get your listing live.</p>
+			<p>Your Vendor Showcase spot is reserved! <a href="<?php echo esc_url( $link ); ?>">Click here to submit your business details</a> so we can get your listing live.</p>
 		</div>
 		<?php
-		return; // Only one Preferred Vendor line item is expected per order.
+		return; // Only one Vendor Showcase line item is expected per order.
 	}
 }
 

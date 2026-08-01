@@ -104,7 +104,7 @@ function lis_directory_get_active_conflict( $post_id ) {
 /**
  * Second activation requirement (added after v0.5.2): a vendor must already
  * have a real, published listing on the site's Local Directory (Directorist's
- * `at_biz_dir` post type) before they can go Active — a Preferred Vendor slot
+ * `at_biz_dir` post type) before they can go Active — a Vendor Showcase slot
  * is meant to sit on top of an existing directory presence, not replace one.
  * `_lis_pv_link_url` is reused for this rather than adding a second URL field,
  * since it already meant "their Directorist listing or external site" and
@@ -201,7 +201,7 @@ function lis_directory_conflict_notice() {
 			<p>
 				<strong>Status not changed to Active.</strong>
 				This vendor's Directorist Listing URL is missing, or doesn't point to a
-				real, published listing on the Local Directory. A Preferred Vendor slot
+				real, published listing on the Local Directory. A Vendor Showcase slot
 				requires an existing directory listing first — add or fix that URL,
 				then try activating again.
 			</p>

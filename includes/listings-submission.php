@@ -2,7 +2,7 @@
 /**
  * Front-end listing submission: [lis_listing_submit] shortcode +
  * admin-post.php handler. Same pattern as includes/submission.php (the
- * Preferred Vendor submission form) — requires a WordPress account,
+ * Vendor Showcase submission form) — requires a WordPress account,
  * honeypot + nonce, real server-side upload validation.
  *
  * Unlike the vendor form, this doesn't need a custom '_lis_pv_status'-style

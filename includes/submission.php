@@ -18,7 +18,7 @@ function lis_directory_render_submission_form_shortcode() {
 		ob_start();
 		?>
 		<p class="lis-pv-submit-login-required">
-			You need an account to submit a Preferred Vendor listing.
+			You need an account to submit a Vendor Showcase listing.
 			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">Log in</a>
 			or <a href="<?php echo esc_url( wp_registration_url() ); ?>">register</a> first.
 		</p>
@@ -66,7 +66,7 @@ function lis_directory_render_submission_form_shortcode() {
 	}
 
 	if ( is_wp_error( $terms ) || empty( $terms ) ) {
-		echo lis_directory_card_admin_hint( 'No vendor categories exist yet — create some under Preferred Vendors before showing the submission form.' ); // phpcs:ignore -- escaped inside helper.
+		echo lis_directory_card_admin_hint( 'No vendor categories exist yet — create some under Vendor Showcase before showing the submission form.' ); // phpcs:ignore -- escaped inside helper.
 		return ob_get_clean();
 	}
 	?>
@@ -109,7 +109,7 @@ function lis_directory_render_submission_form_shortcode() {
 		<p>
 			<label for="lis_pv_link_url">Your Local Directory Listing URL</label><br />
 			<input type="url" id="lis_pv_link_url" name="lis_pv_link_url" placeholder="https://livinginsandpoint.com/directory/your-business/" required />
-			<br /><small>You must already have a listing on the Local Directory to become a Preferred Vendor. Paste its link here.</small>
+			<br /><small>You must already have a listing on the Local Directory before you can join the Vendor Showcase. Paste its link here.</small>
 		</p>
 
 		<p>

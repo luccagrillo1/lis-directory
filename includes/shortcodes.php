@@ -32,7 +32,7 @@ function lis_directory_render_vendor_card_shortcode( $atts ) {
 
 	$vendor = lis_directory_get_active_vendor_for_category( $term->term_id );
 	if ( ! $vendor ) {
-		return lis_directory_card_admin_hint( sprintf( 'No active preferred vendor for category "%s" yet.', $term->name ) );
+		return lis_directory_card_admin_hint( sprintf( 'No active vendor showcase entry for category "%s" yet.', $term->name ) );
 	}
 
 	return lis_directory_render_vendor_card_html( $vendor );
@@ -165,7 +165,7 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 	$vendors = lis_directory_get_all_active_vendors();
 
 	if ( empty( $vendors ) ) {
-		return lis_directory_card_admin_hint( 'No active preferred vendors yet — the ticker has nothing to show.' );
+		return lis_directory_card_admin_hint( 'No active vendor showcase entries yet — the ticker has nothing to show.' );
 	}
 
 	$items = array();
@@ -178,8 +178,8 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 
 	if ( empty( $items ) ) {
 		return lis_directory_card_admin_hint( 'logos' === $style
-			? 'No active preferred vendors have a logo uploaded yet — the logo ticker has nothing to show.'
-			: 'No active preferred vendors yet — the ticker has nothing to show.'
+			? 'No active vendor showcase entries have a logo uploaded yet — the logo ticker has nothing to show.'
+			: 'No active vendor showcase entries yet — the ticker has nothing to show.'
 		);
 	}
 
@@ -189,7 +189,7 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 
 	ob_start();
 	?>
-	<div class="lis-pv-ticker lis-pv-ticker-<?php echo esc_attr( $style ); ?>" role="region" aria-label="Preferred vendors">
+	<div class="lis-pv-ticker lis-pv-ticker-<?php echo esc_attr( $style ); ?>" role="region" aria-label="Vendor showcase">
 		<div class="lis-pv-ticker-track">
 			<div class="lis-pv-ticker-group"><?php echo $items_html; // phpcs:ignore -- built from escaped markup above. ?></div>
 			<div class="lis-pv-ticker-group lis-pv-ticker-copy" aria-hidden="true"><?php echo $items_html; // phpcs:ignore -- same. ?></div>

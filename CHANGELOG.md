@@ -7,6 +7,61 @@ This file is the authoritative project history.
 
 ---
 
+## [0.16.2] — 2026-08-01 — Renamed "Preferred Vendor" to "Vendor Showcase"
+
+### Why
+
+Client feedback: "Preferred Vendor" reads as a personal endorsement
+("we prefer this business"), when the reality is a business is paying for
+placement, not being individually vouched for. "Vendor Showcase" describes
+the same paid-slot mechanic without implying endorsement.
+
+### What changed
+
+Copy-only rename across admin and customer-facing text — no data migration,
+no breaking change:
+
+* `includes/cpt.php` — CPT labels (`name`, `singular_name`, `add_new_item`,
+  `edit_item`, menu label, etc.) now read "Vendor Showcase" / "Vendor
+  Showcase Entry" instead of "Preferred Vendor(s)".
+* `includes/enforcement.php` — the activation-blocked admin notice ("A
+  Preferred Vendor slot requires...") now reads "A Vendor Showcase slot
+  requires...".
+* `includes/shortcodes.php` — logged-in-editor hint text ("No active
+  preferred vendor(s)...") and the ticker's `aria-label` ("Preferred
+  vendors" → "Vendor showcase").
+* `includes/submission.php` — front-end submission form copy, including the
+  login-required notice and the "must already have a Local Directory
+  listing" helper text (previously "...to become a Preferred Vendor",
+  rewritten to "...before you can join the Vendor Showcase" to drop the
+  endorsement framing specifically called out).
+* `includes/woocommerce.php` — the WooCommerce thank-you page message
+  ("Your Preferred Vendor slot is reserved!" → "Your Vendor Showcase spot
+  is reserved!") and the variation-tagging admin UI copy.
+* `includes/admin.php`, `includes/listings-cpt.php`,
+  `includes/listings-submission.php`, `lis-directory.php` — doc comments
+  and the plugin's own `Description:` header updated for consistency.
+* `readme.txt` — description, shortcode docs, and WooCommerce setup steps
+  updated to match.
+
+### Deliberately unchanged
+
+* Shortcode tags (`[lis_preferred_vendor_card]`, `[lis_preferred_vendor_ticker]`,
+  `[lis_preferred_vendor_heading]`, `[lis_preferred_vendor_submit]`) — these
+  are already embedded in live page content (including the homepage); renaming
+  the tags themselves would silently break every existing placement without a
+  backward-compat alias, for zero user-visible benefit (nobody sees the raw
+  shortcode tag).
+* The `lis_preferred_vendor` CPT slug, `lis_vendor_category` taxonomy slug,
+  and `_lis_pv_*` meta key prefix — internal identifiers, invisible to users;
+  renaming them is a real migration with real risk (rewrite rules, stored
+  meta keys) for no visible payoff.
+* The public "LIS Partners" branded heading (`[lis_preferred_vendor_heading]`
+  shortcode's rendered output) — that name was never "Preferred Vendor"
+  language to begin with, so it didn't need to change.
+
+---
+
 ## [0.16.1] — 2026-07-31 — Fix: fatal error crashed the whole site
 
 ### Found by

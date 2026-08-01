@@ -8,8 +8,8 @@
  * a separate later step, not an oversight.
  *
  * Kept entirely separate from `lis_preferred_vendor` / `lis_vendor_category`
- * (this plugin's original Preferred Vendor Program) — different CPT,
- * different taxonomy, different purpose. The Preferred Vendor Program is a
+ * (this plugin's original Vendor Showcase program) — different CPT,
+ * different taxonomy, different purpose. The Vendor Showcase is a
  * paid featured-slot overlay; `lis_listing` is the general directory itself
  * it will eventually sit on top of, replacing Directorist as that base layer.
  */

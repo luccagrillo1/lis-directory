@@ -1,19 +1,19 @@
 === LIS Directory ===
 Contributors: Lucca Grillo
-Tags: directory, preferred vendors, custom post type
+Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.16.1
+Stable tag: 0.16.2
 
-Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
+Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
 == Description ==
 
-LIS Directory is a purpose-built plugin for livinginsandpoint.com's Preferred
-Vendor Program — a small number of paying vendors get an exclusive "preferred"
-slot per category (e.g. one preferred Insurance vendor, one preferred Plumber),
-displayed via shortcodes. It does not replace or modify Directorist.
+LIS Directory is a purpose-built plugin for livinginsandpoint.com's Vendor
+Showcase — a small number of paying vendors get an exclusive showcase slot
+per category (e.g. one Insurance slot, one Plumber slot), displayed via
+shortcodes. It does not replace or modify Directorist.
 
 The full v1 build order (data model, category-lock enforcement, front-end
 display, front-end submission, WooCommerce Subscriptions integration) is
@@ -77,14 +77,14 @@ variations is a wp-admin task, not something this plugin does for you).
   form. Categories that already have an active vendor are still selectable,
   labeled "currently taken - apply to be waitlisted". Submissions are never
   auto-published; they land as Pending until an admin approves or rejects
-  them from the Preferred Vendors list in wp-admin.
+  them from the Vendor Showcase list in wp-admin.
 * `[lis_listing_submit]` — front-end listing submission form for the
   self-hosted listings framework. Requires a WordPress account. Business
   name, category, and a photo (real PNG/JPG, server-validated, 2MB cap) are
   required; address/phone/website/description are optional. Submissions
   land as native WordPress "Pending" — reviewed and published from the
   normal Listings admin editor, no separate approve/reject workflow needed
-  (unlike Preferred Vendor, there's no "one active per category" rule to
+  (unlike the Vendor Showcase, there's no "one active per category" rule to
   enforce here). Additional photos, business hours, and features are
   admin-added after first publish, not part of this form yet.
 
@@ -101,7 +101,7 @@ meta this creates are the same classic WC Subscriptions fields this plugin's
 `includes/woocommerce.php` already expects, so nothing in the plugin code
 needs to change — only the setup steps below.
 
-1. Create one **Variable product** ("Preferred Vendor" / "LIS Partner") in
+1. Create one **Variable product** ("Vendor Showcase" / "LIS Partner") in
    WooCommerce, with a "Category" attribute (checked "Used for variations")
    and one variation per vendor category you want to sell, each with its own
    regular price.
@@ -118,12 +118,20 @@ needs to change — only the setup steps below.
    once you're ready to go live — a one-time purchase never creates a
    `WC_Subscription`, so it won't trigger this plugin's auto-expire-on-
    cancellation logic.
-5. Under **Preferred Vendors > Settings**, pick the page that has the
+5. Under **Vendor Showcase > Settings**, pick the page that has the
    `[lis_preferred_vendor_submit]` shortcode.
 6. That's it — stock on tagged variations now follows category availability
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.16.2 =
+* Renamed "Preferred Vendor" to "Vendor Showcase" throughout wp-admin labels,
+  activation notices, the submission form, and WooCommerce thank-you page
+  copy — steers away from language that reads as a personal endorsement,
+  since vendors are paying for placement, not being individually vouched for.
+  Shortcode tags (`[lis_preferred_vendor_card]` etc.), the CPT slug, and meta
+  keys are unchanged — this is a copy-only rename, no data migration needed.
 
 = 0.16.1 =
 * Fixed a fatal error: `register_comment_meta()` isn't a real WordPress
