@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Preferred Vendor Program + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.15.0
+ * Version:           0.16.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.15.0 (front-end listing submission form)
+ * LIS Directory — v0.16.0 (reviews, badges, bookmark/share/report/claim, richer submission form)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.15.0' );
+define( 'LIS_DIRECTORY_VERSION', '0.16.0' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
@@ -34,6 +34,9 @@ require_once LIS_DIRECTORY_PATH . 'includes/directorist-integration.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-cpt.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-meta.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-hours.php';
+require_once LIS_DIRECTORY_PATH . 'includes/listings-badges.php';
+require_once LIS_DIRECTORY_PATH . 'includes/listings-reviews.php';
+require_once LIS_DIRECTORY_PATH . 'includes/listings-actions.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-template.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-submission.php';
 
@@ -43,6 +46,7 @@ register_activation_hook( __FILE__, function () {
 	lis_directory_register_listing_cpt();
 	lis_directory_register_listing_taxonomy();
 	lis_directory_register_listing_feature_taxonomy();
+	lis_directory_register_flag_cpt();
 	flush_rewrite_rules();
 	if ( WP_DEBUG ) {
 		error_log( '[LIS Directory] Activated v' . LIS_DIRECTORY_VERSION );

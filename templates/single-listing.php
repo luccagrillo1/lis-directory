@@ -3,12 +3,15 @@
  * Single-listing template for `lis_listing`. Routed from
  * includes/listings-template.php unless a theme provides single-lis_listing.php.
  *
- * Structure follows the reference layout the client pointed to: image
- * gallery strip, header row (title/category/price/open-status), two-column
- * body (description+features+video / business hours sidebar). Reviews and
- * appointment booking from that reference are NOT built — those need a real
- * data model (review storage/moderation, a booking/slots system), not a
- * template addition, and are deliberately deferred.
+ * Structure follows the reference layout the client pointed to, expanded
+ * over several passes to match Directorist's own real field set (checked
+ * live via its Add Listing pricing-plan page, not guessed): gallery strip,
+ * header (title/category/badges/open-status/bookmark/share), two-column
+ * body (contact/description/features/services/video/social/reviews on the
+ * left, business hours on the right), a Report/Claim block. Not built:
+ * an embedded interactive map (needs a Google Maps API key this project
+ * doesn't have — the address already links out to Google Maps instead)
+ * and FAQs (needs a dynamic add/remove-row admin UI, not yet built).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,6 +32,16 @@ while ( have_posts() ) :
 	$email     = get_post_meta( $post_id, '_lis_listing_email', true );
 	$price     = get_post_meta( $post_id, '_lis_listing_price', true );
 	$video_url = get_post_meta( $post_id, '_lis_listing_video_url', true );
+	$services  = get_post_meta( $post_id, '_lis_listing_services', true );
+	$service_lines = $services ? array_filter( array_map( 'trim', explode( "\n", $services ) ) ) : array();
+
+	$social = array(
+		'Facebook'  => get_post_meta( $post_id, '_lis_listing_facebook', true ),
+		'Instagram' => get_post_meta( $post_id, '_lis_listing_instagram', true ),
+		'X / Twitter' => get_post_meta( $post_id, '_lis_listing_twitter', true ),
+		'LinkedIn'  => get_post_meta( $post_id, '_lis_listing_linkedin', true ),
+	);
+	$social = array_filter( $social );
 
 	$gallery_raw = get_post_meta( $post_id, '_lis_listing_gallery_ids', true );
 	$gallery_ids = $gallery_raw ? array_filter( array_map( 'absint', explode( ',', $gallery_raw ) ) ) : array();
@@ -39,8 +52,14 @@ while ( have_posts() ) :
 	$features = get_the_terms( $post_id, 'lis_listing_feature' );
 	$features = ( $features && ! is_wp_error( $features ) ) ? $features : array();
 
-	$is_open = lis_directory_is_listing_open_now( $post_id );
-	$week    = lis_directory_get_listing_week_hours( $post_id );
+	$is_open  = lis_directory_is_listing_open_now( $post_id );
+	$week     = lis_directory_get_listing_week_hours( $post_id );
+	$featured = (bool) get_post_meta( $post_id, '_lis_listing_featured', true );
+	$verified = (bool) get_post_meta( $post_id, '_lis_listing_verified', true );
+	$popular  = lis_directory_is_listing_popular( $post_id );
+
+	$avg_rating   = lis_directory_get_listing_average_rating( $post_id );
+	$review_count = lis_directory_get_listing_review_count( $post_id );
 
 	$video_embed_url = lis_directory_video_embed_url( $video_url );
 	?>
@@ -57,14 +76,26 @@ while ( have_posts() ) :
 		<?php endif; ?>
 
 		<div class="lis-listing-header">
-			<h1 class="lis-listing-title"><?php the_title(); ?></h1>
-			<div class="lis-listing-header-meta">
-				<?php if ( $category ) : ?><a class="lis-listing-category-badge" href="<?php echo esc_url( get_term_link( $category ) ); ?>"><?php echo esc_html( $category->name ); ?></a><?php endif; ?>
-				<?php if ( null !== $is_open ) : ?>
-					<span class="lis-listing-open-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>">
-						<?php echo $is_open ? 'Open now' : 'Closed now'; ?>
-					</span>
-				<?php endif; ?>
+			<div>
+				<h1 class="lis-listing-title"><?php the_title(); ?></h1>
+				<div class="lis-listing-header-meta">
+					<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
+					<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
+					<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Owner Verified</span><?php endif; ?>
+					<?php if ( $category ) : ?><a class="lis-listing-category-badge" href="<?php echo esc_url( get_term_link( $category ) ); ?>"><?php echo esc_html( $category->name ); ?></a><?php endif; ?>
+					<?php if ( null !== $is_open ) : ?>
+						<span class="lis-listing-open-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>">
+							<?php echo $is_open ? 'Open now' : 'Closed now'; ?>
+						</span>
+					<?php endif; ?>
+					<?php if ( $avg_rating ) : ?>
+						<span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?> <?php echo esc_html( $avg_rating ); ?> (<?php echo (int) $review_count; ?>)</span>
+					<?php endif; ?>
+				</div>
+			</div>
+			<div class="lis-listing-header-actions">
+				<button type="button" class="lis-listing-bookmark-btn">☆ Save</button>
+				<button type="button" class="lis-listing-share-btn">Share</button>
 			</div>
 		</div>
 
@@ -105,6 +136,17 @@ while ( have_posts() ) :
 					<div class="lis-listing-content"><?php the_content(); ?></div>
 				</div>
 
+				<?php if ( ! empty( $service_lines ) ) : ?>
+					<div class="lis-listing-section">
+						<h2>Services</h2>
+						<ul class="lis-listing-services-list">
+							<?php foreach ( $service_lines as $service ) : ?>
+								<li><?php echo esc_html( $service ); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endif; ?>
+
 				<?php if ( ! empty( $features ) ) : ?>
 					<div class="lis-listing-section">
 						<h2>Features</h2>
@@ -124,6 +166,57 @@ while ( have_posts() ) :
 						</div>
 					</div>
 				<?php endif; ?>
+
+				<?php if ( ! empty( $social ) ) : ?>
+					<div class="lis-listing-section">
+						<h2>Social</h2>
+						<div class="lis-listing-social-links">
+							<?php foreach ( $social as $label => $url ) : ?>
+								<a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $label ); ?></a>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				<?php endif; ?>
+
+				<div class="lis-listing-section">
+					<h2>Reviews <?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?> <?php echo esc_html( $avg_rating ); ?> (<?php echo (int) $review_count; ?> review<?php echo 1 === $review_count ? '' : 's'; ?>)</span><?php endif; ?></h2>
+					<?php
+					if ( comments_open() || $review_count ) {
+						comments_template();
+					}
+					?>
+				</div>
+
+				<div class="lis-listing-section lis-listing-flag-actions">
+					<?php if ( is_user_logged_in() ) : ?>
+						<?php if ( ! $verified ) : ?>
+							<details class="lis-listing-flag-form">
+								<summary>Claim this listing</summary>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+									<input type="hidden" name="action" value="lis_directory_submit_claim" />
+									<input type="hidden" name="listing_id" value="<?php echo (int) $post_id; ?>" />
+									<input type="hidden" name="redirect_to" value="<?php echo esc_url( get_permalink() ); ?>" />
+									<?php wp_nonce_field( 'lis_listing_claim', 'lis_listing_claim_nonce' ); ?>
+									<p><label>Tell us how you're connected to this business (optional)<br /><textarea name="message" rows="2"></textarea></label></p>
+									<p><button type="submit">Submit Claim</button></p>
+								</form>
+							</details>
+						<?php endif; ?>
+						<details class="lis-listing-flag-form">
+							<summary>Report this listing</summary>
+							<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+								<input type="hidden" name="action" value="lis_directory_submit_report" />
+								<input type="hidden" name="listing_id" value="<?php echo (int) $post_id; ?>" />
+								<input type="hidden" name="redirect_to" value="<?php echo esc_url( get_permalink() ); ?>" />
+								<?php wp_nonce_field( 'lis_listing_report', 'lis_listing_report_nonce' ); ?>
+								<p><label>What's wrong with this listing?<br /><textarea name="reason" rows="2" required></textarea></label></p>
+								<p><button type="submit">Submit Report</button></p>
+							</form>
+						</details>
+					<?php else : ?>
+						<p><a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">Log in</a> to claim or report this listing.</p>
+					<?php endif; ?>
+				</div>
 
 			</div>
 

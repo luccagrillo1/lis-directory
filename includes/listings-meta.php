@@ -25,6 +25,11 @@ function lis_directory_register_listing_meta() {
 		'_lis_listing_price'        => 'string',
 		'_lis_listing_video_url'    => 'string',
 		'_lis_listing_gallery_ids'  => 'string', // Comma-separated attachment IDs.
+		'_lis_listing_services'     => 'string', // One service per line.
+		'_lis_listing_facebook'     => 'string',
+		'_lis_listing_instagram'    => 'string',
+		'_lis_listing_twitter'      => 'string',
+		'_lis_listing_linkedin'     => 'string',
 	);
 
 	foreach ( $string_fields as $key => $type ) {
@@ -61,6 +66,11 @@ function lis_directory_render_listing_meta_box( $post ) {
 	$video_url  = get_post_meta( $post->ID, '_lis_listing_video_url', true );
 	$gallery_raw = get_post_meta( $post->ID, '_lis_listing_gallery_ids', true );
 	$gallery_ids = $gallery_raw ? array_filter( array_map( 'absint', explode( ',', $gallery_raw ) ) ) : array();
+	$services   = get_post_meta( $post->ID, '_lis_listing_services', true );
+	$facebook   = get_post_meta( $post->ID, '_lis_listing_facebook', true );
+	$instagram  = get_post_meta( $post->ID, '_lis_listing_instagram', true );
+	$twitter    = get_post_meta( $post->ID, '_lis_listing_twitter', true );
+	$linkedin   = get_post_meta( $post->ID, '_lis_listing_linkedin', true );
 	?>
 	<table class="form-table">
 		<tr>
@@ -98,6 +108,26 @@ function lis_directory_render_listing_meta_box( $post ) {
 				</div>
 				<button type="button" class="button lis-listing-gallery-select">Select Images</button>
 				<p class="description">Pick as many as you like — shown as a strip at the top of the listing page.</p>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="lis_listing_services">Services</label></th>
+			<td>
+				<textarea id="lis_listing_services" name="lis_listing_services" class="large-text" rows="4"><?php echo esc_textarea( $services ); ?></textarea>
+				<p class="description">One service per line.</p>
+			</td>
+		</tr>
+		<tr>
+			<th>Social Media</th>
+			<td>
+				<p><label for="lis_listing_facebook">Facebook</label><br />
+				<input type="url" id="lis_listing_facebook" name="lis_listing_facebook" class="large-text" value="<?php echo esc_attr( $facebook ); ?>" placeholder="https://facebook.com/..." /></p>
+				<p><label for="lis_listing_instagram">Instagram</label><br />
+				<input type="url" id="lis_listing_instagram" name="lis_listing_instagram" class="large-text" value="<?php echo esc_attr( $instagram ); ?>" placeholder="https://instagram.com/..." /></p>
+				<p><label for="lis_listing_twitter">X / Twitter</label><br />
+				<input type="url" id="lis_listing_twitter" name="lis_listing_twitter" class="large-text" value="<?php echo esc_attr( $twitter ); ?>" placeholder="https://x.com/..." /></p>
+				<p><label for="lis_listing_linkedin">LinkedIn</label><br />
+				<input type="url" id="lis_listing_linkedin" name="lis_listing_linkedin" class="large-text" value="<?php echo esc_attr( $linkedin ); ?>" placeholder="https://linkedin.com/..." /></p>
 			</td>
 		</tr>
 	</table>
@@ -149,6 +179,15 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 	if ( isset( $_POST['lis_listing_gallery_ids'] ) ) {
 		$ids = array_filter( array_map( 'absint', explode( ',', wp_unslash( $_POST['lis_listing_gallery_ids'] ) ) ) );
 		update_post_meta( $post_id, '_lis_listing_gallery_ids', implode( ',', $ids ) );
+	}
+	if ( isset( $_POST['lis_listing_services'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_services', sanitize_textarea_field( wp_unslash( $_POST['lis_listing_services'] ) ) );
+	}
+	foreach ( array( 'facebook', 'instagram', 'twitter', 'linkedin' ) as $network ) {
+		$field = "lis_listing_{$network}";
+		if ( isset( $_POST[ $field ] ) ) {
+			update_post_meta( $post_id, "_{$field}", esc_url_raw( wp_unslash( $_POST[ $field ] ) ) );
+		}
 	}
 }
 

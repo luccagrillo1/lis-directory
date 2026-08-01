@@ -53,7 +53,7 @@ function lis_directory_register_listing_cpt() {
 			'slug'       => 'listings',
 			'with_front' => false,
 		),
-		'supports'           => array( 'title', 'editor', 'thumbnail', 'author', 'revisions', 'excerpt' ),
+		'supports'           => array( 'title', 'editor', 'thumbnail', 'author', 'revisions', 'excerpt', 'comments' ),
 		'capability_type'    => 'post',
 		'hierarchical'       => false,
 		'taxonomies'         => array( 'lis_listing_category', 'lis_listing_feature' ),

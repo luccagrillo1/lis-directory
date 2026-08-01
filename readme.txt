@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.15.0
+Stable tag: 0.16.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -124,6 +124,24 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.16.0 =
+* Matched Directorist's real field set (checked live, not guessed):
+  submission form now also covers video, services, and social media links.
+* Reviews — built on WordPress's own comment system (star rating as
+  comment meta), so it inherits Akismet spam filtering and the existing
+  Comments moderation screen for free. Reviews always land pending,
+  regardless of the site's general comment-approval setting.
+* Featured / Popular / Owner Verified badges. Featured and Verified are
+  editorial (admin-set or claim-approved); Popular is computed from a
+  view-count threshold, tracked automatically per listing.
+* Bookmark (save/unsave, per logged-in user), Share (native share sheet or
+  copy-link), Report, and Claim — Report/Claim share one lightweight
+  "Claims & Reports" admin screen; approving a claim marks the listing
+  Owner Verified and reassigns it to the claimant.
+* Not built: an embedded interactive map (needs a Google Maps API key this
+  project doesn't have yet — the address already links out to Google Maps)
+  and FAQs (needs a dynamic add/remove-row admin UI).
 
 = 0.15.0 =
 * Added `[lis_listing_submit]` — front-end listing submission, same pattern

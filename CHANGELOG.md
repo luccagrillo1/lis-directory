@@ -7,6 +7,92 @@ This file is the authoritative project history.
 
 ---
 
+## [0.16.0] — 2026-07-31 — Reviews, badges, bookmark/share/report/claim
+
+### Context
+
+Direct follow-up on v0.15.0's submission form: client said it "isn't as
+robust as it should be" and asked to match Directorist's own real field
+set — checked live on this site (Add Listing pricing-plan comparison at
+`/services/local-directory/add-listing-2/?directory_type=local-business-directory`,
+stopped short of the actual paid checkout step) rather than guessed:
+Business Name, Address, Phone, Email, Website, Photos, Video, Services,
+Social Media, Map, Business Hours, FAQs, Customer Reviews, Claim Badge.
+Then, in the same pass: Bookmark/Share/Report (visible in the original
+reference screenshot's card actions), and Featured/Popular/Owner Verified
+badges.
+
+### Added: submission form now covers Video, Services, Social Media
+
+- **`includes/listings-submission.php`** / **`includes/listings-meta.php`**:
+  added Video URL, Services (one per line, stored as a newline-delimited
+  string — not a dynamic repeater), and four social links (Facebook,
+  Instagram, X/Twitter, LinkedIn) to both the public form and the admin
+  meta box, with matching save logic in both.
+- Submission form markup restructured into labeled sections
+  (`.lis-listing-submit-section`) with real CSS instead of bare `<p>`
+  tags — the "needs to look better" half of the request.
+
+### Added: Reviews (`includes/listings-reviews.php`)
+
+Built on WordPress's own comment system rather than a parallel table —
+this site already has Akismet active, and wp-admin's Comments screen
+already has moderation/reply/notification UI a custom system would have
+to rebuild badly. Only additions needed:
+- `register_comment_meta( 'rating', ... )` — 1-5 stars.
+- `preprocess_comment` rejects a review with no rating (`wp_die()`, same
+  mechanism core uses for its own comment validation).
+- `pre_comment_approved` forces every `lis_listing` comment to pending,
+  regardless of Settings > Discussion's general auto-approve setting — a
+  review should always be moderated even if blog comments aren't.
+- `comment_form_before_fields` injects a star-rating radio group;
+  `comment_text` filter prepends rendered stars (★☆ glyphs, no icon font)
+  to each review's text; `comment_form_defaults` relabels the form
+  "Leave a Review" / "Submit Review" — all filter-based, so it works with
+  the active theme's own `comments.php` without a template override.
+- `lis_directory_get_listing_average_rating()` returns `null` (not `0`)
+  when a listing has no reviews yet, so templates can show "no reviews"
+  instead of a misleading 0.0.
+
+### Added: Featured / Popular / Owner Verified badges (`includes/listings-badges.php`)
+
+- Featured and Verified are editorial — a new "Badges" side meta box,
+  gated on `edit_others_posts` (not the listing owner's own call to make).
+- Popular is computed, not set: `template_redirect` increments a raw view
+  counter on every single-listing pageview (no visitor dedup — enough to
+  badge "popular", not analytics-grade), badge shows above a threshold
+  constant (`LIS_DIRECTORY_POPULAR_VIEW_THRESHOLD`, currently 20).
+- Verified gets set automatically by claim approval, not directly editable
+  in the normal case (the checkbox exists for the manual-override case).
+
+### Added: Bookmark / Share / Report / Claim (`includes/listings-actions.php`)
+
+- **Bookmark**: usermeta array (`_lis_listing_bookmarks`) toggled via a
+  small `wp_ajax_` handler (`assets/js/listing-actions.js`), nonce-checked,
+  logged-in only (redirects to login otherwise).
+- **Share**: no server component — Web Share API where available, clipboard
+  copy fallback, pure front-end.
+- **Report** and **Claim** share one lightweight, non-public
+  `lis_listing_flag` post type (own "Claims & Reports" admin screen under
+  Listings) instead of two separate systems — both are "something needs a
+  human's attention on this listing," differing only in `_flag_type`.
+  Reusing WordPress's own post-list UI (Edit/Trash/search) rather than a
+  custom admin screen.
+- Approving a claim (`lis_directory_handle_claim_approval()`, nonce-gated,
+  requires `edit_others_posts`) sets `_lis_listing_verified` and reassigns
+  the listing's `post_author` to the claimant in one action.
+
+### Deliberately not built
+
+An embedded interactive map — Directorist's plan comparison lists "Map,"
+but that needs a Google Maps JavaScript API key, a credential this project
+doesn't have and shouldn't provision without being asked; the address
+already links out to Google Maps (built in v0.14.0), which covers the
+practical need without the API dependency. FAQs need a dynamic
+add/remove-row admin UI, not yet built — noted, not silently dropped.
+
+---
+
 ## [0.15.0] — 2026-07-31 — Front-end listing submission form
 
 ### Context

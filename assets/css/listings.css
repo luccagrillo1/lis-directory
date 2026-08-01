@@ -12,7 +12,7 @@
 
 .lis-listing-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 	gap: 24px;
 }
 
@@ -393,4 +393,279 @@
 	cursor: pointer;
 	font-size: 12px;
 	padding: 0;
+}
+
+/* ---------- Badges: Featured / Popular / Verified ---------- */
+
+.lis-listing-badge {
+	display: inline-block;
+	font-size: 0.78em;
+	font-weight: 600;
+	padding: 3px 9px;
+	border-radius: 999px;
+}
+
+.lis-listing-badge--featured {
+	color: #8a5a00;
+	background: #fdf0d5;
+}
+
+.lis-listing-badge--popular {
+	color: #a13a7a;
+	background: #fbe9f4;
+}
+
+.lis-listing-badge--verified {
+	color: #2e7d32;
+	background: #e6f4ea;
+}
+
+.lis-listing-rating-summary {
+	font-size: 0.85em;
+	color: #666;
+	white-space: nowrap;
+}
+
+/* ---------- Header actions: bookmark / share ---------- */
+
+.lis-listing-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+.lis-listing-header-actions {
+	display: flex;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.lis-listing-bookmark-btn,
+.lis-listing-share-btn {
+	font-size: 0.85em;
+	padding: 7px 14px;
+	border-radius: 8px;
+	border: 1px solid #ddd;
+	background: #fff;
+	cursor: pointer;
+	color: #444;
+}
+
+.lis-listing-bookmark-btn:hover,
+.lis-listing-share-btn:hover {
+	border-color: #576846;
+	color: #576846;
+}
+
+.lis-listing-bookmark-btn.is-bookmarked {
+	background: #eef1e9;
+	border-color: #576846;
+	color: #576846;
+}
+
+/* ---------- Services / social links ---------- */
+
+.lis-listing-services-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 8px;
+}
+
+.lis-listing-services-list li {
+	font-size: 0.92em;
+	color: #444;
+	padding: 6px 10px;
+	background: #f7f7f5;
+	border-radius: 6px;
+}
+
+.lis-listing-social-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.lis-listing-social-links a {
+	font-size: 0.9em;
+	color: #576846;
+	background: #eef1e9;
+	padding: 6px 14px;
+	border-radius: 999px;
+	text-decoration: none;
+}
+
+.lis-listing-social-links a:hover {
+	background: #dfe6d6;
+}
+
+/* ---------- Reviews ---------- */
+
+.lis-listing-review-stars {
+	color: #d99a2b;
+	display: block;
+	margin-bottom: 4px;
+	letter-spacing: 1px;
+}
+
+.lis-listing-rating-field .lis-listing-rating-stars {
+	display: inline-flex;
+	gap: 8px;
+	margin-left: 8px;
+}
+
+.lis-listing-rating-field label {
+	font-weight: normal;
+}
+
+/* ---------- Claim / Report ---------- */
+
+.lis-listing-flag-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.lis-listing-flag-form {
+	border: 1px solid #eee;
+	border-radius: 8px;
+	padding: 10px 16px;
+}
+
+.lis-listing-flag-form summary {
+	cursor: pointer;
+	font-weight: 600;
+	color: #576846;
+}
+
+.lis-listing-flag-form form {
+	margin-top: 10px;
+}
+
+.lis-listing-flag-form textarea {
+	width: 100%;
+	max-width: 480px;
+}
+
+/* ---------- Submission form ---------- */
+
+.lis-listing-submit-form {
+	max-width: 640px;
+}
+
+.lis-listing-submit-section {
+	border: 1px solid #eee;
+	border-radius: 10px;
+	padding: 18px 20px;
+	margin-bottom: 20px;
+	background: #fafafa;
+}
+
+.lis-listing-submit-section h3 {
+	margin: 0 0 14px 0;
+	font-size: 1.05em;
+}
+
+.lis-listing-submit-section p {
+	margin: 0 0 14px 0;
+}
+
+.lis-listing-submit-section label {
+	display: block;
+	font-weight: 600;
+	font-size: 0.88em;
+	color: #555;
+	margin-bottom: 5px;
+}
+
+.lis-listing-submit-section input[type="text"],
+.lis-listing-submit-section input[type="email"],
+.lis-listing-submit-section input[type="url"],
+.lis-listing-submit-section input[type="file"],
+.lis-listing-submit-section textarea,
+.lis-listing-submit-section select {
+	width: 100%;
+	max-width: 420px;
+	padding: 8px 10px;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	font-size: 0.95em;
+	box-sizing: border-box;
+}
+
+.lis-listing-submit-section small {
+	display: block;
+	color: #888;
+	margin-top: 4px;
+	font-weight: normal;
+}
+
+.lis-listing-submit-hours-table th {
+	text-align: left;
+	font-weight: normal;
+	padding: 4px 0;
+	width: 90px;
+}
+
+.lis-listing-submit-hours-table td {
+	padding: 4px 0;
+}
+
+.lis-listing-submit-hours-table span {
+	margin: 0 6px;
+	color: #888;
+}
+
+.lis-listing-submit-checkbox-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 8px;
+}
+
+.lis-listing-submit-checkbox {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: normal;
+	font-size: 0.9em;
+	color: #444;
+}
+
+.lis-listing-submit-button {
+	background: #576846;
+	color: #fff;
+	border: none;
+	padding: 12px 28px;
+	border-radius: 8px;
+	font-size: 1em;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.lis-listing-submit-button:hover {
+	background: #465538;
+}
+
+.lis-listing-submit-success {
+	background: #e6f4ea;
+	color: #2e7d32;
+	padding: 12px 16px;
+	border-radius: 8px;
+	margin-bottom: 20px;
+}
+
+.lis-listing-submit-errors {
+	background: #fbe9e9;
+	color: #a12a2a;
+	padding: 12px 16px;
+	border-radius: 8px;
+	margin-bottom: 20px;
+}
+
+.lis-listing-submit-errors ul {
+	margin: 6px 0 0 18px;
 }

@@ -8,14 +8,19 @@
  * Unlike the vendor form, this doesn't need a custom '_lis_pv_status'-style
  * workflow meta: `lis_listing` has no "one active per category" concept to
  * enforce, so submissions land as native WordPress `pending` post status —
- * an editor reviews and clicks Publish in the normal admin editor, using
- * the existing "Listing Details" meta box (includes/listings-meta.php)
- * already built for admin-created listings.
+ * an editor reviews and clicks Publish in the normal admin editor.
+ *
+ * v0.15.0 shipped with a deliberately minimal field set (one photo, no
+ * hours/features) to keep the form short. Widened in v0.15.1 to cover
+ * business hours and features too, on request — those are real parts of a
+ * listing, not admin-only follow-ups, once the form exists at all.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+define( 'LIS_DIRECTORY_SUBMIT_MAX_PHOTOS', 6 );
 
 add_shortcode( 'lis_listing_submit', 'lis_directory_render_listing_submission_form_shortcode' );
 add_action( 'admin_post_lis_directory_submit_listing', 'lis_directory_handle_listing_submission' );
@@ -35,7 +40,11 @@ function lis_directory_render_listing_submission_form_shortcode() {
 
 	$current_url  = remove_query_arg( array( 'lis_listing_submitted', 'lis_listing_error' ) );
 	$current_user = wp_get_current_user();
-	$terms        = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false ) );
+	$cat_terms    = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false ) );
+	$feature_terms = get_terms( array( 'taxonomy' => 'lis_listing_feature', 'hide_empty' => false ) );
+	if ( is_wp_error( $feature_terms ) ) {
+		$feature_terms = array();
+	}
 
 	ob_start();
 
@@ -59,7 +68,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		<?php
 	}
 
-	if ( is_wp_error( $terms ) || empty( $terms ) ) {
+	if ( is_wp_error( $cat_terms ) || empty( $cat_terms ) ) {
 		echo lis_directory_card_admin_hint( 'No listing categories exist yet — create some under LIS Listings > Categories before showing this form.' ); // phpcs:ignore -- escaped inside helper.
 		return ob_get_clean();
 	}
@@ -74,53 +83,119 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			<input type="text" id="lis_listing_hp" name="lis_listing_hp" tabindex="-1" autocomplete="off" />
 		</div>
 
-		<p>
-			<label for="lis_listing_business_name">Business Name</label><br />
-			<input type="text" id="lis_listing_business_name" name="lis_listing_business_name" required />
-		</p>
+		<div class="lis-listing-submit-section">
+			<h3>Basics</h3>
+			<p>
+				<label for="lis_listing_business_name">Business Name</label>
+				<input type="text" id="lis_listing_business_name" name="lis_listing_business_name" required />
+			</p>
+			<p>
+				<label for="lis_listing_category">Category</label>
+				<select id="lis_listing_category" name="lis_listing_category" required>
+					<option value="">— Select a category —</option>
+					<?php foreach ( $cat_terms as $term ) : ?>
+						<option value="<?php echo esc_attr( $term->term_id ); ?>"><?php echo esc_html( $term->name ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</p>
+			<p>
+				<label for="lis_listing_description">Description</label>
+				<textarea id="lis_listing_description" name="lis_listing_description" rows="4"></textarea>
+			</p>
+		</div>
 
-		<p>
-			<label for="lis_listing_category">Category</label><br />
-			<select id="lis_listing_category" name="lis_listing_category" required>
-				<option value="">— Select a category —</option>
-				<?php foreach ( $terms as $term ) : ?>
-					<option value="<?php echo esc_attr( $term->term_id ); ?>"><?php echo esc_html( $term->name ); ?></option>
+		<div class="lis-listing-submit-section">
+			<h3>Contact</h3>
+			<p>
+				<label for="lis_listing_address">Address</label>
+				<input type="text" id="lis_listing_address" name="lis_listing_address" />
+			</p>
+			<p>
+				<label for="lis_listing_phone">Phone</label>
+				<input type="text" id="lis_listing_phone" name="lis_listing_phone" />
+			</p>
+			<p>
+				<label for="lis_listing_website">Website</label>
+				<input type="url" id="lis_listing_website" name="lis_listing_website" placeholder="https://" />
+			</p>
+			<p>
+				<label for="lis_listing_email">Contact Email</label>
+				<input type="email" id="lis_listing_email" name="lis_listing_email" value="<?php echo esc_attr( $current_user->user_email ); ?>" required />
+			</p>
+		</div>
+
+		<div class="lis-listing-submit-section">
+			<h3>Photos &amp; Video</h3>
+			<p>
+				<label for="lis_listing_photos">Photos (PNG or JPG, at least one required — up to <?php echo (int) LIS_DIRECTORY_SUBMIT_MAX_PHOTOS; ?>)</label>
+				<input type="file" id="lis_listing_photos" name="lis_listing_photos[]" accept="image/png,image/jpeg" multiple required />
+				<small>The first one becomes the main photo; the rest form the gallery.</small>
+			</p>
+			<p>
+				<label for="lis_listing_video_url">Video</label>
+				<input type="url" id="lis_listing_video_url" name="lis_listing_video_url" placeholder="YouTube or Vimeo link" />
+			</p>
+		</div>
+
+		<div class="lis-listing-submit-section">
+			<h3>Business Hours <small>(leave a day blank if closed)</small></h3>
+			<table class="lis-listing-submit-hours-table">
+				<?php foreach ( LIS_DIRECTORY_WEEKDAYS as $day => $label ) : ?>
+					<tr>
+						<th><label for="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open"><?php echo esc_html( $label ); ?></label></th>
+						<td>
+							<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" />
+							<span>to</span>
+							<input type="time" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" />
+						</td>
+					</tr>
 				<?php endforeach; ?>
-			</select>
-		</p>
+			</table>
+		</div>
 
-		<p>
-			<label for="lis_listing_description">Description</label><br />
-			<textarea id="lis_listing_description" name="lis_listing_description" rows="4"></textarea>
-		</p>
+		<div class="lis-listing-submit-section">
+			<h3>Services</h3>
+			<p>
+				<label for="lis_listing_services">One per line</label>
+				<textarea id="lis_listing_services" name="lis_listing_services" rows="4" placeholder="Oil changes&#10;Tire rotation&#10;Brake inspection"></textarea>
+			</p>
+		</div>
 
-		<p>
-			<label for="lis_listing_address">Address</label><br />
-			<input type="text" id="lis_listing_address" name="lis_listing_address" />
-		</p>
+		<?php if ( ! empty( $feature_terms ) ) : ?>
+			<div class="lis-listing-submit-section">
+				<h3>Features</h3>
+				<div class="lis-listing-submit-checkbox-grid">
+					<?php foreach ( $feature_terms as $feature ) : ?>
+						<label class="lis-listing-submit-checkbox">
+							<input type="checkbox" name="lis_listing_features[]" value="<?php echo esc_attr( $feature->term_id ); ?>" />
+							<?php echo esc_html( $feature->name ); ?>
+						</label>
+					<?php endforeach; ?>
+				</div>
+			</div>
+		<?php endif; ?>
 
-		<p>
-			<label for="lis_listing_phone">Phone</label><br />
-			<input type="text" id="lis_listing_phone" name="lis_listing_phone" />
-		</p>
+		<div class="lis-listing-submit-section">
+			<h3>Social Media</h3>
+			<p>
+				<label for="lis_listing_facebook">Facebook</label>
+				<input type="url" id="lis_listing_facebook" name="lis_listing_facebook" placeholder="https://facebook.com/..." />
+			</p>
+			<p>
+				<label for="lis_listing_instagram">Instagram</label>
+				<input type="url" id="lis_listing_instagram" name="lis_listing_instagram" placeholder="https://instagram.com/..." />
+			</p>
+			<p>
+				<label for="lis_listing_twitter">X / Twitter</label>
+				<input type="url" id="lis_listing_twitter" name="lis_listing_twitter" placeholder="https://x.com/..." />
+			</p>
+			<p>
+				<label for="lis_listing_linkedin">LinkedIn</label>
+				<input type="url" id="lis_listing_linkedin" name="lis_listing_linkedin" placeholder="https://linkedin.com/..." />
+			</p>
+		</div>
 
-		<p>
-			<label for="lis_listing_website">Website</label><br />
-			<input type="url" id="lis_listing_website" name="lis_listing_website" placeholder="https://" />
-		</p>
-
-		<p>
-			<label for="lis_listing_email">Contact Email</label><br />
-			<input type="email" id="lis_listing_email" name="lis_listing_email" value="<?php echo esc_attr( $current_user->user_email ); ?>" required />
-		</p>
-
-		<p>
-			<label for="lis_listing_photo">Photo (PNG or JPG, required)</label><br />
-			<input type="file" id="lis_listing_photo" name="lis_listing_photo" accept="image/png,image/jpeg" required />
-			<br /><small>Shown as the listing's main photo. More photos, business hours, and features can be added once you're published — just ask.</small>
-		</p>
-
-		<p><button type="submit">Submit for Review</button></p>
+		<p><button type="submit" class="lis-listing-submit-button">Submit for Review</button></p>
 	</form>
 	<?php
 	return ob_get_clean();
@@ -128,14 +203,14 @@ function lis_directory_render_listing_submission_form_shortcode() {
 
 function lis_directory_listing_submission_error_message( $key ) {
 	$messages = array(
-		'business_name'          => 'Business name is required.',
-		'category'                => 'Please select a valid category.',
-		'email'                   => 'A valid contact email is required.',
-		'lis_listing_photo'              => 'A photo is required.',
-		'lis_listing_photo_type'         => 'Photo must be a real PNG or JPG file.',
-		'lis_listing_photo_too_large'    => 'Photo must be under 2MB.',
-		'lis_listing_photo_upload_failed' => 'Photo failed to upload — please try again.',
-		'save_failed'             => 'Something went wrong saving your submission — please try again.',
+		'business_name'                     => 'Business name is required.',
+		'category'                          => 'Please select a valid category.',
+		'email'                              => 'A valid contact email is required.',
+		'lis_listing_photos'                => 'At least one photo is required.',
+		'lis_listing_photos_type'           => 'Photos must be real PNG or JPG files.',
+		'lis_listing_photos_too_large'      => 'Each photo must be under 2MB.',
+		'lis_listing_photos_upload_failed'  => 'One or more photos failed to upload — please try again.',
+		'save_failed'                       => 'Something went wrong saving your submission — please try again.',
 	);
 	return isset( $messages[ $key ] ) ? $messages[ $key ] : 'Please check your submission and try again.';
 }
@@ -187,19 +262,19 @@ function lis_directory_handle_listing_submission() {
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
-	$photo_id = lis_directory_handle_listing_photo_upload( 'lis_listing_photo', true, $errors );
+	$photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', true, $errors );
 
 	if ( ! empty( $errors ) ) {
-		wp_safe_redirect( add_query_arg( 'lis_listing_error', implode( ',', $errors ), $redirect_base ) );
+		wp_safe_redirect( add_query_arg( 'lis_listing_error', implode( ',', array_unique( $errors ) ), $redirect_base ) );
 		exit;
 	}
 
 	$post_id = wp_insert_post( array(
-		'post_type'   => 'lis_listing',
-		'post_title'  => $business_name,
+		'post_type'    => 'lis_listing',
+		'post_title'   => $business_name,
 		'post_content' => $description,
-		'post_status' => 'pending', // Native WP pending — reviewed/published from the normal admin editor.
-		'post_author' => get_current_user_id(),
+		'post_status'  => 'pending', // Native WP pending — reviewed/published from the normal admin editor.
+		'post_author'  => get_current_user_id(),
 	), true );
 
 	if ( is_wp_error( $post_id ) ) {
@@ -213,63 +288,155 @@ function lis_directory_handle_listing_submission() {
 	update_post_meta( $post_id, '_lis_listing_phone', $phone );
 	update_post_meta( $post_id, '_lis_listing_website', $website );
 	update_post_meta( $post_id, '_lis_listing_email', $email );
-	if ( $photo_id ) {
-		set_post_thumbnail( $post_id, $photo_id );
+
+	if ( ! empty( $photo_ids ) ) {
+		set_post_thumbnail( $post_id, $photo_ids[0] );
+		update_post_meta( $post_id, '_lis_listing_gallery_ids', implode( ',', $photo_ids ) );
 	}
+
+	if ( ! empty( $_POST['lis_listing_video_url'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_video_url', esc_url_raw( wp_unslash( $_POST['lis_listing_video_url'] ) ) );
+	}
+	if ( ! empty( $_POST['lis_listing_services'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_services', sanitize_textarea_field( wp_unslash( $_POST['lis_listing_services'] ) ) );
+	}
+	foreach ( array( 'facebook', 'instagram', 'twitter', 'linkedin' ) as $network ) {
+		$field = "lis_listing_{$network}";
+		if ( ! empty( $_POST[ $field ] ) ) {
+			update_post_meta( $post_id, "_{$field}", esc_url_raw( wp_unslash( $_POST[ $field ] ) ) );
+		}
+	}
+
+	lis_directory_save_submitted_hours( $post_id );
+	lis_directory_save_submitted_features( $post_id );
 
 	wp_safe_redirect( add_query_arg( 'lis_listing_submitted', '1', $redirect_base ) );
 	exit;
 }
 
 /**
- * Validates and sideloads the listing photo. PNG or JPG (unlike the vendor
- * logo upload, this photo is never CSS-recolored, so there's no reason to
- * restrict to PNG-only). Same real-mime-type + getimagesize() validation
- * pattern as lis_directory_handle_logo_upload() in includes/submission.php.
+ * Same HH:MM validation as the admin meta box save
+ * (lis_directory_save_listing_hours_meta_box() in includes/listings-hours.php)
+ * — blank means closed that day, anything not matching HH:MM is silently
+ * dropped rather than stored malformed.
  */
-function lis_directory_handle_listing_photo_upload( $field_name, $required, array &$errors ) {
-	$has_file = ! empty( $_FILES[ $field_name ]['name'] ) && UPLOAD_ERR_NO_FILE !== $_FILES[ $field_name ]['error'];
+function lis_directory_save_submitted_hours( $post_id ) {
+	foreach ( array_keys( LIS_DIRECTORY_WEEKDAYS ) as $day ) {
+		foreach ( array( 'open', 'close' ) as $edge ) {
+			$field = "lis_listing_hours_{$day}_{$edge}";
+			if ( ! isset( $_POST[ $field ] ) ) {
+				continue;
+			}
+			$value = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
+			if ( '' === $value || preg_match( '/^\d{2}:\d{2}$/', $value ) ) {
+				update_post_meta( $post_id, "_{$field}", $value );
+			}
+		}
+	}
+}
 
-	if ( ! $has_file ) {
+/**
+ * Only accepts feature IDs that resolve to real, existing lis_listing_feature
+ * terms — a public form must not be able to create arbitrary new taxonomy
+ * terms via a tampered request.
+ */
+function lis_directory_save_submitted_features( $post_id ) {
+	if ( empty( $_POST['lis_listing_features'] ) || ! is_array( $_POST['lis_listing_features'] ) ) {
+		return;
+	}
+	$submitted_ids = array_map( 'absint', wp_unslash( $_POST['lis_listing_features'] ) );
+	$valid_ids     = array();
+	foreach ( $submitted_ids as $term_id ) {
+		$term = get_term( $term_id, 'lis_listing_feature' );
+		if ( $term && ! is_wp_error( $term ) ) {
+			$valid_ids[] = $term->term_id;
+		}
+	}
+	if ( ! empty( $valid_ids ) ) {
+		wp_set_post_terms( $post_id, $valid_ids, 'lis_listing_feature' );
+	}
+}
+
+/**
+ * Validates and sideloads every file in a multi-file input
+ * (`name="field[]"` + `multiple`). PNG or JPG — unlike the vendor logo
+ * upload, these photos are never CSS-recolored, so there's no reason to
+ * restrict to PNG-only. Same real-mime-type + getimagesize() validation as
+ * lis_directory_handle_logo_upload() in includes/submission.php, just
+ * looped per file since PHP's multi-file $_FILES shape isn't compatible
+ * with media_handle_upload() (which reads a single named field directly) —
+ * media_handle_sideload() is used instead, which takes an explicit file
+ * array rather than reading $_FILES itself.
+ *
+ * @return int[] Attachment IDs of everything that uploaded successfully.
+ */
+function lis_directory_handle_listing_photos_upload( $field_name, $required, array &$errors ) {
+	if ( empty( $_FILES[ $field_name ] ) || empty( $_FILES[ $field_name ]['name'] ) ) {
 		if ( $required ) {
 			$errors[] = $field_name;
 		}
-		return 0;
+		return array();
 	}
 
-	if ( UPLOAD_ERR_OK !== $_FILES[ $field_name ]['error'] ) {
-		$errors[] = $field_name . '_upload_failed';
-		return 0;
+	$files    = $_FILES[ $field_name ];
+	$count    = min( count( (array) $files['name'] ), LIS_DIRECTORY_SUBMIT_MAX_PHOTOS );
+	$has_any  = false;
+	$ids      = array();
+
+	for ( $i = 0; $i < $count; $i++ ) {
+		if ( UPLOAD_ERR_NO_FILE === $files['error'][ $i ] ) {
+			continue;
+		}
+		$has_any = true;
+
+		$file = array(
+			'name'     => $files['name'][ $i ],
+			'type'     => $files['type'][ $i ],
+			'tmp_name' => $files['tmp_name'][ $i ],
+			'error'    => $files['error'][ $i ],
+			'size'     => $files['size'][ $i ],
+		);
+
+		if ( UPLOAD_ERR_OK !== $file['error'] ) {
+			$errors[] = $field_name . '_upload_failed';
+			continue;
+		}
+
+		$max_bytes = 2 * MB_IN_BYTES;
+		if ( $file['size'] > $max_bytes ) {
+			$errors[] = $field_name . '_too_large';
+			continue;
+		}
+
+		$filetype = wp_check_filetype_and_ext( $file['tmp_name'], $file['name'] );
+		if ( empty( $filetype['ext'] ) || ! in_array( $filetype['ext'], array( 'jpg', 'jpeg', 'png' ), true ) ) {
+			$errors[] = $field_name . '_type';
+			continue;
+		}
+
+		// Extension can lie; confirm the bytes actually decode as an image.
+		if ( false === @getimagesize( $file['tmp_name'] ) ) { // phpcs:ignore -- deliberate suppression, failure handled below.
+			$errors[] = $field_name . '_type';
+			continue;
+		}
+
+		add_filter( 'upload_mimes', 'lis_directory_restrict_listing_photo_mimes' );
+		$attachment_id = media_handle_sideload( $file, 0 );
+		remove_filter( 'upload_mimes', 'lis_directory_restrict_listing_photo_mimes' );
+
+		if ( is_wp_error( $attachment_id ) ) {
+			$errors[] = $field_name . '_upload_failed';
+			continue;
+		}
+
+		$ids[] = (int) $attachment_id;
 	}
 
-	$max_bytes = 2 * MB_IN_BYTES;
-	if ( $_FILES[ $field_name ]['size'] > $max_bytes ) {
-		$errors[] = $field_name . '_too_large';
-		return 0;
+	if ( ! $has_any && $required ) {
+		$errors[] = $field_name;
 	}
 
-	$filetype = wp_check_filetype_and_ext( $_FILES[ $field_name ]['tmp_name'], $_FILES[ $field_name ]['name'] );
-	if ( empty( $filetype['ext'] ) || ! in_array( $filetype['ext'], array( 'jpg', 'jpeg', 'png' ), true ) ) {
-		$errors[] = $field_name . '_type';
-		return 0;
-	}
-
-	// Extension can lie; confirm the bytes actually decode as an image.
-	if ( false === @getimagesize( $_FILES[ $field_name ]['tmp_name'] ) ) { // phpcs:ignore -- deliberate suppression, failure handled below.
-		$errors[] = $field_name . '_type';
-		return 0;
-	}
-
-	add_filter( 'upload_mimes', 'lis_directory_restrict_listing_photo_mimes' );
-	$attachment_id = media_handle_upload( $field_name, 0 );
-	remove_filter( 'upload_mimes', 'lis_directory_restrict_listing_photo_mimes' );
-
-	if ( is_wp_error( $attachment_id ) ) {
-		$errors[] = $field_name . '_upload_failed';
-		return 0;
-	}
-
-	return (int) $attachment_id;
+	return $ids;
 }
 
 function lis_directory_restrict_listing_photo_mimes( $mimes ) {
