@@ -68,7 +68,12 @@ function lis_directory_prepend_rating_to_comment( $text, $comment = null ) {
 }
 
 function lis_directory_register_review_meta() {
-	register_comment_meta( 'rating', array(
+	// No register_comment_meta() convenience wrapper exists in WordPress core
+	// (unlike register_post_meta() / register_term_meta()) — comment meta is
+	// registered through the generic register_meta() with an explicit
+	// 'comment' object type instead. Confirmed the fatal ("Call to undefined
+	// function register_comment_meta()") live on this site before fixing.
+	register_meta( 'comment', 'rating', array(
 		'type'          => 'integer',
 		'single'        => true,
 		'show_in_rest'  => true,

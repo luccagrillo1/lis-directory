@@ -7,6 +7,46 @@ This file is the authoritative project history.
 
 ---
 
+## [0.16.1] — 2026-07-31 — Fix: fatal error crashed the whole site
+
+### Found by
+
+Installed v0.16.0 live, then immediately checked the real listing page —
+`WordPress › Error`, whole site down (WP's critical-error screen, "Suspected
+plugin: LIS Directory v0.16.0"). Error detail: `Uncaught Error: Call to
+undefined function register_comment_meta()` in `includes/listings-reviews.php:71`,
+thrown from an `init` hook — meaning **every single page load** hit this
+fatal, not just listing pages, since `init` fires universally.
+
+### Root cause
+
+`register_comment_meta()` doesn't exist in WordPress core. Only
+`register_post_meta()` and `register_term_meta()` are real convenience
+wrappers; comment meta has no equivalent and must go through the generic
+`register_meta( 'comment', $meta_key, $args )` instead. Assumed a
+consistent post/term/comment API existed without checking — it doesn't.
+
+### Immediate response
+
+Deactivated the plugin directly from WordPress's own critical-error
+recovery screen (the "Deactivate" button/form it renders for a logged-in
+admin) to restore the site immediately, *before* writing the fix — stopping
+the outage took priority over fixing the code.
+
+### Fixed
+
+- **`includes/listings-reviews.php`**: `register_comment_meta( 'rating', ... )`
+  → `register_meta( 'comment', 'rating', ... )`.
+- Manually audited every other new function call across
+  `listings-reviews.php`, `listings-badges.php`, and `listings-actions.php`
+  against known WordPress core APIs before shipping this fix — PHP lint
+  (`php -l`) only catches syntax errors, not calls to undefined functions,
+  so it had already passed clean on the broken 0.16.0 code and would pass
+  clean on this fix too; it isn't sufficient alone to catch this class of
+  bug.
+
+---
+
 ## [0.16.0] — 2026-07-31 — Reviews, badges, bookmark/share/report/claim
 
 ### Context

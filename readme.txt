@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.16.0
+Stable tag: 0.16.1
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -124,6 +124,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.16.1 =
+* Fixed a fatal error: `register_comment_meta()` isn't a real WordPress
+  function (only `register_post_meta()`/`register_term_meta()` exist) —
+  crashed the entire site on every page load via `init`. Replaced with the
+  correct `register_meta( 'comment', ... )` call. Caught live immediately
+  after 0.16.0 installed; site was down for a few minutes while fixed.
 
 = 0.16.0 =
 * Matched Directorist's real field set (checked live, not guessed):
