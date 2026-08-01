@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.16.2
+Stable tag: 0.16.3
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -124,6 +124,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.16.3 =
+* `[lis_preferred_vendor_heading]` now renders the real "Vendor Showcase"
+  lockup image instead of the old "LIS Partners" one.
+* Vendor cards now show a small "Sponsored" badge in the top-right corner.
 
 = 0.16.2 =
 * Renamed "Preferred Vendor" to "Vendor Showcase" throughout wp-admin labels,

@@ -7,6 +7,34 @@ This file is the authoritative project history.
 
 ---
 
+## [0.16.3] — 2026-08-01 — Real "Vendor Showcase" lockup + Sponsored badge
+
+### What changed
+
+* `[lis_preferred_vendor_heading]` now renders the client-supplied
+  `lis-vendor-showcase-lockup.png` (icon + "Vendor Showcase" wordmark,
+  same 811px source height as the old file so the existing
+  `height: 28px; width: auto` CSS scales it correctly with no other
+  changes needed) instead of the old "LIS Partners" lockup. Alt text
+  updated to "LIS Vendor Showcase". Old `assets/img/lis-partners-lockup.png`
+  deleted — nothing referenced it after the swap.
+* Every vendor card (`lis_directory_render_vendor_card_html()` — used by
+  both `[lis_preferred_vendor_card]` and the ticker's `style="cards"` mode)
+  now shows a small "Sponsored" badge, top-right corner. Reinforces the
+  0.16.2 rename: these are paid placements, and the badge says so plainly
+  instead of leaving it implied.
+* `assets/css/vendor-card.css` — `.lis-pv-card` gained `position: relative`
+  so the new `.lis-pv-card-badge` (`position: absolute`, small uppercase
+  label, muted gray pill) can anchor to the card's corner.
+
+### Deliberately unchanged
+
+* The "logos" ticker style (`style="logos"`) — no room for a badge next to
+  a bare logo without redesigning that layout; the "Sponsored" framing is
+  the primary use case (full cards) for now.
+
+---
+
 ## [0.16.2] — 2026-08-01 — Renamed "Preferred Vendor" to "Vendor Showcase"
 
 ### Why

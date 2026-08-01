@@ -63,6 +63,7 @@ function lis_directory_render_vendor_card_html( $vendor ) {
 	ob_start();
 	?>
 	<div class="lis-pv-card">
+		<span class="lis-pv-card-badge">Sponsored</span>
 		<<?php echo esc_html( $tag ); ?> class="lis-pv-card-inner"<?php if ( $link_url ) : ?> href="<?php echo esc_url( $link_url ); ?>" target="_blank" rel="noopener noreferrer"<?php endif; ?>>
 			<?php if ( $logo_url ) : ?>
 				<img class="lis-pv-card-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy" />
@@ -103,12 +104,12 @@ function lis_directory_get_card_styles_once() {
 }
 
 /**
- * [lis_preferred_vendor_heading] — the "LIS Partners" branding treatment,
- * meant to sit above a card or ticker wherever they're placed on the site.
- * Uses the pre-built "LIS Partners" lockup image supplied directly by the
- * client rather than this plugin recreating the pairing from a separate
- * icon + text — that lockup was already designed and kerned as one unit,
- * so reassembling it in CSS was solving a problem that didn't need solving.
+ * [lis_preferred_vendor_heading] — the "LIS Vendor Showcase" branding
+ * treatment, meant to sit above a card or ticker wherever they're placed on
+ * the site. Uses the pre-built lockup image supplied directly by the client
+ * rather than this plugin recreating the pairing from a separate icon +
+ * text — that lockup was already designed and kerned as one unit, so
+ * reassembling it in CSS was solving a problem that didn't need solving.
  * Still wrapped in a real heading tag by default (h2) for document
  * structure — `tag="h3"` etc. to fit a page's own heading hierarchy.
  */
@@ -123,7 +124,7 @@ function lis_directory_render_heading_shortcode( $atts ) {
 	ob_start();
 	?>
 	<<?php echo esc_html( $tag ); ?> class="lis-pv-heading">
-		<img class="lis-pv-heading-lockup" src="<?php echo esc_url( LIS_DIRECTORY_URL . 'assets/img/lis-partners-lockup.png?ver=' . LIS_DIRECTORY_VERSION ); ?>" alt="LIS Partners" />
+		<img class="lis-pv-heading-lockup" src="<?php echo esc_url( LIS_DIRECTORY_URL . 'assets/img/lis-vendor-showcase-lockup.png?ver=' . LIS_DIRECTORY_VERSION ); ?>" alt="LIS Vendor Showcase" />
 	</<?php echo esc_html( $tag ); ?>>
 	<?php
 	return $styles . ob_get_clean();
