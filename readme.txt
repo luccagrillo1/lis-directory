@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.16.3
+Stable tag: 0.16.4
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -124,6 +124,12 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.16.4 =
+* Fixed: the search widget's "More Filters" panel rendered fully expanded
+  and unstyled when previewing an unpublished draft (Directorist's own CSS
+  wasn't loading). Live/published pages were never affected. See CHANGELOG.md
+  for the root cause.
 
 = 0.16.3 =
 * `[lis_preferred_vendor_heading]` now renders the real "Vendor Showcase"

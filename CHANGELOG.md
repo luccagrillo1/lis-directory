@@ -7,6 +7,56 @@ This file is the authoritative project history.
 
 ---
 
+## [0.16.4] — 2026-08-01 — Fix: Directorist CSS missing on draft previews
+
+### Found by
+
+Client flagged the "Local Directory" draft's search widget rendering with
+its "More Filters" panel fully expanded and unstyled (raw checkboxes/labels
+stacked down the page) instead of collapsed behind the usual toggle. Same
+draft, same page — client saw it twice across two separate check-ins, so
+worth actually fixing instead of re-explaining.
+
+### Root cause
+
+Confirmed the *live*, published version of the same page (`/services/local-directory/`)
+renders correctly — checked both as a logged-in admin and as a logged-out
+visitor, computed `height: 0px` on `.directorist-search-modal` both times.
+The break is real but scoped specifically to *unpublished drafts viewed via
+their `?preview=true` link*.
+
+Directorist decides whether to enqueue its own `assets/build/css/public/main.css`
+(the file responsible for collapsing that panel) by scanning post content
+during `wp_enqueue_scripts`. WordPress's preview mechanism swaps in the
+actual post content *later* than that hook fires — via `the_preview` filter
+logic inside `get_post()` calls made during template loading — so on a
+preview of content that's never been published, Directorist's scan sees
+stale/empty content and skips the enqueue entirely. Verified directly:
+scanned every same-origin stylesheet loaded on the broken preview for any
+rule mentioning `.directorist-search-modal` — zero matches, while the same
+scan on the live page returned 111 matching rules, all from that one file.
+Manually injecting that exact file into the broken preview fixed it
+instantly, confirming both the cause and the fix.
+
+### Fix
+
+`includes/directorist-integration.php` — new
+`lis_directory_fix_directorist_preview_css()`, hooked on `wp_enqueue_scripts`
+at priority 20, force-enqueues that one Directorist stylesheet whenever
+`is_preview()` is true. No-op on every normal page load (`is_preview()` is
+false), and harmless even if Directorist's own logic *does* fire on some
+future preview path — WordPress dedupes styles by handle, so at worst it's
+loaded twice under two different handles, not a conflict.
+
+### Deliberately not done
+
+Did not patch Directorist's own plugin files directly — any changes there
+get silently reverted on Directorist's next update. Fixing it from this
+plugin's side, even though the root cause lives in someone else's code, is
+the only change that survives.
+
+---
+
 ## [0.16.3] — 2026-08-01 — Real "Vendor Showcase" lockup + Sponsored badge
 
 ### What changed

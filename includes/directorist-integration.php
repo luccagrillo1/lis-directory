@@ -189,3 +189,44 @@ function lis_directory_render_card_on_directorist_single( $listing_id ) {
 		}
 	}
 }
+
+/**
+ * Directorist decides whether to enqueue its own `assets/build/css/public/main.css`
+ * (the file that collapses the "More Filters" panel to height:0 until a user
+ * opens it — see 0.16.3 investigation) by scanning post content for its
+ * block/shortcode during `wp_enqueue_scripts`. WordPress's preview mechanism
+ * swaps in the actual (possibly-never-published) post content later than
+ * that hook fires, via `the_preview` filtering inside `get_post()` calls made
+ * during template loading — so on a `?preview=true` view of an unpublished
+ * draft, Directorist's scan runs against stale/empty content and enqueues
+ * nothing. Every real (published) page load is unaffected, since by then the
+ * content Directorist scans is already correct. Confirmed by hand: injecting
+ * this exact stylesheet client-side on a broken preview fixed it instantly,
+ * with no other CSS/JS involved.
+ *
+ * Force-enqueueing it on every preview request sidesteps the timing bug
+ * without needing to patch Directorist itself (which would be reverted on
+ * its next update). Harmless everywhere else: `is_preview()` is false on
+ * normal page loads, and WordPress dedupes by handle if Directorist also
+ * enqueues the same file under its own handle.
+ */
+add_action( 'wp_enqueue_scripts', 'lis_directory_fix_directorist_preview_css', 20 );
+
+function lis_directory_fix_directorist_preview_css() {
+	if ( ! is_preview() ) {
+		return;
+	}
+
+	$relative_path = 'directorist/assets/build/css/public/main.css';
+	$absolute_path = WP_PLUGIN_DIR . '/' . $relative_path;
+	if ( ! file_exists( $absolute_path ) ) {
+		return;
+	}
+
+	wp_enqueue_style(
+		'lis-directory-preview-directorist-fix',
+		WP_PLUGIN_URL . '/' . $relative_path,
+		array(),
+		filemtime( $absolute_path )
+	);
+}
