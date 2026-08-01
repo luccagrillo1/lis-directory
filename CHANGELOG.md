@@ -7,6 +7,55 @@ This file is the authoritative project history.
 
 ---
 
+## [0.15.0] — 2026-07-31 — Front-end listing submission form
+
+### Context
+
+Second of the two next-step options offered after the framework/styling
+work (migration vs. submission form) — client picked submission form.
+Directorist lets business owners submit their own listings; the
+self-hosted replacement needs the same to eventually take over that role.
+
+### Added
+
+- **`includes/listings-submission.php`**: new — `[lis_listing_submit]`
+  shortcode + `admin-post.php` handler, deliberately mirroring
+  `includes/submission.php` (the Preferred Vendor form)'s exact security
+  pattern: login-required gate, hidden honeypot field (bot fills it → fake
+  success redirect, nothing created), nonce-verified POST, real
+  server-side upload validation (`wp_check_filetype_and_ext` +
+  `getimagesize()`, not just an `accept` attribute).
+  - Required: business name, category (must resolve to a real
+    `lis_listing_category` term), contact email, one photo. Optional:
+    description, address, phone, website.
+  - Photo upload accepts **PNG or JPG** (`lis_directory_handle_listing_photo_upload()`)
+    — unlike the vendor logo upload, which is PNG-only because it gets
+    CSS-recolored to black/white. A listing photo is never recolored, so
+    there's no reason to exclude JPG here; copied the vendor upload
+    function's validation logic but with the wider mime whitelist.
+  - Submissions land as **native WordPress `pending` post status**, not a
+    custom workflow meta. Deliberate difference from the vendor form:
+    Preferred Vendor needs `_lis_pv_status` because of the "one active
+    vendor per category" rule it enforces (conflict flagging, category
+    locking); `lis_listing` has no equivalent rule, so there's nothing a
+    custom status would buy over WordPress's own Pending → editor opens it
+    → clicks Publish flow, which the existing "Listing Details" meta box
+    (built for admin-created listings) already supports with zero changes.
+  - Sets the uploaded photo as the post's featured image
+    (`set_post_thumbnail()`) rather than populating the gallery meta field
+    — the single/archive templates already fall back to the featured
+    image when `_lis_listing_gallery_ids` is empty (built in v0.13.0), so
+    this needed no template changes to display correctly.
+
+### Deliberately not in this form
+
+Additional photos (beyond the one required), business hours, and features
+are not submittable yet — added by an admin after first publish, using
+the existing meta boxes. Keeps the public form short; can be widened
+later if that turns out to matter.
+
+---
+
 ## [0.14.0] — 2026-07-31 — Contact labels+maps, tags, wider layout, no stripes
 
 ### Context

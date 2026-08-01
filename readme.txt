@@ -4,7 +4,7 @@ Tags: directory, preferred vendors, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.14.0
+Stable tag: 0.15.0
 
 Preferred Vendor Program for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -44,6 +44,11 @@ variations is a wp-admin task, not something this plugin does for you).
   stock auto-syncs to whether that category is taken, the thank-you page
   links buyers straight to a pre-scoped submission form, and a cancelled/
   expired subscription automatically expires the linked vendor
+* Self-hosted listings framework (`lis_listing` post type, `/listings/`) —
+  gallery, price (hidden by default), business hours with a live open/closed
+  badge, a Features taxonomy, video embed, and `[lis_listing_submit]` for
+  logged-in front-end submissions (land as Pending, reviewed in the normal
+  admin editor)
 
 == Shortcodes ==
 
@@ -73,6 +78,15 @@ variations is a wp-admin task, not something this plugin does for you).
   labeled "currently taken - apply to be waitlisted". Submissions are never
   auto-published; they land as Pending until an admin approves or rejects
   them from the Preferred Vendors list in wp-admin.
+* `[lis_listing_submit]` — front-end listing submission form for the
+  self-hosted listings framework. Requires a WordPress account. Business
+  name, category, and a photo (real PNG/JPG, server-validated, 2MB cap) are
+  required; address/phone/website/description are optional. Submissions
+  land as native WordPress "Pending" — reviewed and published from the
+  normal Listings admin editor, no separate approve/reject workflow needed
+  (unlike Preferred Vendor, there's no "one active per category" rule to
+  enforce here). Additional photos, business hours, and features are
+  admin-added after first publish, not part of this form yet.
 
 == Setup: WooCommerce Subscriptions ==
 
@@ -110,6 +124,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.15.0 =
+* Added `[lis_listing_submit]` — front-end listing submission, same pattern
+  as the vendor form (login required, honeypot, real server-side photo
+  validation). Submissions land as native WP Pending for admin review.
 
 = 0.14.0 =
 * Contact block now labels each field (Address/Phone/Website/Email) and
