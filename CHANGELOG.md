@@ -7,6 +7,59 @@ This file is the authoritative project history.
 
 ---
 
+## [0.29.0] — 2026-08-02 — Progress bar + Google Places autocomplete
+
+### Progress bar
+
+SurveyMonkey-style thin bar above the wizard sidebar, filled
+`(step / total) * 100%`, with a "Step X of Y" label — Lucca's request,
+straightforward addition to `listing-form-wizard.js`'s existing
+`goToStep()`.
+
+### Google Places autocomplete
+
+Lucca had already enabled Places API and Places API (New) in Google
+Cloud (alongside a long list of other Maps Platform APIs enabled at the
+same time — only Places API, Places API (New), and Maps JavaScript API
+are actually used by anything in this plugin; the rest is harmless but
+unused). New `assets/js/listing-places-autocomplete.js`, binds
+`google.maps.places.Autocomplete` to `#lis_listing_business_name` on
+both `[lis_listing_submit]` and `[lis_listing_edit]`. Picking a real
+business from the dropdown auto-fills Address, Phone, Website, and
+per-day Business Hours from Google's Place Details response
+(`opening_hours.periods`, converted from Google's `{day: 0-6, time:
+"HHMM"}` shape into this form's per-weekday `HH:MM` open/close time
+inputs). Purely additive — typing a name without picking a suggestion
+leaves every field exactly as before.
+
+New shared `lis_directory_enqueue_places_autocomplete()` (in
+`listings-submission.php`, called from both forms) loads the Maps
+JavaScript API with `libraries=places`, no-ops entirely if no Maps API
+key is configured yet.
+
+Also gave the two per-day closing-time inputs actual `id` attributes
+(`lis_listing_hours_{day}_close`) — they only had `name` before, which
+the autocomplete script needs for reliable targeting, and which the
+opening-time inputs already had for their own `<label for>`.
+
+### Files touched
+
+- `assets/js/listing-places-autocomplete.js` (new)
+- `assets/js/listing-form-wizard.js` (progress bar)
+- `assets/css/listings.css` (progress bar, wizard body wrapper restructure)
+- `includes/listings-submission.php` (shared enqueue helper, close-input id)
+- `includes/listings-edit.php` (enqueue call, close-input id)
+
+### Known limitation
+
+A business open past midnight (close time on the following calendar
+day) isn't handled specially — the close time still lands on the open
+day's row, which is what this form's one-shift-per-day model can
+represent anyway. Rare enough for local listings that it wasn't worth
+a more complex data model.
+
+---
+
 ## [0.28.1] — 2026-08-02 — Wizard polish: Submit button on the last step only
 
 First real live-tested fix this session: clicked through the actual

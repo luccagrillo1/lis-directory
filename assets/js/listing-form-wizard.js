@@ -27,6 +27,18 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		var wizard = document.createElement( 'div' );
 		wizard.className = 'lis-listing-wizard';
 
+		var progress = document.createElement( 'div' );
+		progress.className = 'lis-listing-wizard-progress';
+		var progressBar = document.createElement( 'div' );
+		progressBar.className = 'lis-listing-wizard-progress-bar';
+		progress.appendChild( progressBar );
+
+		var progressLabel = document.createElement( 'p' );
+		progressLabel.className = 'lis-listing-wizard-progress-label';
+
+		var body = document.createElement( 'div' );
+		body.className = 'lis-listing-wizard-body';
+
 		var nav = document.createElement( 'nav' );
 		nav.className = 'lis-listing-wizard-nav';
 		nav.setAttribute( 'aria-label', 'Form sections' );
@@ -63,6 +75,8 @@ document.addEventListener( 'DOMContentLoaded', function () {
 					numberEl.textContent = isComplete ? '✓' : String( i + 1 );
 				}
 			} );
+			progressBar.style.width = ( ( index + 1 ) / sections.length * 100 ) + '%';
+			progressLabel.textContent = 'Step ' + ( index + 1 ) + ' of ' + sections.length;
 			if ( submitWrap ) {
 				submitWrap.style.display = index === sections.length - 1 ? '' : 'none';
 			}
@@ -124,8 +138,11 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		} );
 
 		form.insertBefore( wizard, sections[0] );
-		wizard.appendChild( nav );
-		wizard.appendChild( stepsWrap );
+		wizard.appendChild( progress );
+		wizard.appendChild( progressLabel );
+		wizard.appendChild( body );
+		body.appendChild( nav );
+		body.appendChild( stepsWrap );
 		sections.forEach( function ( section ) {
 			stepsWrap.appendChild( section );
 		} );

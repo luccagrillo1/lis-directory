@@ -25,10 +25,36 @@ define( 'LIS_DIRECTORY_SUBMIT_MAX_PHOTOS', 6 );
 add_shortcode( 'lis_listing_submit', 'lis_directory_render_listing_submission_form_shortcode' );
 add_action( 'admin_post_lis_directory_submit_listing', 'lis_directory_handle_listing_submission' );
 
+/**
+ * Shared by both [lis_listing_submit] and [lis_listing_edit] — loads the
+ * Maps JavaScript API with the `places` library and this plugin's own
+ * autocomplete script (assets/js/listing-places-autocomplete.js), which
+ * binds to #lis_listing_business_name and auto-fills address/phone/
+ * website/hours from Google's Place Details when a real business is
+ * picked. No-op if no Maps API key is configured yet (Settings > LIS
+ * Directory Settings) — same key already used for the single-listing and
+ * archive maps, so nothing new to set up if that's already there.
+ */
+function lis_directory_enqueue_places_autocomplete() {
+	$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
+	if ( ! $maps_api_key ) {
+		return;
+	}
+	wp_enqueue_script( 'lis-directory-listing-places-autocomplete', LIS_DIRECTORY_URL . 'assets/js/listing-places-autocomplete.js', array(), LIS_DIRECTORY_VERSION, true );
+	wp_enqueue_script(
+		'lis-directory-google-maps-places',
+		'https://maps.googleapis.com/maps/api/js?key=' . rawurlencode( $maps_api_key ) . '&libraries=places&callback=lisDirectoryInitPlacesAutocomplete&loading=async',
+		array( 'lis-directory-listing-places-autocomplete' ),
+		null,
+		true
+	);
+}
+
 function lis_directory_render_listing_submission_form_shortcode() {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 	wp_enqueue_script( 'lis-directory-listing-photos', LIS_DIRECTORY_URL . 'assets/js/listing-photos.js', array(), LIS_DIRECTORY_VERSION, true );
 	wp_enqueue_script( 'lis-directory-listing-form-wizard', LIS_DIRECTORY_URL . 'assets/js/listing-form-wizard.js', array(), LIS_DIRECTORY_VERSION, true );
+	lis_directory_enqueue_places_autocomplete();
 
 	if ( ! is_user_logged_in() ) {
 		ob_start();
@@ -162,7 +188,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 						<td>
 							<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" />
 							<span>to</span>
-							<input type="time" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" />
+							<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" />
 						</td>
 					</tr>
 				<?php endforeach; ?>

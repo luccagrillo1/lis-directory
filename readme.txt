@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.28.1
+Stable tag: 0.29.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,12 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.29.0 =
+* Added a progress bar to the Add/Edit Listing wizard.
+* Added Google Places autocomplete: pick your business from the dropdown
+  on the Business Name field and Address, Phone, Website, and Business
+  Hours all auto-fill from Google's data.
 
 = 0.28.1 =
 * Wizard polish: Submit for Review now only shows on the last step,

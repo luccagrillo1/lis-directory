@@ -51,6 +51,7 @@ function lis_directory_render_listing_edit_form_shortcode() {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 	wp_enqueue_script( 'lis-directory-listing-photos', LIS_DIRECTORY_URL . 'assets/js/listing-photos.js', array(), LIS_DIRECTORY_VERSION, true );
 	wp_enqueue_script( 'lis-directory-listing-form-wizard', LIS_DIRECTORY_URL . 'assets/js/listing-form-wizard.js', array(), LIS_DIRECTORY_VERSION, true );
+	lis_directory_enqueue_places_autocomplete();
 
 	if ( ! is_user_logged_in() ) {
 		ob_start();
@@ -209,7 +210,7 @@ function lis_directory_render_listing_edit_form_shortcode() {
 						<td>
 							<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" value="<?php echo esc_attr( $week[ $day ]['open'] ?? '' ); ?>" />
 							<span>to</span>
-							<input type="time" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" value="<?php echo esc_attr( $week[ $day ]['close'] ?? '' ); ?>" />
+							<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" value="<?php echo esc_attr( $week[ $day ]['close'] ?? '' ); ?>" />
 						</td>
 					</tr>
 				<?php endforeach; ?>

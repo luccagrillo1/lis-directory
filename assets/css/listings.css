@@ -925,6 +925,34 @@
 
 .lis-listing-wizard {
 	display: flex;
+	flex-direction: column;
+}
+
+.lis-listing-wizard-progress {
+	height: 6px;
+	border-radius: 999px;
+	background: #e8e8e0;
+	overflow: hidden;
+	margin-bottom: 8px;
+}
+
+.lis-listing-wizard-progress-bar {
+	height: 100%;
+	background: #576846;
+	border-radius: 999px;
+	transition: width 0.25s ease;
+}
+
+.lis-listing-wizard-progress-label {
+	margin: 0 0 28px;
+	font-size: 0.82em;
+	color: #999;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.lis-listing-wizard-body {
+	display: flex;
 	gap: 40px;
 	align-items: flex-start;
 }
@@ -1025,7 +1053,7 @@
 }
 
 @media (max-width: 720px) {
-	.lis-listing-wizard {
+	.lis-listing-wizard-body {
 		flex-direction: column;
 		gap: 20px;
 	}
