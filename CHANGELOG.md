@@ -7,6 +7,28 @@ This file is the authoritative project history.
 
 ---
 
+## [0.20.1] — 2026-08-01 — QA pass
+
+Read back through every file touched this session (v0.16.4 → v0.20.0) with
+fresh eyes: cross-checked shortcode tag names against what's actually
+registered and what the 9 new draft pages use (all match), cross-checked
+every `<input name="...">` in the search widget against the `$_GET[...]`
+keys the `pre_get_posts` handler reads (all match), cross-checked every
+`lis-listing-*` type-slug string literal across templates/includes for
+typos (none found), and diffed every CSS class referenced in the new PHP
+against what's actually defined in `listings.css`.
+
+Found one real gap: `.lis-listing-search-field` (the wrapper around each
+filter group in the "More Filters" panel — Open Now, Price, Features,
+Reset) had no width rule, so it could shrink awkwardly inside the flex
+row. Added `min-width: 160px`. Everything else the diff flagged
+(`lis-listing-author-missing`, `lis-listing-dashboard-login-required`) is
+intentionally unstyled — matches the existing, already-established
+convention for login-required messages elsewhere in this plugin
+(`lis-listing-submit-login-required` has never had dedicated CSS either).
+
+---
+
 ## [0.20.0] — 2026-08-01 — Directorist parity, phase 5: listing FAQs
 
 ### What changed

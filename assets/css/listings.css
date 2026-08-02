@@ -74,6 +74,10 @@
 	background: #fafafa;
 }
 
+.lis-listing-search-field {
+	min-width: 160px;
+}
+
 .lis-listing-search-field-label {
 	display: block;
 	font-size: 0.78em;
