@@ -79,7 +79,7 @@ function lis_directory_render_settings_page() {
 					<td>
 						<?php
 						$featured_product_id = (int) get_option( 'lis_directory_featured_listing_product_id' );
-						if ( class_exists( 'WooCommerce' ) ) {
+						if ( class_exists( 'WooCommerce' ) ) :
 							$products = get_posts( array(
 								'post_type'      => 'product',
 								'post_status'    => 'publish',
