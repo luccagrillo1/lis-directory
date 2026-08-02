@@ -7,6 +7,32 @@ This file is the authoritative project history.
 
 ---
 
+## [0.24.2] — 2026-08-02 — Maps: switched to the Maps JavaScript API
+
+v0.24.0's map used the Maps Embed API (a plain iframe — no JS SDK, no
+billing account needed historically). Once the key was actually live,
+Google rejected it: "This API is not activated on your API key" — the
+key Lucca provisioned was scoped to Maps JavaScript API + Geocoding API,
+not Embed API. Rather than ask him to also enable Embed API, rebuilt the
+map to use what was actually provisioned:
+`templates/single-listing.php` now loads the Maps JavaScript API
+(async, via a `callback=` query param — Google's current recommended
+loading pattern) and geocodes the listing's plain address string
+client-side with `google.maps.Geocoder`, then drops a `google.maps.Map`
++ marker into a plain `<div>`. Same trigger condition as before (address
++ API key both present), same fallback (plain "open in Google Maps"
+link) otherwise.
+
+CSS: `.lis-listing-map iframe` → `.lis-listing-map-canvas` (a plain div
+now, not an iframe), same absolute-fill-inside-aspect-ratio-box technique.
+
+### Files touched
+
+- `templates/single-listing.php`
+- `assets/css/listings.css`
+
+---
+
 ## [0.24.1] — 2026-08-02 — Fix: settings never actually visible via REST
 
 Real bug, caught immediately after v0.24.0 deployed: every

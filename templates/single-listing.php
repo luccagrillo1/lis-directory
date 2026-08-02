@@ -10,11 +10,15 @@
  * body (contact/description/features/services/video/social/reviews on the
  * left, business hours on the right), a Report/Claim block. FAQs (admin-
  * managed, dynamic add/remove rows) render as a plain accordion. An
- * embedded map (Google Maps Embed API, "place" mode — geocodes the plain
- * address string server-side, no lat/long stored on the listing) shows
- * whenever both an address and a Maps API key (Settings > LIS Directory
- * Settings) are present; otherwise the address just links out to Google
- * Maps like before.
+ * embedded map (Maps JavaScript API + client-side Geocoder — geocodes
+ * the plain address string in-browser, no lat/long stored on the
+ * listing) shows whenever both an address and a Maps API key
+ * (Settings > LIS Directory Settings, scoped to Maps JavaScript API +
+ * Geocoding API in Google Cloud Console) are present; otherwise the
+ * address just links out to Google Maps like before. Started as the
+ * simpler Maps Embed API (an iframe, no JS SDK needed) but the API key
+ * provided was scoped to Maps JavaScript API + Geocoding API instead, so
+ * this uses those.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -165,13 +169,24 @@ while ( have_posts() ) :
 
 				<?php if ( $address && $maps_api_key ) : ?>
 					<div class="lis-listing-map">
-						<iframe
-							src="https://www.google.com/maps/embed/v1/place?key=<?php echo esc_attr( $maps_api_key ); ?>&q=<?php echo esc_attr( rawurlencode( $address ) ); ?>"
-							loading="lazy"
-							referrerpolicy="no-referrer-when-downgrade"
-							allowfullscreen
-						></iframe>
+						<div class="lis-listing-map-canvas" data-address="<?php echo esc_attr( $address ); ?>"></div>
 					</div>
+					<script>
+					window.lisDirectoryInitMaps = window.lisDirectoryInitMaps || function () {
+						document.querySelectorAll( '.lis-listing-map-canvas[data-address]' ).forEach( function ( el ) {
+							var geocoder = new google.maps.Geocoder();
+							geocoder.geocode( { address: el.dataset.address }, function ( results, status ) {
+								if ( 'OK' !== status || ! results[0] ) {
+									return;
+								}
+								var map = new google.maps.Map( el, { center: results[0].geometry.location, zoom: 15 } );
+								new google.maps.Marker( { map: map, position: results[0].geometry.location } );
+							} );
+						} );
+					};
+					</script>
+					<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr( $maps_api_key ); ?>&callback=lisDirectoryInitMaps&loading=async" async defer></script>
+				<?php endif; ?>
 				<?php endif; ?>
 
 				<div class="lis-listing-section">
