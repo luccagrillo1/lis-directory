@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.24.0
+Stable tag: 0.24.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.24.1 =
+* Fixed a real bug: the new Settings fields (Maps API key, Featured
+  Listing Product, Listing Edit Page) never actually worked via the REST
+  API because they were registered on the wrong hook. wp-admin itself
+  was unaffected — this only blocked me from configuring them for you
+  via the API.
 
 = 0.24.0 =
 * Added an embedded Google Maps map on each listing's page (needs a Maps

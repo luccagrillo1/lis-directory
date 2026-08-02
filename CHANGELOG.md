@@ -7,6 +7,28 @@ This file is the authoritative project history.
 
 ---
 
+## [0.24.1] — 2026-08-02 — Fix: settings never actually visible via REST
+
+Real bug, caught immediately after v0.24.0 deployed: every
+`register_setting( ..., array( 'show_in_rest' => true ) )` call added
+this session (`lis_directory_listing_edit_page_id`,
+`lis_directory_featured_listing_product_id`,
+`lis_directory_google_maps_api_key`) was hooked on `admin_init` — which
+never fires on a REST API request (that's not a wp-admin page load), so
+none of them ever actually appeared via `/wp-json/wp/v2/settings`,
+regardless of plugin version or deployment. Moved all three to `init`,
+which fires on every request type (front-end, admin, REST, AJAX) and is
+just as safe for the wp-admin Settings form. Confirmed via REST
+immediately after this deployed.
+
+### Files touched
+
+- `includes/woocommerce.php`
+- `includes/listings-edit.php`
+- `includes/listings-pricing.php`
+
+---
+
 ## [0.24.0] — 2026-08-02 — Embedded map, plus two new WooCommerce pricing products
 
 ### Maps

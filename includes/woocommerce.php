@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 add_action( 'admin_menu', 'lis_directory_add_settings_page' );
-add_action( 'admin_init', 'lis_directory_register_settings' );
+add_action( 'init', 'lis_directory_register_settings' ); // Not admin_init - that never fires on REST requests, which would silently keep show_in_rest settings invisible via /wp-json/wp/v2/settings regardless of anything else being right.
 add_action( 'plugins_loaded', 'lis_directory_init_woocommerce_integration' );
 
 function lis_directory_add_settings_page() {

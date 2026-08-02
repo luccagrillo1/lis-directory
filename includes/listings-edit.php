@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_shortcode( 'lis_listing_edit', 'lis_directory_render_listing_edit_form_shortcode' );
 add_action( 'admin_post_lis_directory_update_listing', 'lis_directory_handle_listing_update' );
-add_action( 'admin_init', 'lis_directory_register_listing_edit_settings' );
+add_action( 'init', 'lis_directory_register_listing_edit_settings' ); // Not admin_init - see the note on the equivalent hook in includes/woocommerce.php.
 
 function lis_directory_register_listing_edit_settings() {
 	register_setting( 'lis_pv_settings_group', 'lis_directory_listing_edit_page_id', array(

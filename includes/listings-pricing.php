@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'admin_init', 'lis_directory_register_listing_pricing_settings' );
+add_action( 'init', 'lis_directory_register_listing_pricing_settings' ); // Not admin_init - see the note on the equivalent hook in includes/woocommerce.php.
 add_action( 'plugins_loaded', 'lis_directory_init_listing_pricing_woocommerce' );
 
 function lis_directory_register_listing_pricing_settings() {
