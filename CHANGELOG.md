@@ -7,6 +7,27 @@ This file is the authoritative project history.
 
 ---
 
+## [0.24.4] — 2026-08-02 — Features filter: checkbox wall → type-to-filter
+
+User feedback on the search widget's "More Filters" panel: the Features
+list was a wall of plain checkboxes, wanted something you type into
+instead. New `assets/js/listing-search.js`, progressive enhancement —
+the server still renders the full checkbox grid unchanged (that's what
+actually submits with the form, and is what a no-JS visitor sees and
+uses), but on page load JS hides that grid and replaces it with a
+type-to-filter input: type to narrow a dropdown of remaining feature
+names, click one to add it as a removable chip, chips stay in sync with
+the underlying (now hidden) checkboxes. No new dependency — vanilla JS,
+matching this plugin's existing pattern (`assets/js/listing-compare.js`).
+
+### Files touched
+
+- `assets/js/listing-search.js` (new)
+- `includes/listings-search.php` (enqueue + `data-feature-field`/`data-feature-checkboxes` hooks)
+- `assets/css/listings.css`
+
+---
+
 ## [0.24.2] — 2026-08-02 — Maps: switched to the Maps JavaScript API
 
 v0.24.0's map used the Maps Embed API (a plain iframe — no JS SDK, no

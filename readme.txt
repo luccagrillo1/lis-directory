@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.24.3
+Stable tag: 0.24.4
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.24.4 =
+* The search widget's Features filter is now a type-to-filter picker
+  (type to narrow, click to add as a chip) instead of a wall of
+  checkboxes. Works the same with JavaScript off.
 
 = 0.24.3 =
 * Fixes a duplicate `endif` that broke v0.24.2 — CI caught it before

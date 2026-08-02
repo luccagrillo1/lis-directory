@@ -36,6 +36,7 @@ function lis_directory_get_price_tiers() {
 
 function lis_directory_render_search_form_shortcode( $atts ) {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	wp_enqueue_script( 'lis-directory-listing-search', LIS_DIRECTORY_URL . 'assets/js/listing-search.js', array(), LIS_DIRECTORY_VERSION, true );
 
 	$atts = shortcode_atts( array( 'redirect' => '' ), $atts, 'lis_listing_search' );
 
@@ -97,14 +98,16 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 				</div>
 
 				<?php if ( ! is_wp_error( $features ) && ! empty( $features ) ) : ?>
-					<div class="lis-listing-search-field">
+					<div class="lis-listing-search-field" data-feature-field>
 						<span class="lis-listing-search-field-label">Features</span>
-						<?php foreach ( $features as $feature ) : ?>
-							<label class="lis-listing-search-checkbox">
-								<input type="checkbox" name="lis_feature[]" value="<?php echo esc_attr( $feature->slug ); ?>" <?php checked( in_array( $feature->slug, $current_features, true ) ); ?> />
-								<?php echo esc_html( $feature->name ); ?>
-							</label>
-						<?php endforeach; ?>
+						<div class="lis-listing-search-checkbox-grid" data-feature-checkboxes>
+							<?php foreach ( $features as $feature ) : ?>
+								<label class="lis-listing-search-checkbox">
+									<input type="checkbox" name="lis_feature[]" value="<?php echo esc_attr( $feature->slug ); ?>" data-feature-name="<?php echo esc_attr( $feature->name ); ?>" <?php checked( in_array( $feature->slug, $current_features, true ) ); ?> />
+									<?php echo esc_html( $feature->name ); ?>
+								</label>
+							<?php endforeach; ?>
+						</div>
 					</div>
 				<?php endif; ?>
 
