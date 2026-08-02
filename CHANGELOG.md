@@ -7,6 +7,55 @@ This file is the authoritative project history.
 
 ---
 
+## [0.23.0] — 2026-08-02 — Featured Listing paid upgrade
+
+### What changed
+
+Directorist Pricing Plans parity, scoped down to one real upgrade
+(Featured) instead of a general multi-tier plan builder — see
+`DIRECTORIST_PARITY_PLAN.md`. New `includes/listings-pricing.php`, follows
+the exact same pattern as the existing Vendor Showcase WooCommerce
+integration (`includes/woocommerce.php`): a WooCommerce product configured
+by hand in wp-admin (Settings > LIS Directory Settings > Featured Listing
+Product), one-time or WC Subscriptions — this plugin only reacts to order
+completion, it doesn't care which.
+
+Dashboard now shows a "⭐ Feature this listing" link on any of the user's
+own published, not-yet-featured listings (hidden if no product is
+configured yet). Clicking it adds the configured product to the cart via
+a plain add-to-cart URL carrying which listing it's for
+(`woocommerce_add_cart_item_data` → `woocommerce_checkout_create_order_line_item`
+→ order line item meta, same linking approach as Vendor Showcase's
+category-tagged variations, just listing-tagged instead). On
+`woocommerce_order_status_completed` **and** `processing` (many payment
+gateways for virtual products only ever reach `processing`), the matching
+order item's linked listing gets `_lis_listing_featured` set. If WC
+Subscriptions is active, `cancelled`/`expired` un-features it, same as
+Vendor Showcase's expiry handling.
+
+**No real purchase was executed while building or testing this** —
+completing a real transaction isn't something done autonomously,
+regardless of framing. The code is ready for one real test purchase, which
+is on you to run before trusting it fully.
+
+### Known limitation
+
+A one-time (non-subscription) purchase features a listing indefinitely —
+there's no automatic time-boxed expiry for one-time purchases, only for
+WC Subscriptions cancellation/expiry. Building real expiry (a cron job
+checking purchase date against some configured duration) is a reasonable
+follow-up if a one-time "Featured for 30 days" model turns out to be what's
+actually wanted, rather than guessing a duration now.
+
+### Files touched
+
+- `includes/listings-pricing.php` (new)
+- `includes/listings-account.php` (Dashboard "Feature this listing" link)
+- `includes/woocommerce.php` (Settings: Featured Listing Product dropdown)
+- `lis-directory.php`
+
+---
+
 ## [0.22.1] — 2026-08-02 — Prep for real-listing migration
 
 New `_lis_listing_migrated_from` meta (integer, REST-registered) on

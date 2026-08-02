@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.22.1
+Stable tag: 0.23.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,12 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.23.0 =
+* Added a Featured Listing paid upgrade (WooCommerce-backed, configured
+  under Settings > LIS Directory Settings). Owners can feature their own
+  published listing from the Dashboard. No real purchase has been made —
+  run one real test purchase yourself before relying on it.
 
 = 0.22.1 =
 * Internal prep for migrating the 108 real Directorist listings — no

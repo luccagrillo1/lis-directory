@@ -74,6 +74,32 @@ function lis_directory_render_settings_page() {
 						<p class="description">Used to build the "Edit" link on the front-end Dashboard for users who don't have wp-admin edit access to their own listing (the common case for front-end signups).</p>
 					</td>
 				</tr>
+				<tr>
+					<th><label for="lis_directory_featured_listing_product_id">Featured Listing Product</label></th>
+					<td>
+						<?php
+						$featured_product_id = (int) get_option( 'lis_directory_featured_listing_product_id' );
+						if ( class_exists( 'WooCommerce' ) ) {
+							$products = get_posts( array(
+								'post_type'      => 'product',
+								'post_status'    => 'publish',
+								'posts_per_page' => -1,
+								'orderby'        => 'title',
+								'order'          => 'ASC',
+							) );
+							?>
+							<select id="lis_directory_featured_listing_product_id" name="lis_directory_featured_listing_product_id">
+								<option value="0">— Not configured —</option>
+								<?php foreach ( $products as $product ) : ?>
+									<option value="<?php echo (int) $product->ID; ?>" <?php selected( $featured_product_id, $product->ID ); ?>><?php echo esc_html( get_the_title( $product ) ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description">The WooCommerce product a listing owner buys to feature their listing. Set up the product itself (price, one-time or WC Subscriptions) by hand — this just tells the plugin which product to watch for.</p>
+						<?php else : ?>
+							<p class="description">WooCommerce isn't active, so this can't be configured.</p>
+						<?php endif; ?>
+					</td>
+				</tr>
 			</table>
 			<?php submit_button(); ?>
 		</form>

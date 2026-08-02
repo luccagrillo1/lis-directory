@@ -359,6 +359,15 @@ function lis_directory_render_dashboard_shortcode() {
 										<button type="submit" class="lis-listing-dashboard-link-button"><?php echo $sold ? esc_html( 'Mark Available' ) : esc_html( 'Mark ' . $sold_label ); ?></button>
 									</form>
 								<?php endif; ?>
+								<?php
+								$featured    = (bool) get_post_meta( $listing->ID, '_lis_listing_featured', true );
+								$feature_url = ( 'publish' === $listing->post_status && ! $featured ) ? lis_directory_get_feature_listing_url( $listing->ID ) : '';
+								if ( $feature_url ) :
+									?>
+									<a href="<?php echo esc_url( $feature_url ); ?>">⭐ Feature this listing</a>
+								<?php elseif ( $featured ) : ?>
+									<span class="lis-listing-badge lis-listing-badge--featured">Featured</span>
+								<?php endif; ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>
