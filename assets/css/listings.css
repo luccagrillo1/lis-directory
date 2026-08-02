@@ -924,72 +924,203 @@
 }
 
 .lis-listing-submit-section {
-	border: 1px solid #eee;
-	border-radius: 10px;
-	padding: 18px 20px;
-	margin-bottom: 20px;
-	background: #fafafa;
+	border: 1px solid #ececec;
+	border-radius: 12px;
+	padding: 22px 24px;
+	margin-bottom: 18px;
+	background: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .lis-listing-submit-section h3 {
-	margin: 0 0 14px 0;
+	margin: 0 0 18px 0;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #f0f0f0;
 	font-size: 1.05em;
+	font-weight: 700;
+	color: #333;
+}
+
+.lis-listing-submit-section h3 small {
+	font-weight: 400;
+	color: #999;
+	font-size: 0.75em;
 }
 
 .lis-listing-submit-section p {
-	margin: 0 0 14px 0;
+	margin: 0 0 16px 0;
+}
+
+.lis-listing-submit-section p:last-child {
+	margin-bottom: 0;
 }
 
 .lis-listing-submit-section label {
 	display: block;
 	font-weight: 600;
-	font-size: 0.88em;
+	font-size: 0.86em;
 	color: #555;
-	margin-bottom: 5px;
+	margin-bottom: 6px;
 }
 
 .lis-listing-submit-section input[type="text"],
 .lis-listing-submit-section input[type="email"],
 .lis-listing-submit-section input[type="url"],
-.lis-listing-submit-section input[type="file"],
+.lis-listing-submit-section input[type="time"],
 .lis-listing-submit-section textarea,
 .lis-listing-submit-section select {
 	width: 100%;
-	max-width: 420px;
-	padding: 8px 10px;
-	border: 1px solid #ddd;
-	border-radius: 6px;
+	max-width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #dcdcdc;
+	border-radius: 8px;
 	font-size: 0.95em;
 	box-sizing: border-box;
+	background: #fff;
+	transition: border-color 0.15s ease;
+}
+
+.lis-listing-submit-section input[type="text"]:focus,
+.lis-listing-submit-section input[type="email"]:focus,
+.lis-listing-submit-section input[type="url"]:focus,
+.lis-listing-submit-section input[type="time"]:focus,
+.lis-listing-submit-section textarea:focus,
+.lis-listing-submit-section select:focus {
+	outline: none;
+	border-color: #576846;
+	box-shadow: 0 0 0 3px rgba(87, 104, 70, 0.12);
 }
 
 .lis-listing-submit-section small {
 	display: block;
 	color: #888;
-	margin-top: 4px;
+	margin-top: 5px;
 	font-weight: normal;
+}
+
+/* Photos: hide the raw file input, style its own label as the clickable "button" instead of relying on the ugly native browser control. */
+.lis-listing-submit-section input[type="file"] {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	overflow: hidden;
+}
+
+.lis-listing-photos-dropzone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 28px 16px;
+	border: 2px dashed #d5d5d5;
+	border-radius: 10px;
+	background: #fafaf7;
+	cursor: pointer;
+	text-align: center;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.lis-listing-photos-dropzone:hover,
+.lis-listing-photos-dropzone.is-dragover {
+	border-color: #576846;
+	background: #f2f5ee;
+}
+
+.lis-listing-photos-dropzone-label {
+	font-weight: 600;
+	color: #576846;
+}
+
+.lis-listing-photos-dropzone-hint {
+	font-size: 0.82em;
+	color: #999;
+}
+
+.lis-listing-photos-preview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 14px;
+}
+
+.lis-listing-photos-preview:empty {
+	margin-top: 0;
+}
+
+.lis-listing-photos-preview-item {
+	width: 84px;
+	height: 84px;
+	border-radius: 8px;
+	overflow: hidden;
+	background: #eee;
+}
+
+.lis-listing-photos-preview-item img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.lis-listing-submit-hours-table {
+	width: 100%;
+	border-collapse: collapse;
 }
 
 .lis-listing-submit-hours-table th {
 	text-align: left;
-	font-weight: normal;
-	padding: 4px 0;
+	font-weight: 500;
+	color: #555;
+	padding: 6px 12px 6px 0;
 	width: 90px;
+	font-size: 0.9em;
 }
 
 .lis-listing-submit-hours-table td {
-	padding: 4px 0;
+	padding: 6px 0;
+}
+
+.lis-listing-submit-hours-table input[type="time"] {
+	width: auto;
+	max-width: 130px;
+	display: inline-block;
 }
 
 .lis-listing-submit-hours-table span {
-	margin: 0 6px;
-	color: #888;
+	margin: 0 8px;
+	color: #999;
 }
 
 .lis-listing-submit-checkbox-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-	gap: 8px;
+	gap: 10px;
+}
+
+@media (max-width: 600px) {
+	.lis-listing-submit-section {
+		padding: 16px;
+		border-radius: 10px;
+	}
+
+	.lis-listing-submit-hours-table th {
+		width: 76px;
+		font-size: 0.85em;
+	}
+
+	.lis-listing-submit-hours-table input[type="time"] {
+		max-width: 105px;
+	}
+
+	.lis-listing-submit-checkbox-grid {
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	}
+
+	.lis-listing-submit-button {
+		width: 100%;
+	}
 }
 
 .lis-listing-edit-gallery {

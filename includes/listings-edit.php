@@ -49,6 +49,7 @@ function lis_directory_get_listing_edit_url( $listing_id ) {
 
 function lis_directory_render_listing_edit_form_shortcode() {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	wp_enqueue_script( 'lis-directory-listing-photos', LIS_DIRECTORY_URL . 'assets/js/listing-photos.js', array(), LIS_DIRECTORY_VERSION, true );
 
 	if ( ! is_user_logged_in() ) {
 		ob_start();
@@ -176,8 +177,13 @@ function lis_directory_render_listing_edit_form_shortcode() {
 				</div>
 			<?php endif; ?>
 			<p>
-				<label for="lis_listing_photos">Add more photos (PNG or JPG, up to <?php echo (int) LIS_DIRECTORY_SUBMIT_MAX_PHOTOS; ?> at a time)</label>
+				<label for="lis_listing_photos">Add more photos (up to <?php echo (int) LIS_DIRECTORY_SUBMIT_MAX_PHOTOS; ?> at a time)</label>
+				<label for="lis_listing_photos" class="lis-listing-photos-dropzone">
+					<span class="lis-listing-photos-dropzone-label">Click to choose photos, or drag them here</span>
+					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each.</span>
+				</label>
 				<input type="file" id="lis_listing_photos" name="lis_listing_photos[]" accept="image/png,image/jpeg" multiple />
+				<div class="lis-listing-photos-preview" data-photos-preview></div>
 			</p>
 			<p>
 				<label for="lis_listing_video_url">Video</label>

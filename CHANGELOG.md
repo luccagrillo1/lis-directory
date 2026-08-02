@@ -7,6 +7,58 @@ This file is the authoritative project history.
 
 ---
 
+## [0.26.0] — 2026-08-02 — Fixed: Add Listing form was rendering unstyled
+
+### Real bug found and fixed
+
+User feedback: the Add Listing page "looks ass." Root cause:
+`lis_directory_render_listing_submission_form_shortcode()`
+(`includes/listings-submission.php`) never called `wp_enqueue_style()` for
+`listings.css` — every `.lis-listing-submit-*` rule that's existed since
+this form was first built has simply never applied on a page that only
+has this one shortcode on it (which is exactly the standalone "Add
+Listing" page's situation). The form has been raw, completely unstyled
+browser-default HTML the entire time. Fixed by adding the missing
+enqueue call. `[lis_listing_edit]` already had it (that one was fine).
+
+Found the same *class* of bug in the older Vendor Showcase submission
+form (`includes/submission.php`, `[lis_preferred_vendor_submit]`) —
+except there, no CSS was ever written for its `lis-pv-submit-*` classes
+at all, not just a missing enqueue. Bigger job, flagged separately
+rather than scope-creeping it into this fix.
+
+### While in there: redesigned the photo upload
+
+The bare native `<input type="file" multiple>` was very likely the
+single ugliest part of an otherwise reasonably-styled form. Replaced
+with a proper dropzone: the raw input is visually hidden (still real,
+still what actually submits), a styled `<label>` triggers it on click,
+and new `assets/js/listing-photos.js` adds drag-and-drop onto the
+dropzone plus live thumbnail previews of exactly what's selected before
+upload. Shared by both `[lis_listing_submit]` and `[lis_listing_edit]`
+since they use identical `#lis_listing_photos` markup.
+
+Also: mobile-responsive breakpoint for the whole submit form (hours
+table, checkbox grid, full-width submit button under 600px), better
+section card styling (white cards with subtle shadow instead of flat
+gray), and focus states on inputs.
+
+### Files touched
+
+- `includes/listings-submission.php` (missing enqueue, dropzone markup)
+- `includes/listings-edit.php` (dropzone markup, photo-preview enqueue)
+- `assets/js/listing-photos.js` (new)
+- `assets/css/listings.css`
+
+### Known limitation
+
+Could not visually verify this against the live draft "Add Listing" page
+— no wp-admin login session, and Application Passwords don't authenticate
+normal page loads (REST-only). Built and reasoned through carefully, but
+a screenshot after this deploys would confirm it actually looks right.
+
+---
+
 ## [0.25.0] — 2026-08-02 — Grid/List/Map view toggle + Sort By
 
 Matches a toolbar Lucca pointed to on Directorist's real listings page:

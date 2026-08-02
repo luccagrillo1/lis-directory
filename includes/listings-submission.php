@@ -26,6 +26,9 @@ add_shortcode( 'lis_listing_submit', 'lis_directory_render_listing_submission_fo
 add_action( 'admin_post_lis_directory_submit_listing', 'lis_directory_handle_listing_submission' );
 
 function lis_directory_render_listing_submission_form_shortcode() {
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	wp_enqueue_script( 'lis-directory-listing-photos', LIS_DIRECTORY_URL . 'assets/js/listing-photos.js', array(), LIS_DIRECTORY_VERSION, true );
+
 	if ( ! is_user_logged_in() ) {
 		ob_start();
 		?>
@@ -127,9 +130,13 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		<div class="lis-listing-submit-section">
 			<h3>Photos &amp; Video</h3>
 			<p>
-				<label for="lis_listing_photos">Photos (PNG or JPG, at least one required — up to <?php echo (int) LIS_DIRECTORY_SUBMIT_MAX_PHOTOS; ?>)</label>
+				<label for="lis_listing_photos">Photos (at least one required — up to <?php echo (int) LIS_DIRECTORY_SUBMIT_MAX_PHOTOS; ?>)</label>
+				<label for="lis_listing_photos" class="lis-listing-photos-dropzone">
+					<span class="lis-listing-photos-dropzone-label">Click to choose photos, or drag them here</span>
+					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each. The first one becomes the main photo.</span>
+				</label>
 				<input type="file" id="lis_listing_photos" name="lis_listing_photos[]" accept="image/png,image/jpeg" multiple required />
-				<small>The first one becomes the main photo; the rest form the gallery.</small>
+				<div class="lis-listing-photos-preview" data-photos-preview></div>
 			</p>
 			<p>
 				<label for="lis_listing_video_url">Video</label>
