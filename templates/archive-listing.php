@@ -19,6 +19,10 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 <div class="lis-listing-archive">
 	<h1 class="lis-listing-archive-title"><?php echo esc_html( $title ); ?></h1>
 
+	<?php if ( function_exists( 'lis_directory_render_search_form_shortcode' ) ) : ?>
+		<?php echo lis_directory_render_search_form_shortcode( array() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already escaped inside the render function. ?>
+	<?php endif; ?>
+
 	<?php if ( have_posts() ) : ?>
 		<div class="lis-listing-grid">
 			<?php

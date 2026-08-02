@@ -7,6 +7,47 @@ This file is the authoritative project history.
 
 ---
 
+## [0.21.0] — 2026-08-02 — Search widget on the real archive page
+
+### What changed
+
+Fixed a real, user-reported gap: the `[lis_listing_search]` filter widget
+(keyword, directory type, category, price, open now, features) was only
+ever placed on the separate draft "LIS Directory (Preview)" page — it was
+never embedded into `templates/archive-listing.php`, so the actual live
+`/listings/` archive (and any `lis_listing_category` term archive) had no
+visible search/filter UI at all, unlike Directorist's real site where the
+search bar sits directly atop the results.
+
+`templates/archive-listing.php` now calls
+`lis_directory_render_search_form_shortcode()` directly at the top of
+`.lis-listing-archive`, right after the page title, before the listing
+grid. Existing `pre_get_posts` filtering logic in `listings-search.php`
+needed no changes — it was already scoped to the archive/category query,
+just never had a form on that page pointing at it.
+
+Added one CSS override
+(`.lis-listing-archive .lis-listing-search-form`) — the form's own
+`max-width`/padding were sized for standalone shortcode placement inside
+a narrower page-content column; nested inside `.lis-listing-archive`
+(which already provides matching width/padding), those would have
+doubled up. Reset to `padding: 0` and `max-width: none` in that context.
+
+### Files touched
+
+- `templates/archive-listing.php`
+- `assets/css/listings.css`
+
+### Known limitation
+
+The form's `action` always points at the plain `/listings/` archive
+(via `get_post_type_archive_link()`), not the current category term
+archive — so filtering from inside a category page redirects to the
+unscoped archive rather than staying scoped to that category. Existing
+behavior, unchanged by this fix; not in scope of the reported bug.
+
+---
+
 ## [0.20.1] — 2026-08-01 — QA pass
 
 Read back through every file touched this session (v0.16.4 → v0.20.0) with

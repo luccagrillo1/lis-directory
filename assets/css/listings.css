@@ -122,6 +122,12 @@
 	margin-bottom: 20px;
 }
 
+.lis-listing-archive .lis-listing-search-form {
+	padding: 0;
+	margin: 0 0 24px;
+	max-width: none;
+}
+
 .lis-listing-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
