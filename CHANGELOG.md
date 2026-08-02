@@ -7,6 +7,43 @@ This file is the authoritative project history.
 
 ---
 
+## [0.28.0] — 2026-08-02 — Real multi-step wizard for Add/Edit Listing
+
+The bigger rebuild explicitly deferred in v0.27.0 ("not something to risk
+without being able to see it live") — became buildable once Lucca
+connected the Claude in Chrome extension mid-session, which finally let
+this get visually verified against the real draft page instead of
+reasoned about blind.
+
+New `assets/js/listing-form-wizard.js`, applied to both
+`[lis_listing_submit]` and `[lis_listing_edit]` automatically (any
+`.lis-listing-submit-form` with 2+ `.lis-listing-submit-section`
+children gets wizard-ified — no per-shortcode wiring). Deliberately
+**not** a real multi-page wizard with server-side partial saves — every
+field still lives in the same `<form>` and posts in one request exactly
+as before. This only changes which section is visible at a time, driven
+entirely client-side:
+
+- Sidebar step list, auto-generated from each section's own `<h3>` text
+  (can't drift out of sync if a section is ever renamed/reordered/added).
+- Numbered steps, checkmark on completed ones, current step highlighted.
+- Back/Continue buttons per step; Continue is gated on that step's own
+  `:invalid` fields before advancing (native HTML5 validation).
+- Sidebar items are freely clickable regardless of step (jump ahead or
+  back anytime) — only Continue-driven linear flow is gated.
+- Final backstop on the real submit button: reveals every section right
+  before checking `form.checkValidity()`, so a required field on a
+  step you jumped past can't silently block submission — if invalid,
+  jumps to the offending step and calls `reportValidity()` on it.
+
+### Files touched
+
+- `assets/js/listing-form-wizard.js` (new)
+- `assets/css/listings.css` (sidebar/step layout, `.lis-listing-submit-form` widened to fit two columns)
+- `includes/listings-submission.php` / `includes/listings-edit.php` (enqueue)
+
+---
+
 ## [0.27.0] — 2026-08-02 — Rich-text description, airier form styling
 
 Lucca shared a screenshot of Directorist's own real "Add Listing" flow —

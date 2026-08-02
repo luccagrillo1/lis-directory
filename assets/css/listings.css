@@ -920,13 +920,137 @@
 /* ---------- Submission form ---------- */
 
 .lis-listing-submit-form {
-	max-width: 640px;
+	max-width: 900px;
+}
+
+.lis-listing-wizard {
+	display: flex;
+	gap: 40px;
+	align-items: flex-start;
+}
+
+.lis-listing-wizard-nav {
+	flex: 0 0 190px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	position: sticky;
+	top: 24px;
+}
+
+.lis-listing-wizard-nav-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	text-align: left;
+	padding: 10px 12px;
+	border: none;
+	border-radius: 8px;
+	background: none;
+	color: #888;
+	font-size: 0.92em;
+	cursor: pointer;
+}
+
+.lis-listing-wizard-nav-item:hover {
+	background: #f5f5f0;
+	color: #444;
+}
+
+.lis-listing-wizard-nav-item.is-active {
+	background: #eef1e9;
+	color: #37421f;
+	font-weight: 600;
+}
+
+.lis-listing-wizard-nav-number {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: #e2e2da;
+	color: #666;
+	font-size: 0.78em;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+.lis-listing-wizard-nav-item.is-active .lis-listing-wizard-nav-number,
+.lis-listing-wizard-nav-item.is-complete .lis-listing-wizard-nav-number {
+	background: #576846;
+	color: #fff;
+}
+
+.lis-listing-wizard-steps {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.lis-listing-wizard-controls {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 28px;
+}
+
+.lis-listing-wizard-back,
+.lis-listing-wizard-next {
+	padding: 10px 22px;
+	border: none;
+	border-radius: 8px;
+	font-size: 0.95em;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.lis-listing-wizard-back {
+	background: none;
+	border: 1px solid #ddd;
+	color: #666;
+}
+
+.lis-listing-wizard-back:hover {
+	background: #f5f5f0;
+}
+
+.lis-listing-wizard-next {
+	background: #576846;
+	color: #fff;
+	margin-left: auto;
+}
+
+.lis-listing-wizard-next:hover {
+	background: #465538;
+}
+
+@media (max-width: 720px) {
+	.lis-listing-wizard {
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.lis-listing-wizard-nav {
+		flex-direction: row;
+		flex-wrap: wrap;
+		position: static;
+		width: 100%;
+	}
+
+	.lis-listing-wizard-nav-item span:last-child {
+		display: none;
+	}
+
+	.lis-listing-wizard-nav-item {
+		padding: 8px;
+		border-radius: 999px;
+	}
 }
 
 .lis-listing-submit-section {
-	padding: 0 0 32px;
-	margin-bottom: 32px;
-	border-bottom: 1px solid #eee;
+	padding: 0;
+	margin-bottom: 0;
+	border-bottom: none;
 }
 
 .lis-listing-submit-section:last-of-type {
