@@ -148,3 +148,14 @@ durable record in case of a context compaction mid-run.
   (still v0.16.4 live, v0.19.0 not yet installed) and kept going rather
   than stopping — built v0.20.0, closing the FAQs gap that had been
   flagged as "not built" since early in this framework's history.
+- 2026-08-02: v0.20.1 confirmed installed live. Re-submitted the
+  type-specific meta (bedrooms/bathrooms/sqft/salary/employment_type/
+  directory type) for all 6 demo listings via REST — it had silently
+  failed the first time under the old plugin version (see the deployment-
+  gap note above). All 6 confirmed correct via a follow-up GET each.
+  Also fixed a real user-reported bug: the search/filter widget was only
+  ever on the separate draft preview page, never the real `/listings/`
+  archive. Shipped as v0.21.0. Noticed the live site returning
+  intermittent 502/504 errors on REST POST requests throughout this
+  session (GETs mostly fine) — flagged to Lucca as a probable hosting/
+  server-load issue, unrelated to this plugin.
