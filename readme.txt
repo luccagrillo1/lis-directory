@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.23.0
+Stable tag: 0.23.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.23.1 =
+* Fixes a PHP syntax error in v0.23.0's Settings page (mismatched
+  if/else syntax). v0.23.0's zip was never released — caught by CI
+  before install.
 
 = 0.23.0 =
 * Added a Featured Listing paid upgrade (WooCommerce-backed, configured
