@@ -103,6 +103,7 @@ while ( have_posts() ) :
 			<div class="lis-listing-header-actions">
 				<button type="button" class="lis-listing-bookmark-btn">☆ Save</button>
 				<button type="button" class="lis-listing-share-btn">Share</button>
+				<button type="button" class="lis-listing-compare-btn" data-id="<?php echo (int) $post_id; ?>">+ Compare</button>
 			</div>
 		</div>
 

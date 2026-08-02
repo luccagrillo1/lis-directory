@@ -88,10 +88,12 @@ real content pages; **deliberately out of scope** (see below).
 
 ## Phases (versioned incrementally, each pushed to GitHub as it lands)
 
-1. **v0.17.0** — Directory-type taxonomy + type-specific meta fields
-2. **v0.18.0** — Full category tree import (233 terms) + search/filter widget
-3. **v0.19.0** — Compare Listings + Author Profile + front-end Dashboard
-4. **v0.20.0** — Demo listings per type + new draft page tree assembled from
+1. **v0.17.0** ✅ — Directory-type taxonomy + type-specific meta fields
+2. **v0.18.0** ✅ — Full category tree import (233 terms) + search/filter
+   widget + Compare Listings + Author Profile + front-end Dashboard
+   (phases 2 and 3 landed together in one version — no reason to split the
+   release once both were done)
+3. **v0.19.0** — Demo listings per type + new draft page tree assembled from
    all of the above
 
 Each phase gets its own CHANGELOG.md entry, version bump, commit, tag, and
@@ -102,3 +104,9 @@ durable record in case of a context compaction mid-run.
 ## Status log
 
 - 2026-08-01: Plan written. Starting Phase 1.
+- 2026-08-01: v0.17.0 shipped (directory types + Real Estate/Job Listing
+  fields).
+- 2026-08-01: v0.18.0 shipped — 233-term category tree imported, search
+  widget, Compare Listings, Author Profile, Dashboard. Moving to Phase 4
+  (demo listings + the actual draft page tree, the deliverable Lucca can
+  click through).

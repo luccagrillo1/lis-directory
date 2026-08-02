@@ -7,6 +7,65 @@ This file is the authoritative project history.
 
 ---
 
+## [0.18.0] — 2026-08-01 — Directorist parity, phases 2+3
+
+### What changed
+
+**Phase 2a — full category tree.** `lis_listing_category` was ~1 term deep;
+imported Directorist's real `at_biz_dir-category` tree 1:1 via the REST API
+(both taxonomies are `show_in_rest`, so no direct DB access was needed) —
+233 terms total, confirmed exactly 2 levels deep (29 top-level, 204
+children) before importing, two-pass (parents first, building an old-ID →
+new-ID map, then children against that map). Idempotent by name, so it was
+safe to re-run after the browser tab's 30-second tool-call timeout cut the
+first attempt off partway through — it just skipped what already existed
+and picked up where it left off. Verified after: 233 terms, 0 orphaned
+children, spot-checked hierarchy (e.g. "Acupuncturists" correctly parented
+under "Health & Wellness").
+
+**Phase 2b — search/filter widget.** New `includes/listings-search.php`:
+`[lis_listing_search]` shortcode — keyword, directory type, category, price
+tier ($/$$/$$$/$$$$, matching how this site's listing prices are actually
+stored — free text, not a strict number, so no numeric range slider),
+open-now, and features. Deliberately GET-based with no AJAX and no separate
+results page: the form submits to the existing `lis_listing` archive (or a
+category archive) and a `pre_get_posts` hook (plus a `the_posts` filter
+specifically for open-now, since that's derived at request time from hours
+meta, not a single stored value a `meta_query` can match) applies the
+filters to that same query. Only touches the query when one of this
+plugin's own filter params is present, so a plain `/listings/` visit is
+unaffected.
+
+**Phase 3 — Compare, Author Profile, Dashboard.** New
+`includes/listings-account.php`:
+* `[lis_listing_compare]` — up to 4 listings side by side (photo, category,
+  price, rating, address, features). Cookie-backed (`assets/js/listing-compare.js`),
+  not a DB record, so it works for anonymous visitors the same way
+  Directorist's own Compare does. "+ Compare" buttons added to archive
+  cards, the single listing page, and author-profile cards.
+* `[lis_listing_author_profile]` — public page for one vendor
+  (`?author_id=`): avatar, display name, bio, grid of their published
+  listings.
+* `[lis_listing_dashboard]` — logged-in user's own listings (any status)
+  with a status pill and View/Edit actions. **Scope note:** no front-end
+  edit form. The existing `[lis_listing_submit]` form requires a fresh
+  photo upload every submit, which is right for a first submission and
+  wrong for an edit — a real pre-filled edit variant is separate work, not
+  something to rush. Edit links only appear when the user's role actually
+  has `edit_post` capability (Author/Contributor+, not the default
+  Subscriber most front-end registrants get) — honest about current
+  capability rather than a dead link.
+
+### Deliberately unchanged
+
+`templates/archive-listing.php` keeps its own inline card markup rather
+than being refactored to call the new `lis_directory_render_listing_card()`
+helper (used by Author Profile) — a mid-flight refactor of the one template
+every listing view already depends on wasn't worth the risk this pass; the
+duplication is small and contained.
+
+---
+
 ## [0.17.0] — 2026-08-01 — Directorist parity, phase 1: directory types
 
 ### Why

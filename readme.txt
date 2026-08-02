@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.17.0
+Stable tag: 0.18.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -87,6 +87,25 @@ variations is a wp-admin task, not something this plugin does for you).
   (unlike the Vendor Showcase, there's no "one active per category" rule to
   enforce here). Additional photos, business hours, and features are
   admin-added after first publish, not part of this form yet.
+* `[lis_listing_search]` — the search/filter widget (keyword, directory
+  type, category, price tier, open-now, features). Plain GET form, no AJAX
+  — submits straight to the `lis_listing` archive (or a category archive)
+  and a `pre_get_posts`/`the_posts` hook applies the filters there, so
+  results use the same archive template rather than a separate results
+  page. `redirect="https://..."` to point it somewhere other than the
+  default archive.
+* `[lis_listing_compare]` — side-by-side comparison (up to 4) of whatever
+  listings the visitor has added via the "+ Compare" button on archive
+  cards, the single listing page, or Author Profile cards. Cookie-backed,
+  works for anonymous visitors, no account needed.
+* `[lis_listing_author_profile]` — public vendor page. Reads `?author_id=`
+  from the URL; shows avatar, display name, bio, and a grid of that
+  author's published listings.
+* `[lis_listing_dashboard]` — logged-in user's own listings (any status)
+  with a status pill and View/Edit actions. No front-end edit form yet —
+  Edit only appears for users whose role actually has edit access
+  (Author/Contributor+); most front-end registrants are Subscribers and
+  will just see status + View.
 
 == Setup: WooCommerce Subscriptions ==
 
@@ -124,6 +143,12 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.18.0 =
+* Directorist parity, phases 2+3 (see DIRECTORIST_PARITY_PLAN.md):
+  imported the full 233-term category tree; added the `[lis_listing_search]`
+  filter widget; added `[lis_listing_compare]`, `[lis_listing_author_profile]`,
+  and `[lis_listing_dashboard]`.
 
 = 0.17.0 =
 * Directorist parity, phase 1 (see DIRECTORIST_PARITY_PLAN.md): `lis_listing`
