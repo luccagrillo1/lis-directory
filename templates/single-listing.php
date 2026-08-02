@@ -187,7 +187,6 @@ while ( have_posts() ) :
 					</script>
 					<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr( $maps_api_key ); ?>&callback=lisDirectoryInitMaps&loading=async" async defer></script>
 				<?php endif; ?>
-				<?php endif; ?>
 
 				<div class="lis-listing-section">
 					<h2>Description</h2>
