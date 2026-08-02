@@ -7,6 +7,55 @@ This file is the authoritative project history.
 
 ---
 
+## [0.17.0] — 2026-08-01 — Directorist parity, phase 1: directory types
+
+### Why
+
+Directive from Lucca: "everything framework wise that's live on the site rn"
+should get a `lis_listing` counterpart, on a separate draft page tree,
+touching nothing live. Full plan and scope reasoning (what's in, what's
+deliberately out) lives in `DIRECTORIST_PARITY_PLAN.md` at the project root
+— not duplicated here since it'll grow across several versions.
+
+Verified via REST API what's actually live before assuming: Directorist
+powers **four** directory types on this site, not just the one "Local
+Directory" this plugin had been shadowing — Local Business (108 listings),
+Real Estate Sale, Real Estate Rent, and Job Listing, all sharing one 233-term
+category taxonomy (`at_biz_dir-category` — confirmed real-estate terms like
+"Apartment" and business terms like "Accounting & Tax Services" coexist in
+the same flat-ish tree, not separate per-type taxonomies).
+
+### What changed
+
+* **`includes/listings-meta.php`** — new `_lis_listing_type` post meta
+  (`local-business` / `real-estate-sale` / `real-estate-rent` / `job-listing`),
+  a plain `<select>` in the meta box rather than a taxonomy — Directorist's
+  own "Add Listing" screen uses a single dropdown, not checkboxes, and a
+  listing only ever has one type. Defaults to `local-business` so the one
+  pre-existing listing (Talus Rock Retreat, saved before this field existed)
+  resolves sanely with no migration needed.
+* New type-specific fields, shown/hidden via a small inline script keyed off
+  the type `<select>`: Real Estate gets `_lis_listing_bedrooms` /
+  `_lis_listing_bathrooms` / `_lis_listing_sqft`; Job Listing gets
+  `_lis_listing_salary` / `_lis_listing_employment_type` (full-time/
+  part-time/contract/seasonal). Job application contact deliberately reuses
+  the existing generic Email/Website fields instead of adding new ones.
+* New "Directory" admin list-table column showing each listing's type at a
+  glance.
+* `templates/single-listing.php` and `templates/archive-listing.php` — both
+  now show the type-specific facts (bed/bath/sqft on Real Estate, salary +
+  employment type on Job Listing) in the obvious places (a facts strip on
+  the single page, a one-line summary on archive cards).
+* `assets/css/listings.css` — matching styles for the new facts strip/line.
+
+### Deliberately unchanged
+
+Categories are still ~1 term deep (`lis_listing_category`) — the full
+233-term import is phase 2, tracked separately since it's a data operation,
+not a code change, and worth its own commit.
+
+---
+
 ## [0.16.4] — 2026-08-01 — Fix: Directorist CSS missing on draft previews
 
 ### Found by

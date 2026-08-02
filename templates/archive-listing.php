@@ -25,7 +25,12 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 			while ( have_posts() ) :
 				the_post();
 				$post_id     = get_the_ID();
+				$type        = lis_directory_get_listing_type( $post_id );
 				$price       = get_post_meta( $post_id, '_lis_listing_price', true );
+				$bedrooms    = get_post_meta( $post_id, '_lis_listing_bedrooms', true );
+				$bathrooms   = get_post_meta( $post_id, '_lis_listing_bathrooms', true );
+				$sqft        = get_post_meta( $post_id, '_lis_listing_sqft', true );
+				$salary      = get_post_meta( $post_id, '_lis_listing_salary', true );
 				$categories  = get_the_terms( $post_id, 'lis_listing_category' );
 				$category    = ( $categories && ! is_wp_error( $categories ) ) ? $categories[0] : null;
 				$features    = get_the_terms( $post_id, 'lis_listing_feature' );
@@ -57,6 +62,17 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 							<?php if ( $category ) : ?><span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span><?php endif; ?>
 							<?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?></span><?php endif; ?>
 						</div>
+						<?php if ( ( 'real-estate-sale' === $type || 'real-estate-rent' === $type ) && ( $bedrooms || $bathrooms || $sqft ) ) : ?>
+							<p class="lis-listing-card-facts">
+								<?php echo esc_html( implode( ' · ', array_filter( array(
+									$bedrooms ? $bedrooms . ' bd' : '',
+									$bathrooms ? $bathrooms . ' ba' : '',
+									$sqft ? number_format_i18n( (int) $sqft ) . ' sqft' : '',
+								) ) ) ); ?>
+							</p>
+						<?php elseif ( 'job-listing' === $type && $salary ) : ?>
+							<p class="lis-listing-card-facts lis-listing-card-facts--salary"><?php echo esc_html( $salary ); ?></p>
+						<?php endif; ?>
 						<p class="lis-listing-card-excerpt"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 16 ) ); ?></p>
 						<?php if ( ! empty( $features ) ) : ?>
 							<div class="lis-listing-card-tags">

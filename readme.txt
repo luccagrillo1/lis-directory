@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.16.4
+Stable tag: 0.17.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -124,6 +124,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.17.0 =
+* Directorist parity, phase 1 (see DIRECTORIST_PARITY_PLAN.md): `lis_listing`
+  now supports the same four directory types Directorist runs live (Local
+  Business, Real Estate Sale, Real Estate Rent, Job Listing), with
+  type-specific fields (beds/baths/sqft, salary/employment type) shown on
+  both the single listing page and archive cards.
 
 = 0.16.4 =
 * Fixed: the search widget's "More Filters" panel rendered fully expanded

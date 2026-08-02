@@ -26,12 +26,19 @@ while ( have_posts() ) :
 	the_post();
 	$post_id = get_the_ID();
 
+	$type      = lis_directory_get_listing_type( $post_id );
 	$address   = get_post_meta( $post_id, '_lis_listing_address', true );
 	$phone     = get_post_meta( $post_id, '_lis_listing_phone', true );
 	$website   = get_post_meta( $post_id, '_lis_listing_website', true );
 	$email     = get_post_meta( $post_id, '_lis_listing_email', true );
 	$price     = get_post_meta( $post_id, '_lis_listing_price', true );
 	$video_url = get_post_meta( $post_id, '_lis_listing_video_url', true );
+	$bedrooms  = get_post_meta( $post_id, '_lis_listing_bedrooms', true );
+	$bathrooms = get_post_meta( $post_id, '_lis_listing_bathrooms', true );
+	$sqft      = get_post_meta( $post_id, '_lis_listing_sqft', true );
+	$salary    = get_post_meta( $post_id, '_lis_listing_salary', true );
+	$employment_types = lis_directory_get_employment_types();
+	$employment_type  = get_post_meta( $post_id, '_lis_listing_employment_type', true );
 	$services  = get_post_meta( $post_id, '_lis_listing_services', true );
 	$service_lines = $services ? array_filter( array_map( 'trim', explode( "\n", $services ) ) ) : array();
 
@@ -101,6 +108,23 @@ while ( have_posts() ) :
 
 		<div class="lis-listing-columns">
 			<div class="lis-listing-main">
+
+				<?php if ( 'real-estate-sale' === $type || 'real-estate-rent' === $type ) : ?>
+					<?php if ( $bedrooms || $bathrooms || $sqft ) : ?>
+						<div class="lis-listing-realestate-facts">
+							<?php if ( $bedrooms ) : ?><span><strong><?php echo esc_html( $bedrooms ); ?></strong> Beds</span><?php endif; ?>
+							<?php if ( $bathrooms ) : ?><span><strong><?php echo esc_html( $bathrooms ); ?></strong> Baths</span><?php endif; ?>
+							<?php if ( $sqft ) : ?><span><strong><?php echo esc_html( $sqft ); ?></strong> Sq Ft</span><?php endif; ?>
+						</div>
+					<?php endif; ?>
+				<?php elseif ( 'job-listing' === $type ) : ?>
+					<?php if ( $salary || $employment_type ) : ?>
+						<div class="lis-listing-job-facts">
+							<?php if ( $salary ) : ?><span class="lis-listing-job-salary"><?php echo esc_html( $salary ); ?></span><?php endif; ?>
+							<?php if ( $employment_type && isset( $employment_types[ $employment_type ] ) ) : ?><span class="lis-listing-job-type"><?php echo esc_html( $employment_types[ $employment_type ] ); ?></span><?php endif; ?>
+						</div>
+					<?php endif; ?>
+				<?php endif; ?>
 
 				<?php if ( $address || $phone || $website || $email ) : ?>
 					<div class="lis-listing-meta">

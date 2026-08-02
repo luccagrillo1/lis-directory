@@ -72,6 +72,17 @@
 	margin: 4px 0 0 0;
 }
 
+.lis-listing-card-facts {
+	font-size: 0.88em;
+	font-weight: 600;
+	color: #3a5a2c;
+	margin: 4px 0 0 0;
+}
+
+.lis-listing-card-facts--salary {
+	font-size: 1em;
+}
+
 .lis-listing-card-tags {
 	display: flex;
 	flex-wrap: wrap;
@@ -246,6 +257,47 @@
 
 .lis-listing-section {
 	margin-bottom: 28px;
+}
+
+.lis-listing-realestate-facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;
+	margin: 0 0 20px 0;
+	padding: 14px 16px;
+	border: 1px solid #eee;
+	border-radius: 10px;
+	background: #fafafa;
+	font-size: 0.95em;
+}
+
+.lis-listing-realestate-facts strong {
+	font-size: 1.1em;
+}
+
+.lis-listing-job-facts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin: 0 0 20px 0;
+}
+
+.lis-listing-job-salary {
+	font-weight: 700;
+	font-size: 1.15em;
+	color: #3a5a2c;
+}
+
+.lis-listing-job-type {
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: #eef1e9;
+	color: #576846;
+	font-size: 0.82em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
 }
 
 .lis-listing-section h2 {
