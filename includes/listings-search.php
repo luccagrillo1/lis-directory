@@ -34,6 +34,39 @@ function lis_directory_get_price_tiers() {
 	);
 }
 
+/**
+ * "Highest Rated" isn't here — ratings are computed on the fly from
+ * approved comments (lis_directory_get_listing_average_rating()), not
+ * stored as sortable post meta, so WP_Query can't ORDER BY it without a
+ * denormalized rating meta field kept in sync on every new review. A
+ * reasonable follow-up if it turns out to matter, not something to fake
+ * with a wrong sort.
+ */
+function lis_directory_get_sort_options() {
+	return array(
+		'newest'     => array(
+			'label'   => 'Newest',
+			'orderby' => 'date',
+			'order'   => 'DESC',
+		),
+		'oldest'     => array(
+			'label'   => 'Oldest',
+			'orderby' => 'date',
+			'order'   => 'ASC',
+		),
+		'title_asc'  => array(
+			'label'   => 'A → Z',
+			'orderby' => 'title',
+			'order'   => 'ASC',
+		),
+		'title_desc' => array(
+			'label'   => 'Z → A',
+			'orderby' => 'title',
+			'order'   => 'DESC',
+		),
+	);
+}
+
 function lis_directory_render_search_form_shortcode( $atts ) {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 	wp_enqueue_script( 'lis-directory-listing-search', LIS_DIRECTORY_URL . 'assets/js/listing-search.js', array(), LIS_DIRECTORY_VERSION, true );
@@ -122,6 +155,62 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 }
 
 /**
+ * Grid/List/Map view toggle + Sort By, rendered just above the results
+ * grid in templates/archive-listing.php. View is a pure display
+ * preference (which layout to show the SAME results in) — handled
+ * entirely client-side via a CSS class + localStorage, no query param,
+ * since it doesn't change what's being queried. Sort changes the actual
+ * query, so it's a real GET form (works with JS off; the onchange
+ * auto-submit is just a convenience) that preserves every other active
+ * filter param as a hidden field.
+ */
+function lis_directory_render_listing_toolbar() {
+	$sort_options = lis_directory_get_sort_options();
+	$current_sort = isset( $_GET['lis_sort'] ) && isset( $sort_options[ sanitize_key( wp_unslash( $_GET['lis_sort'] ) ) ] )
+		? sanitize_key( wp_unslash( $_GET['lis_sort'] ) )
+		: 'newest';
+	$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
+	?>
+	<div class="lis-listing-toolbar">
+		<div class="lis-listing-view-toggle" role="group" aria-label="View">
+			<button type="button" class="lis-listing-view-btn is-active" data-view="grid" aria-label="Grid view" title="Grid view">
+				<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="12" y="2" width="6" height="6" rx="1"/><rect x="2" y="12" width="6" height="6" rx="1"/><rect x="12" y="12" width="6" height="6" rx="1"/></svg>
+			</button>
+			<button type="button" class="lis-listing-view-btn" data-view="list" aria-label="List view" title="List view">
+				<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/></svg>
+			</button>
+			<?php if ( $maps_api_key ) : ?>
+				<button type="button" class="lis-listing-view-btn" data-view="map" aria-label="Map view" title="Map view">
+					<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M7 3 2 5v12l5-2 6 2 5-2V3l-5 2-6-2Z"/><line x1="7" y1="3" x2="7" y2="15"/><line x1="13" y1="5" x2="13" y2="17"/></svg>
+				</button>
+			<?php endif; ?>
+		</div>
+
+		<form method="get" class="lis-listing-sort-form">
+			<?php foreach ( $_GET as $key => $value ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only, re-emitted as hidden fields to preserve filter state, no state change on this request.
+				if ( 'lis_sort' === $key ) {
+					continue;
+				}
+				foreach ( (array) $value as $v ) :
+					?>
+					<input type="hidden" name="<?php echo esc_attr( is_array( $value ) ? $key . '[]' : $key ); ?>" value="<?php echo esc_attr( is_array( $v ) ? '' : $v ); ?>" />
+				<?php endforeach; ?>
+			<?php endforeach; ?>
+			<label class="lis-listing-sort-label">
+				Sort By
+				<select name="lis_sort" onchange="this.form.submit()">
+					<?php foreach ( $sort_options as $value => $option ) : ?>
+						<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current_sort, $value ); ?>><?php echo esc_html( $option['label'] ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</label>
+			<noscript><button type="submit" class="lis-listing-sort-submit">Apply</button></noscript>
+		</form>
+	</div>
+	<?php
+}
+
+/**
  * Only touches the real, public, main query — never wp-admin, never a
  * secondary/widget query — and only when one of this plugin's own filter
  * params is actually present, so a plain visit to `/listings/` with no
@@ -136,9 +225,19 @@ function lis_directory_apply_search_filters( $query ) {
 	}
 
 	$has_any_filter = isset( $_GET['lis_q'] ) || isset( $_GET['lis_type'] ) || isset( $_GET['lis_category'] )
-		|| isset( $_GET['lis_price'] ) || isset( $_GET['lis_open_now'] ) || isset( $_GET['lis_feature'] );
+		|| isset( $_GET['lis_price'] ) || isset( $_GET['lis_open_now'] ) || isset( $_GET['lis_feature'] )
+		|| isset( $_GET['lis_sort'] );
 	if ( ! $has_any_filter ) {
 		return;
+	}
+
+	if ( ! empty( $_GET['lis_sort'] ) ) {
+		$sort_options = lis_directory_get_sort_options();
+		$sort         = sanitize_key( wp_unslash( $_GET['lis_sort'] ) );
+		if ( isset( $sort_options[ $sort ] ) ) {
+			$query->set( 'orderby', $sort_options[ $sort ]['orderby'] );
+			$query->set( 'order', $sort_options[ $sort ]['order'] );
+		}
 	}
 
 	if ( ! empty( $_GET['lis_q'] ) ) {

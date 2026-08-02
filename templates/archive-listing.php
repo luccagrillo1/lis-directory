@@ -24,12 +24,17 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 	<?php endif; ?>
 
 	<?php if ( have_posts() ) : ?>
-		<div class="lis-listing-grid">
+		<?php if ( function_exists( 'lis_directory_render_listing_toolbar' ) ) : ?>
+			<?php lis_directory_render_listing_toolbar(); ?>
+		<?php endif; ?>
+
+		<div class="lis-listing-grid" data-lis-listing-results>
 			<?php
 			while ( have_posts() ) :
 				the_post();
 				$post_id     = get_the_ID();
 				$type        = lis_directory_get_listing_type( $post_id );
+				$address     = get_post_meta( $post_id, '_lis_listing_address', true );
 				$price       = get_post_meta( $post_id, '_lis_listing_price', true );
 				$bedrooms    = get_post_meta( $post_id, '_lis_listing_bedrooms', true );
 				$bathrooms   = get_post_meta( $post_id, '_lis_listing_bathrooms', true );
@@ -49,7 +54,7 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 				$popular     = lis_directory_is_listing_popular( $post_id );
 				$avg_rating  = lis_directory_get_listing_average_rating( $post_id );
 				?>
-				<a class="lis-listing-card" href="<?php the_permalink(); ?>">
+				<a class="lis-listing-card" href="<?php the_permalink(); ?>" <?php echo $address ? 'data-address="' . esc_attr( $address ) . '" data-title="' . esc_attr( get_the_title() ) . '"' : ''; ?>>
 					<?php if ( $thumb_id ) : ?>
 						<?php echo wp_get_attachment_image( $thumb_id, 'medium', false, array( 'class' => 'lis-listing-card-thumb' ) ); ?>
 					<?php endif; ?>
@@ -92,6 +97,18 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 				</a>
 			<?php endwhile; ?>
 		</div>
+
+		<?php
+		$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
+		if ( $maps_api_key ) :
+			?>
+			<div class="lis-listing-map-view" data-lis-listing-map-view hidden>
+				<div class="lis-listing-map-view-canvas"></div>
+			</div>
+			<script>window.lisDirectoryMapsApiKey = <?php echo wp_json_encode( $maps_api_key ); ?>;</script>
+		<?php endif; ?>
+		<?php wp_enqueue_script( 'lis-directory-listing-view-toggle', LIS_DIRECTORY_URL . 'assets/js/listing-view-toggle.js', array(), LIS_DIRECTORY_VERSION, true ); ?>
+
 		<?php the_posts_pagination(); ?>
 	<?php else : ?>
 		<p class="lis-listing-empty">No listings here yet.</p>

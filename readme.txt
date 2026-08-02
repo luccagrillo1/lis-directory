@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.24.4
+Stable tag: 0.25.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,12 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.25.0 =
+* Added Grid/List/Map view toggle buttons and a Sort By dropdown to the
+  listings archive, matching Directorist's own toolbar. Map view needs a
+  Google Maps API key configured (same one used for the single-listing
+  map).
 
 = 0.24.4 =
 * The search widget's Features filter is now a type-to-filter picker

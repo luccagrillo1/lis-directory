@@ -7,6 +7,47 @@ This file is the authoritative project history.
 
 ---
 
+## [0.25.0] — 2026-08-02 — Grid/List/Map view toggle + Sort By
+
+Matches a toolbar Lucca pointed to on Directorist's real listings page:
+view-mode buttons (Grid/List/Map) plus a Sort By dropdown, rendered by
+the new `lis_directory_render_listing_toolbar()` just above the results
+grid in `templates/archive-listing.php`.
+
+- **Grid/List** is a pure client-side display preference — same query
+  results, different layout — handled by `assets/js/listing-view-toggle.js`
+  toggling a `.lis-listing-grid--list` class and remembering the choice
+  in `localStorage`. Deliberately not a URL param since it doesn't change
+  what's queried.
+- **Map** view only appears if a Google Maps API key is configured
+  (Settings > LIS Directory Settings) — same key used for the
+  single-listing map. Lazy-loads the Maps JavaScript API only when
+  actually clicked (no point loading it for visitors who never do),
+  geocodes every visible card's address client-side, drops a marker per
+  result, and fits the map bounds to show them all. Clicking a marker
+  goes to that listing.
+- **Sort By** (`lis_sort` GET param: Newest/Oldest/A→Z/Z→A) is a real
+  `pre_get_posts` change, handled in `lis_directory_apply_search_filters()`
+  in `includes/listings-search.php` — added to the same guard/dispatch
+  function that already owns the archive query rather than a second
+  competing hook. The sort `<select>` auto-submits via `onchange`, but
+  it's a real GET form with every other active filter re-emitted as
+  hidden fields, so it still works with JavaScript off.
+- **Not built**: sorting by rating. Ratings are computed on the fly from
+  approved comments, not stored as queryable post meta, so `ORDER BY`
+  can't reach it without a denormalized rating field kept in sync on
+  every new review — a real follow-up if it turns out to matter, not
+  something to fake with a wrong sort.
+
+### Files touched
+
+- `includes/listings-search.php` (sort options, toolbar render function, `pre_get_posts` sort handling)
+- `templates/archive-listing.php` (toolbar placement, `data-address`/`data-title` on cards, map view container)
+- `assets/js/listing-view-toggle.js` (new)
+- `assets/css/listings.css`
+
+---
+
 ## [0.24.4] — 2026-08-02 — Features filter: checkbox wall → type-to-filter
 
 User feedback on the search widget's "More Filters" panel: the Features
