@@ -39,6 +39,11 @@ function lis_directory_register_settings() {
 		'type'              => 'integer',
 		'sanitize_callback' => 'absint',
 	) );
+	register_setting( 'lis_pv_settings_group', 'lis_directory_google_maps_api_key', array(
+		'type'              => 'string',
+		'sanitize_callback' => 'sanitize_text_field',
+		'show_in_rest'      => true,
+	) );
 }
 
 function lis_directory_render_settings_page() {
@@ -98,6 +103,13 @@ function lis_directory_render_settings_page() {
 						<?php else : ?>
 							<p class="description">WooCommerce isn't active, so this can't be configured.</p>
 						<?php endif; ?>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="lis_directory_google_maps_api_key">Google Maps API Key</label></th>
+					<td>
+						<input type="text" id="lis_directory_google_maps_api_key" name="lis_directory_google_maps_api_key" class="regular-text" value="<?php echo esc_attr( get_option( 'lis_directory_google_maps_api_key' ) ); ?>" />
+						<p class="description">Enables an embedded map on each listing's page (Google Maps Embed API, using the listing's address). Leave blank to keep showing just the "open in Google Maps" link instead. Restrict this key to your domain in the Google Cloud Console — it's visible in page source, same as any Maps Embed key.</p>
 					</td>
 				</tr>
 			</table>

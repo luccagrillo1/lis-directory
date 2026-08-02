@@ -7,6 +7,66 @@ This file is the authoritative project history.
 
 ---
 
+## [0.24.0] — 2026-08-02 — Embedded map, plus two new WooCommerce pricing products
+
+### Maps
+
+`templates/single-listing.php`'s doc comment previously flagged this as
+"not built — needs a Google Maps API key this project doesn't have." Lucca
+provided one. New Settings > LIS Directory Settings field
+(`lis_directory_google_maps_api_key`), and when both that key and a
+listing's address are present, a Google Maps Embed API iframe (`place`
+mode — geocodes the plain address string, no lat/long stored on the
+listing) renders right after the contact info block. No key or no
+address: falls back to exactly the previous behavior (address just links
+out to Google Maps).
+
+### Two new WooCommerce products (created as drafts — review before publishing)
+
+Per Lucca's direction, created via the WooCommerce REST API (same
+Application Password used all session — no real purchase was made,
+creating a draft catalog product isn't a transaction):
+
+- **Featured Listing** (product 6439, variable): Monthly $18 (variation
+  6440) / Annual $150 (variation 6441). Configure Settings > LIS Directory
+  Settings > Featured Listing Product to point at 6439 once published —
+  `includes/listings-pricing.php` already matches on the parent product
+  ID regardless of which variation was purchased, so both prices work
+  with no code change.
+- **Standard Listing** (product 6442, variable): Monthly $8 (6443) /
+  Annual $60 (6444). **Not wired to anything** — submitting a listing via
+  `[lis_listing_submit]` is still completely free. Gating submission
+  behind payment would be a real behavior change to existing, live
+  functionality and wasn't something to decide unilaterally; flagged
+  here rather than silently built. Say the word if that's actually
+  wanted and it's a straightforward follow-up.
+
+Both products used `type: "variable"` with subscription meta
+(`_subscription_price`/`_subscription_period`/etc.) set at the variation
+level — WooCommerce's REST API on this site rejects a bare
+`type: "subscription"` (its product-type enum here is only `simple,
+grouped, external, variable, listing_pricing_plans` — the last one being
+Directorist's own pricing-plan product type, not something this plugin's
+generic cart/order hooks integrate with), which is also exactly how the
+existing, already-working Vendor Showcase product is structured.
+
+### Files touched
+
+- `includes/woocommerce.php` (Maps API key + settings field)
+- `templates/single-listing.php` (map embed)
+- `assets/css/listings.css` (map container)
+
+---
+
+## [0.23.1] — 2026-08-02 — PHP syntax fix
+
+Fixed a mismatched brace/alt-syntax `if` in `includes/woocommerce.php`'s
+Settings page (the Featured Listing Product dropdown block) that CI
+caught via `php -l` before it ever reached a release — v0.23.0's zip was
+deleted and never installed anywhere.
+
+---
+
 ## [0.23.0] — 2026-08-02 — Featured Listing paid upgrade
 
 ### What changed

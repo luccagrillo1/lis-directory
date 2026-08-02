@@ -9,10 +9,12 @@
  * header (title/category/badges/open-status/bookmark/share), two-column
  * body (contact/description/features/services/video/social/reviews on the
  * left, business hours on the right), a Report/Claim block. FAQs (admin-
- * managed, dynamic add/remove rows) render as a plain accordion. Not
- * built: an embedded interactive map (needs a Google Maps API key this
- * project doesn't have — the address already links out to Google Maps
- * instead).
+ * managed, dynamic add/remove rows) render as a plain accordion. An
+ * embedded map (Google Maps Embed API, "place" mode — geocodes the plain
+ * address string server-side, no lat/long stored on the listing) shows
+ * whenever both an address and a Maps API key (Settings > LIS Directory
+ * Settings) are present; otherwise the address just links out to Google
+ * Maps like before.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -42,6 +44,7 @@ while ( have_posts() ) :
 	$employment_type  = get_post_meta( $post_id, '_lis_listing_employment_type', true );
 	$faqs      = lis_directory_get_listing_faqs( $post_id );
 	$services  = get_post_meta( $post_id, '_lis_listing_services', true );
+	$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
 	$service_lines = $services ? array_filter( array_map( 'trim', explode( "\n", $services ) ) ) : array();
 
 	$social = array(
@@ -157,6 +160,17 @@ while ( have_posts() ) :
 								<a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a>
 							</div>
 						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( $address && $maps_api_key ) : ?>
+					<div class="lis-listing-map">
+						<iframe
+							src="https://www.google.com/maps/embed/v1/place?key=<?php echo esc_attr( $maps_api_key ); ?>&q=<?php echo esc_attr( rawurlencode( $address ) ); ?>"
+							loading="lazy"
+							referrerpolicy="no-referrer-when-downgrade"
+							allowfullscreen
+						></iframe>
 					</div>
 				<?php endif; ?>
 

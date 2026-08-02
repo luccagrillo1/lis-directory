@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.23.1
+Stable tag: 0.24.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.24.0 =
+* Added an embedded Google Maps map on each listing's page (needs a Maps
+  API key configured under Settings > LIS Directory Settings).
+* Created two new WooCommerce products for review: Featured Listing
+  ($18/mo or $150/yr) and Standard Listing ($8/mo or $60/yr, not yet
+  wired to anything). Both are drafts — review and publish when ready.
 
 = 0.23.1 =
 * Fixes a PHP syntax error in v0.23.0's Settings page (mismatched
