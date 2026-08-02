@@ -7,6 +7,25 @@ This file is the authoritative project history.
 
 ---
 
+## [0.22.1] — 2026-08-02 — Prep for real-listing migration
+
+New `_lis_listing_migrated_from` meta (integer, REST-registered) on
+`lis_listing` — stores the original Directorist `at_biz_dir` post ID once
+the bulk migration of the 108 real Local Business listings runs. Purely
+prep: lets the migration script (run via REST, not shipped as UI) check
+"have I already migrated this one?" before creating a duplicate, so a
+retried/resumed run given the site's occasional REST flakiness is safe.
+No user-facing change in this version by itself.
+
+Also confirmed via Directorist's own REST namespace
+(`/wp-json/directorist/v2/listings/{id}`) that real listing data —
+address/phone/email/website/categories/hours/price/gallery (as *existing*
+attachment IDs already in the media library, not new uploads) — is
+cleanly readable there, which is what the migration script will read
+from rather than reverse-engineering Directorist's raw postmeta storage.
+
+---
+
 ## [0.22.0] — 2026-08-02 — Reviews fix, Mark as Sold, front-end edit form
 
 ### Reviews: fixed a real dead-end bug

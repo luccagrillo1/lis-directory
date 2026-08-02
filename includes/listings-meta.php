@@ -123,6 +123,11 @@ function lis_directory_register_listing_meta() {
 		'_lis_listing_employment_type' => 'string',
 		// JSON-encoded array of {question, answer} objects.
 		'_lis_listing_faqs'            => 'string',
+		// Original Directorist `at_biz_dir` post ID, for the one-time bulk
+		// migration of real listings — lets the migration script skip a
+		// listing it already created on a retried/resumed run instead of
+		// creating duplicates.
+		'_lis_listing_migrated_from'   => 'integer',
 	);
 
 	foreach ( $string_fields as $key => $type ) {
