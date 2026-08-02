@@ -139,10 +139,10 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 		form.insertBefore( wizard, sections[0] );
 		wizard.appendChild( progress );
-		wizard.appendChild( progressLabel );
 		wizard.appendChild( body );
 		body.appendChild( nav );
 		body.appendChild( stepsWrap );
+		stepsWrap.appendChild( progressLabel );
 		sections.forEach( function ( section ) {
 			stepsWrap.appendChild( section );
 		} );

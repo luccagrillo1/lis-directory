@@ -7,6 +7,48 @@ This file is the authoritative project history.
 
 ---
 
+## [0.29.1] — 2026-08-02 — Places autocomplete rebuilt; SurveyMonkey-style typography
+
+### Places autocomplete: rebuilt on PlaceAutocompleteElement
+
+v0.29.0's Places autocomplete used `google.maps.places.Autocomplete`, the
+classic widget bound directly onto the existing Business Name `<input>`.
+Live-tested it on the actual deployed form (Claude in Chrome) and hit a
+real console error: "You're calling a legacy API, which is not enabled
+for your project" — `google.maps.places.Autocomplete` was retired for
+any Google Cloud project created after March 2025, and this one was
+created today. Not a config problem, a hard platform cutoff.
+
+Rebuilt on `google.maps.places.PlaceAutocompleteElement`
+(`google.maps.importLibrary('places')`) — a self-contained web component
+with its own shadow-DOM input, so it can't attach to an existing plain
+`<input>` the way the old class did. Inserted as a separate "Search for
+your business (optional)" field above Business Name instead; picking a
+result still fills Business Name plus Address/Phone/Website/Hours, same
+as originally intended. Field/event names are the new camelCase Places
+API (New) shape (`displayName`, `formattedAddress`,
+`regularOpeningHours.periods` with `{hour, minute}` instead of the old
+`"HHMM"` string), not the old snake_case Places API fields.
+
+### Typography: less form-section, more "question"
+
+Lucca pointed at a SurveyMonkey-style reference (bold single question,
+small "Question X of Y" label directly above it, generous whitespace,
+no visual clutter). Moved `listing-form-wizard.js`'s progress label from
+the top of the whole wizard to sit immediately above each step's own
+heading, and restyled `.lis-listing-submit-section h3`: bold sans-serif
+instead of italic, larger, non-italic. Sidebar step nav kept as-is for
+now (real navigation utility, not something asked to remove) — can drop
+it later if the reference was meant literally rather than as a tone cue.
+
+### Files touched
+
+- `assets/js/listing-places-autocomplete.js` (rewritten)
+- `assets/js/listing-form-wizard.js` (progress label placement)
+- `assets/css/listings.css` (search field styling, heading typography, label styling)
+
+---
+
 ## [0.29.0] — 2026-08-02 — Progress bar + Google Places autocomplete
 
 ### Progress bar
