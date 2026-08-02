@@ -4,17 +4,11 @@
  * DIRECTORIST_PARITY_PLAN.md phase 3): Compare Listings, a public
  * Author/Vendor Profile page, and a logged-in Dashboard of "my listings".
  *
- * Dashboard scope note: this does NOT include a front-end edit form. The
- * existing [lis_listing_submit] form requires a fresh photo upload on every
- * submit (reasonable for a first submission, wrong for an edit — nobody
- * should have to re-upload photos just to fix a typo), and building a real
- * pre-filled edit variant is a substantial separate piece of work, not
- * something to bolt on in the time left for a first pass at this phase.
- * The Dashboard instead shows each listing's status plus a wp-admin Edit
- * link when the current user's role actually has edit_post capability for
- * it (Author/Contributor+, not the default Subscriber most front-end
- * registrants get) — honest about what it does and doesn't do rather than
- * shipping a half-working edit form.
+ * Dashboard Edit link: prefers the front-end [lis_listing_edit] form
+ * (includes/listings-edit.php, once its page is configured under Settings >
+ * LIS Directory Settings) so front-end signups — usually Subscribers, who
+ * lack wp-admin edit_post capability — can actually edit their own listing.
+ * Falls back to the wp-admin edit link only if that page isn't configured.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,6 +21,45 @@ add_shortcode( 'lis_listing_compare', 'lis_directory_render_compare_shortcode' )
 add_shortcode( 'lis_listing_author_profile', 'lis_directory_render_author_profile_shortcode' );
 add_shortcode( 'lis_listing_dashboard', 'lis_directory_render_dashboard_shortcode' );
 add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
+add_action( 'admin_post_lis_directory_toggle_sold', 'lis_directory_handle_toggle_sold' );
+
+/**
+ * Lets a listing owner flip Sold/Rented from the Dashboard without needing
+ * wp-admin edit access (most front-end registrants are Subscribers, who
+ * don't have it — same reasoning as the Edit link above). Ownership is
+ * enforced by post_author match, not just is_user_logged_in(), so one
+ * user can't toggle another's listing by guessing a listing_id.
+ */
+function lis_directory_handle_toggle_sold() {
+	$redirect_base = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : home_url( '/' );
+
+	if ( ! is_user_logged_in() ) {
+		wp_die( 'You must be logged in to do that.' );
+	}
+
+	$listing_id = isset( $_POST['listing_id'] ) ? absint( $_POST['listing_id'] ) : 0;
+
+	if ( ! isset( $_POST['lis_listing_toggle_sold_nonce'] ) || ! wp_verify_nonce( $_POST['lis_listing_toggle_sold_nonce'], 'lis_listing_toggle_sold_' . $listing_id ) ) {
+		wp_die( 'Security check failed. Please go back and try again.' );
+	}
+
+	$listing = get_post( $listing_id );
+	if ( ! $listing || 'lis_listing' !== $listing->post_type || (int) $listing->post_author !== get_current_user_id() ) {
+		wp_die( 'You can only do that for your own listings.' );
+	}
+
+	$type = lis_directory_get_listing_type( $listing_id );
+	if ( 'real-estate-sale' !== $type && 'real-estate-rent' !== $type ) {
+		wp_safe_redirect( $redirect_base );
+		exit;
+	}
+
+	$current = (bool) get_post_meta( $listing_id, '_lis_listing_sold', true );
+	update_post_meta( $listing_id, '_lis_listing_sold', ! $current );
+
+	wp_safe_redirect( $redirect_base );
+	exit;
+}
 
 /**
  * [lis_listing_grid type="real-estate-sale" count="12"] — a standalone grid
@@ -290,20 +323,41 @@ function lis_directory_render_dashboard_shortcode() {
 				</thead>
 				<tbody>
 					<?php foreach ( $listings as $listing ) :
-						$types  = lis_directory_get_listing_types();
-						$status = isset( $status_labels[ $listing->post_status ] ) ? $status_labels[ $listing->post_status ] : $listing->post_status;
+						$types      = lis_directory_get_listing_types();
+						$status     = isset( $status_labels[ $listing->post_status ] ) ? $status_labels[ $listing->post_status ] : $listing->post_status;
+						$type       = lis_directory_get_listing_type( $listing->ID );
+						$is_re      = 'real-estate-sale' === $type || 'real-estate-rent' === $type;
+						$sold       = $is_re && (bool) get_post_meta( $listing->ID, '_lis_listing_sold', true );
+						$sold_label = 'real-estate-rent' === $type ? 'Rented' : 'Sold';
 						?>
 						<tr>
 							<td><?php echo esc_html( get_the_title( $listing ) ); ?></td>
-							<td><?php echo esc_html( $types[ lis_directory_get_listing_type( $listing->ID ) ] ); ?></td>
-							<td><span class="lis-listing-dashboard-status lis-listing-dashboard-status--<?php echo esc_attr( $listing->post_status ); ?>"><?php echo esc_html( $status ); ?></span></td>
+							<td><?php echo esc_html( $types[ $type ] ); ?></td>
+							<td>
+								<span class="lis-listing-dashboard-status lis-listing-dashboard-status--<?php echo esc_attr( $listing->post_status ); ?>"><?php echo esc_html( $status ); ?></span>
+								<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo esc_html( $sold_label ); ?></span><?php endif; ?>
+							</td>
 							<td><?php echo esc_html( get_the_date( '', $listing ) ); ?></td>
 							<td>
 								<?php if ( 'publish' === $listing->post_status ) : ?>
 									<a href="<?php echo esc_url( get_permalink( $listing ) ); ?>">View</a>
 								<?php endif; ?>
-								<?php if ( current_user_can( 'edit_post', $listing->ID ) ) : ?>
+								<?php
+								$front_edit_url = lis_directory_get_listing_edit_url( $listing->ID );
+								if ( $front_edit_url ) :
+									?>
+									<a href="<?php echo esc_url( $front_edit_url ); ?>">Edit</a>
+								<?php elseif ( current_user_can( 'edit_post', $listing->ID ) ) : ?>
 									<a href="<?php echo esc_url( get_edit_post_link( $listing->ID ) ); ?>">Edit</a>
+								<?php endif; ?>
+								<?php if ( $is_re ) : ?>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="lis-listing-dashboard-inline-form">
+										<input type="hidden" name="action" value="lis_directory_toggle_sold" />
+										<input type="hidden" name="listing_id" value="<?php echo (int) $listing->ID; ?>" />
+										<input type="hidden" name="redirect_to" value="<?php echo esc_url( get_permalink() ); ?>" />
+										<?php wp_nonce_field( 'lis_listing_toggle_sold_' . $listing->ID, 'lis_listing_toggle_sold_nonce' ); ?>
+										<button type="submit" class="lis-listing-dashboard-link-button"><?php echo $sold ? esc_html( 'Mark Available' ) : esc_html( 'Mark ' . $sold_label ); ?></button>
+									</form>
 								<?php endif; ?>
 							</td>
 						</tr>

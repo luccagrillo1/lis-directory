@@ -61,6 +61,19 @@ function lis_directory_render_settings_page() {
 						<p class="description">Used to build the "submit your details" link shown on the WooCommerce thank-you page after a Vendor Showcase purchase.</p>
 					</td>
 				</tr>
+				<tr>
+					<th><label for="lis_directory_listing_edit_page_id">Listing Edit Page</label></th>
+					<td>
+						<?php
+						wp_dropdown_pages( array(
+							'name'             => 'lis_directory_listing_edit_page_id',
+							'selected'         => (int) get_option( 'lis_directory_listing_edit_page_id' ),
+							'show_option_none' => '— Select the page with [lis_listing_edit] —',
+						) );
+						?>
+						<p class="description">Used to build the "Edit" link on the front-end Dashboard for users who don't have wp-admin edit access to their own listing (the common case for front-end signups).</p>
+					</td>
+				</tr>
 			</table>
 			<?php submit_button(); ?>
 		</form>

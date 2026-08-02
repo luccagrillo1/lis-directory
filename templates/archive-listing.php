@@ -45,6 +45,7 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 				$thumb_id    = ! empty( $gallery_ids ) ? $gallery_ids[0] : ( has_post_thumbnail() ? get_post_thumbnail_id() : 0 );
 				$featured    = (bool) get_post_meta( $post_id, '_lis_listing_featured', true );
 				$verified    = (bool) get_post_meta( $post_id, '_lis_listing_verified', true );
+				$sold        = ( 'real-estate-sale' === $type || 'real-estate-rent' === $type ) && (bool) get_post_meta( $post_id, '_lis_listing_sold', true );
 				$popular     = lis_directory_is_listing_popular( $post_id );
 				$avg_rating  = lis_directory_get_listing_average_rating( $post_id );
 				?>
@@ -60,6 +61,7 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 							<?php endif; ?>
 						</div>
 						<div class="lis-listing-card-meta-row">
+							<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo 'real-estate-rent' === $type ? 'Rented' : 'Sold'; ?></span><?php endif; ?>
 							<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
 							<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
 							<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Verified</span><?php endif; ?>

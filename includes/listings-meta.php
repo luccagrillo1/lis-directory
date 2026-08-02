@@ -117,6 +117,7 @@ function lis_directory_register_listing_meta() {
 		'_lis_listing_bedrooms'     => 'string',
 		'_lis_listing_bathrooms'    => 'string',
 		'_lis_listing_sqft'         => 'string',
+		'_lis_listing_sold'         => 'boolean', // Real Estate only — "Sold" for sale listings, "Rented" for rentals.
 		// Job Listing only.
 		'_lis_listing_salary'          => 'string',
 		'_lis_listing_employment_type' => 'string',
@@ -170,6 +171,7 @@ function lis_directory_render_listing_meta_box( $post ) {
 	$salary     = get_post_meta( $post->ID, '_lis_listing_salary', true );
 	$employment_type = get_post_meta( $post->ID, '_lis_listing_employment_type', true );
 	$faqs       = lis_directory_get_listing_faqs( $post->ID );
+	$sold       = (bool) get_post_meta( $post->ID, '_lis_listing_sold', true );
 	?>
 	<table class="form-table">
 		<tr>
@@ -190,6 +192,13 @@ function lis_directory_render_listing_meta_box( $post ) {
 				<input type="text" id="lis_listing_bathrooms" name="lis_listing_bathrooms" class="small-text" placeholder="Baths" value="<?php echo esc_attr( $bathrooms ); ?>" />
 				<input type="text" id="lis_listing_sqft" name="lis_listing_sqft" class="small-text" placeholder="Sq Ft" value="<?php echo esc_attr( $sqft ); ?>" />
 				<p class="description">Real Estate only.</p>
+			</td>
+		</tr>
+		<tr class="lis-listing-type-fields lis-listing-type-fields--real-estate-sale lis-listing-type-fields--real-estate-rent">
+			<th>Status</th>
+			<td>
+				<label><input type="checkbox" id="lis_listing_sold" name="lis_listing_sold" value="1" <?php checked( $sold ); ?> /> Mark as Sold / Rented</label>
+				<p class="description">Shows a "Sold"/"Rented" badge and keeps the listing visible but flagged as no longer available.</p>
 			</td>
 		</tr>
 		<tr class="lis-listing-type-fields lis-listing-type-fields--job-listing">
@@ -393,6 +402,7 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 			update_post_meta( $post_id, "_{$key}", sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) );
 		}
 	}
+	update_post_meta( $post_id, '_lis_listing_sold', ! empty( $_POST['lis_listing_sold'] ) );
 	if ( isset( $_POST['lis_listing_employment_type'] ) ) {
 		$employment_type = sanitize_key( wp_unslash( $_POST['lis_listing_employment_type'] ) );
 		$valid           = lis_directory_get_employment_types();

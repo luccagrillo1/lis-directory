@@ -270,11 +270,12 @@ function lis_directory_handle_listing_submission() {
 	}
 
 	$post_id = wp_insert_post( array(
-		'post_type'    => 'lis_listing',
-		'post_title'   => $business_name,
-		'post_content' => $description,
-		'post_status'  => 'pending', // Native WP pending — reviewed/published from the normal admin editor.
-		'post_author'  => get_current_user_id(),
+		'post_type'      => 'lis_listing',
+		'post_title'     => $business_name,
+		'post_content'   => $description,
+		'post_status'    => 'pending', // Native WP pending — reviewed/published from the normal admin editor.
+		'post_author'    => get_current_user_id(),
+		'comment_status' => 'open', // Explicit, not left to the site-wide Discussion default — a listing with reviews turned off has a permanently empty, unusable Reviews section (see Talus Rock Retreat, which predated this and needed a one-time fix).
 	), true );
 
 	if ( is_wp_error( $post_id ) ) {

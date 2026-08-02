@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.21.0
+Stable tag: 0.22.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,16 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.22.0 =
+* Fixed a real bug: the one real listing (Talus Rock Retreat) had reviews
+  turned off from before this CPT supported comments, so its Reviews
+  section rendered nothing — not even a login prompt. Fixed live, and
+  hardened new submissions so it can't happen again.
+* Added Mark as Sold / Rented for Real Estate listings, with a badge and
+  a Dashboard toggle for the listing owner.
+* Added a front-end listing edit form (`[lis_listing_edit]`) so listing
+  owners can update their own listing without needing wp-admin access.
 
 = 0.21.0 =
 * Fixed a real bug: the search/filter widget only ever appeared on the

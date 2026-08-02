@@ -66,6 +66,7 @@ while ( have_posts() ) :
 	$featured = (bool) get_post_meta( $post_id, '_lis_listing_featured', true );
 	$verified = (bool) get_post_meta( $post_id, '_lis_listing_verified', true );
 	$popular  = lis_directory_is_listing_popular( $post_id );
+	$sold     = ( 'real-estate-sale' === $type || 'real-estate-rent' === $type ) && (bool) get_post_meta( $post_id, '_lis_listing_sold', true );
 
 	$avg_rating   = lis_directory_get_listing_average_rating( $post_id );
 	$review_count = lis_directory_get_listing_review_count( $post_id );
@@ -88,6 +89,7 @@ while ( have_posts() ) :
 			<div>
 				<h1 class="lis-listing-title"><?php the_title(); ?></h1>
 				<div class="lis-listing-header-meta">
+					<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo 'real-estate-rent' === $type ? 'Rented' : 'Sold'; ?></span><?php endif; ?>
 					<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
 					<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
 					<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Owner Verified</span><?php endif; ?>

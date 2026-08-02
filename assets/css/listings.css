@@ -565,7 +565,7 @@
 	padding: 0;
 }
 
-/* ---------- Badges: Featured / Popular / Verified ---------- */
+/* ---------- Badges: Featured / Popular / Verified / Sold ---------- */
 
 .lis-listing-badge {
 	display: inline-block;
@@ -588,6 +588,11 @@
 .lis-listing-badge--verified {
 	color: #2e7d32;
 	background: #e6f4ea;
+}
+
+.lis-listing-badge--sold {
+	color: #7a1f1f;
+	background: #fbe6e6;
 }
 
 .lis-listing-rating-summary {
@@ -796,6 +801,29 @@
 	gap: 8px;
 }
 
+.lis-listing-edit-gallery {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.lis-listing-edit-gallery-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	font-size: 0.8em;
+	font-weight: normal;
+}
+
+.lis-listing-edit-gallery-item img {
+	width: 80px;
+	height: 80px;
+	object-fit: cover;
+	border-radius: 4px;
+}
+
 .lis-listing-submit-checkbox {
 	display: flex;
 	align-items: center;
@@ -985,6 +1013,22 @@
 .lis-listing-dashboard-status--draft {
 	background: #eee;
 	color: #666;
+}
+
+.lis-listing-dashboard-inline-form {
+	display: inline;
+}
+
+.lis-listing-dashboard-link-button {
+	background: none;
+	border: none;
+	padding: 0;
+	margin-right: 10px;
+	color: #2271b1;
+	text-decoration: underline;
+	cursor: pointer;
+	font-size: inherit;
+	font-family: inherit;
 }
 
 /* ---------- FAQs ---------- */

@@ -7,6 +7,79 @@ This file is the authoritative project history.
 
 ---
 
+## [0.22.0] — 2026-08-02 — Reviews fix, Mark as Sold, front-end edit form
+
+### Reviews: fixed a real dead-end bug
+
+Reviews were never actually not-built — `includes/listings-reviews.php` has
+had a full working submission mechanism since early on (WordPress's own
+comment system, extended with a required 1–5 star rating, forced to
+`pending` for moderation regardless of the site's general Discussion
+setting). What was broken: **Talus Rock Retreat** (the one real listing,
+post 6386) had `comment_status: closed`, because it was created before
+this CPT supported comments at all — so `comments_open()` was false and
+`$review_count` was 0, meaning `templates/single-listing.php`'s
+`if ( comments_open() || $review_count )` guard never rendered anything
+under "Reviews," not even a login prompt. Fixed live via a one-time REST
+PATCH (`comment_status` → `open`). The 6 demo listings were already fine
+(created after comment support existed). Hardened
+`includes/listings-submission.php`'s `wp_insert_post()` call to explicitly
+set `'comment_status' => 'open'` going forward, instead of relying on the
+site-wide Discussion default.
+
+### Mark as Sold / Rented
+
+New `_lis_listing_sold` meta (Real Estate Sale/Rent only). Admin checkbox
+in the meta box, a "Sold"/"Rented" badge on the card and single page
+(label depends on sale vs. rent), and a Dashboard toggle button so the
+listing owner can flip it themselves without wp-admin access — ownership
+enforced by `post_author` match, not just being logged in.
+
+### Front-end listing edit form
+
+New `[lis_listing_edit]` shortcode + `includes/listings-edit.php`,
+deliberately a separate file/functions from `[lis_listing_submit]` rather
+than one shared form — real differences (photos optional vs. required,
+`wp_update_post` vs. `wp_insert_post`, ownership check instead of "anyone
+logged in") made a merged version harder to follow than two smaller ones.
+
+Editing does **not** reset a published listing back to `pending` — an
+owner fixing a typo shouldn't have to wait for re-approval every time.
+Existing gallery photos show with a "Remove" checkbox each; new photos are
+optional (unlike submission, where at least one is required). Type-specific
+fields (bedrooms/bathrooms/sqft, salary/employment type, directory type)
+are **not editable here** — the original submission form never collected
+them either (admin-only, set via the wp-admin meta box) — the form says so
+inline rather than silently omitting them.
+
+New "Listing Edit Page" setting (Settings > LIS Directory Settings,
+`lis_directory_listing_edit_page_id`, `show_in_rest` so it can be set via
+the REST settings endpoint too) — the Dashboard's Edit link uses it when
+configured, falling back to the wp-admin edit link otherwise. New draft
+page "Edit Listing" (post 6438) added under "LIS Directory (Preview)"
+with the `[lis_listing_edit]` shortcode, matching the existing 8-page tree.
+
+### Files touched
+
+- `includes/listings-reviews.php` (unchanged — confirmed correct, not
+  the source of the bug)
+- `templates/single-listing.php` (Sold/Rented badge)
+- `templates/archive-listing.php` (Sold/Rented badge)
+- `includes/listings-meta.php` (`_lis_listing_sold` meta + admin checkbox)
+- `includes/listings-account.php` (Dashboard toggle + smarter Edit link)
+- `includes/listings-submission.php` (explicit `comment_status`)
+- `includes/listings-edit.php` (new)
+- `assets/css/listings.css`
+
+### Known limitation
+
+The edit form can't touch directory type or its type-specific fields
+(bedrooms/bathrooms/sqft, salary, employment type) — same gap as the
+original submission form, just not newly introduced here. A reasonable
+follow-up if it turns out to matter in practice.
+
+---
+
 ## [0.21.0] — 2026-08-02 — Search widget on the real archive page
 
 ### What changed
