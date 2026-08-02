@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.19.0
+Stable tag: 0.20.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.20.0 =
+* Directorist parity, phase 5: listings can now have FAQs (admin-managed,
+  dynamic add/remove rows, plain accordion display) — the one gap that
+  had been explicitly flagged as not-yet-built since early on.
 
 = 0.19.0 =
 * Directorist parity, phase 4 (see DIRECTORIST_PARITY_PLAN.md): added

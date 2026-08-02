@@ -976,3 +976,34 @@
 	background: #eee;
 	color: #666;
 }
+
+/* ---------- FAQs ---------- */
+
+.lis-listing-faq {
+	border-bottom: 1px solid #eee;
+	padding: 12px 0;
+}
+
+.lis-listing-faq summary {
+	cursor: pointer;
+	font-weight: 600;
+	list-style: none;
+}
+
+.lis-listing-faq summary::-webkit-details-marker {
+	display: none;
+}
+
+.lis-listing-faq summary::before {
+	content: "+ ";
+	color: #576846;
+}
+
+.lis-listing-faq[open] summary::before {
+	content: "– ";
+}
+
+.lis-listing-faq p {
+	margin: 10px 0 0 0;
+	color: #555;
+}

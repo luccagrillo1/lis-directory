@@ -8,10 +8,11 @@
  * live via its Add Listing pricing-plan page, not guessed): gallery strip,
  * header (title/category/badges/open-status/bookmark/share), two-column
  * body (contact/description/features/services/video/social/reviews on the
- * left, business hours on the right), a Report/Claim block. Not built:
- * an embedded interactive map (needs a Google Maps API key this project
- * doesn't have — the address already links out to Google Maps instead)
- * and FAQs (needs a dynamic add/remove-row admin UI, not yet built).
+ * left, business hours on the right), a Report/Claim block. FAQs (admin-
+ * managed, dynamic add/remove rows) render as a plain accordion. Not
+ * built: an embedded interactive map (needs a Google Maps API key this
+ * project doesn't have — the address already links out to Google Maps
+ * instead).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -39,6 +40,7 @@ while ( have_posts() ) :
 	$salary    = get_post_meta( $post_id, '_lis_listing_salary', true );
 	$employment_types = lis_directory_get_employment_types();
 	$employment_type  = get_post_meta( $post_id, '_lis_listing_employment_type', true );
+	$faqs      = lis_directory_get_listing_faqs( $post_id );
 	$services  = get_post_meta( $post_id, '_lis_listing_services', true );
 	$service_lines = $services ? array_filter( array_map( 'trim', explode( "\n", $services ) ) ) : array();
 
@@ -198,6 +200,20 @@ while ( have_posts() ) :
 						<div class="lis-listing-social-links">
 							<?php foreach ( $social as $label => $url ) : ?>
 								<a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $label ); ?></a>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $faqs ) ) : ?>
+					<div class="lis-listing-section">
+						<h2>FAQs</h2>
+						<div class="lis-listing-faqs">
+							<?php foreach ( $faqs as $faq ) : ?>
+								<details class="lis-listing-faq">
+									<summary><?php echo esc_html( $faq['question'] ); ?></summary>
+									<p><?php echo esc_html( $faq['answer'] ); ?></p>
+								</details>
 							<?php endforeach; ?>
 						</div>
 					</div>

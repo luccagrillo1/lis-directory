@@ -7,6 +7,42 @@ This file is the authoritative project history.
 
 ---
 
+## [0.20.0] — 2026-08-01 — Directorist parity, phase 5: listing FAQs
+
+### What changed
+
+`lis_listing` listings can now have FAQs — the one gap explicitly flagged
+as "not built" in `templates/single-listing.php`'s own doc comment since
+the framework's early passes ("needs a dynamic add/remove-row admin UI,
+not yet built").
+
+* New `_lis_listing_faqs` post meta (`includes/listings-meta.php`) — a
+  JSON-encoded array of `{question, answer}` pairs in one meta field.
+  There's no fixed number of FAQs (that's the whole point of a dynamic
+  add/remove UI) and WordPress has no built-in repeatable-field-group
+  primitive, so JSON-in-one-field is the pragmatic choice over one meta
+  row per question.
+* Admin meta box: a plain `<template>` + vanilla-JS clone/remove pattern
+  (matching the existing type-field-toggle script already in this file,
+  not a new dependency) — "+ Add FAQ" clones a blank row, each row has its
+  own Remove button. Submits as parallel `lis_listing_faq_question[]` /
+  `lis_listing_faq_answer[]` arrays rather than assembling JSON
+  client-side; the save handler zips them together, drops any row missing
+  either half, and JSON-encodes the result server-side.
+* `lis_directory_get_listing_faqs( $post_id )` — always returns a clean,
+  re-indexed array, never trusts the stored JSON blindly (defensive
+  against anything else that might one day write to that meta key
+  outside this admin UI).
+* `templates/single-listing.php` — new FAQs section, plain `<details>`/
+  `<summary>` accordion (no JS needed for the front-end, browsers handle
+  `<details>` natively), positioned between Social and Reviews.
+* `assets/css/listings.css` — matching accordion styles. No new admin CSS
+  for the meta box rows — consistent with the rest of this plugin's admin
+  UI, which has never had custom styling beyond default wp-admin form
+  table markup.
+
+---
+
 ## [0.19.0] — 2026-08-01 — Directorist parity, phase 4: demo listings + draft page tree
 
 ### Found mid-phase: the live site was still on v0.16.4

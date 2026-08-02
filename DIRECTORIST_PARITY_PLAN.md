@@ -93,8 +93,11 @@ real content pages; **deliberately out of scope** (see below).
    widget + Compare Listings + Author Profile + front-end Dashboard
    (phases 2 and 3 landed together in one version — no reason to split the
    release once both were done)
-3. **v0.19.0** — Demo listings per type + new draft page tree assembled from
-   all of the above
+3. **v0.19.0** ✅ — Demo listings per type + new draft page tree assembled
+   from all of the above
+4. **v0.20.0** ✅ — Bonus: Listing FAQs (the one gap explicitly flagged as
+   "not built" since early on — not part of the original 4-phase plan, but
+   a genuine framework gap worth closing while there was time left)
 
 Each phase gets its own CHANGELOG.md entry, version bump, commit, tag, and
 GitHub release (zip attached), matching this plugin's existing convention.
@@ -141,3 +144,7 @@ durable record in case of a context compaction mid-run.
   widget already routes to the real archive), Single Category (the
   taxonomy archive handles this natively), and the WooCommerce
   checkout-flow pages (out of scope from the start, see above).
+- 2026-08-01: All 4 original phases done. Checked deployment status
+  (still v0.16.4 live, v0.19.0 not yet installed) and kept going rather
+  than stopping — built v0.20.0, closing the FAQs gap that had been
+  flagged as "not built" since early in this framework's history.

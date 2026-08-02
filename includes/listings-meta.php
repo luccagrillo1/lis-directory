@@ -71,6 +71,33 @@ function lis_directory_get_employment_types() {
 	);
 }
 
+/**
+ * FAQs, stored as a JSON-encoded array of {question, answer} pairs in a
+ * single meta field rather than one meta row per Q&A — there's no fixed
+ * number of them (that's the whole point of a dynamic add/remove-row admin
+ * UI), and WordPress has no built-in "repeatable field group" primitive to
+ * reach for instead. Always returns a clean, re-indexed array — never
+ * trusts stored JSON blindly, since it round-trips through a raw meta
+ * field that (in principle) something other than this admin UI could edit.
+ */
+function lis_directory_get_listing_faqs( $post_id ) {
+	$raw = get_post_meta( $post_id, '_lis_listing_faqs', true );
+	if ( ! $raw ) {
+		return array();
+	}
+	$decoded = json_decode( $raw, true );
+	if ( ! is_array( $decoded ) ) {
+		return array();
+	}
+	$faqs = array();
+	foreach ( $decoded as $pair ) {
+		if ( ! empty( $pair['question'] ) && ! empty( $pair['answer'] ) ) {
+			$faqs[] = array( 'question' => $pair['question'], 'answer' => $pair['answer'] );
+		}
+	}
+	return $faqs;
+}
+
 function lis_directory_register_listing_meta() {
 	$string_fields = array(
 		'_lis_listing_type'         => 'string', // local-business | real-estate-sale | real-estate-rent | job-listing.
@@ -93,6 +120,8 @@ function lis_directory_register_listing_meta() {
 		// Job Listing only.
 		'_lis_listing_salary'          => 'string',
 		'_lis_listing_employment_type' => 'string',
+		// JSON-encoded array of {question, answer} objects.
+		'_lis_listing_faqs'            => 'string',
 	);
 
 	foreach ( $string_fields as $key => $type ) {
@@ -140,6 +169,7 @@ function lis_directory_render_listing_meta_box( $post ) {
 	$sqft       = get_post_meta( $post->ID, '_lis_listing_sqft', true );
 	$salary     = get_post_meta( $post->ID, '_lis_listing_salary', true );
 	$employment_type = get_post_meta( $post->ID, '_lis_listing_employment_type', true );
+	$faqs       = lis_directory_get_listing_faqs( $post->ID );
 	?>
 	<table class="form-table">
 		<tr>
@@ -238,6 +268,28 @@ function lis_directory_render_listing_meta_box( $post ) {
 				<input type="url" id="lis_listing_linkedin" name="lis_listing_linkedin" class="large-text" value="<?php echo esc_attr( $linkedin ); ?>" placeholder="https://linkedin.com/..." /></p>
 			</td>
 		</tr>
+		<tr>
+			<th>FAQs</th>
+			<td>
+				<div id="lis_listing_faqs_rows">
+					<?php foreach ( $faqs as $faq ) : ?>
+						<div class="lis-listing-faq-row">
+							<input type="text" name="lis_listing_faq_question[]" class="large-text" placeholder="Question" value="<?php echo esc_attr( $faq['question'] ); ?>" />
+							<textarea name="lis_listing_faq_answer[]" class="large-text" rows="2" placeholder="Answer"><?php echo esc_textarea( $faq['answer'] ); ?></textarea>
+							<button type="button" class="button lis-listing-faq-remove">Remove</button>
+						</div>
+					<?php endforeach; ?>
+				</div>
+				<button type="button" class="button" id="lis_listing_faq_add">+ Add FAQ</button>
+				<template id="lis_listing_faq_row_template">
+					<div class="lis-listing-faq-row">
+						<input type="text" name="lis_listing_faq_question[]" class="large-text" placeholder="Question" value="" />
+						<textarea name="lis_listing_faq_answer[]" class="large-text" rows="2" placeholder="Answer"></textarea>
+						<button type="button" class="button lis-listing-faq-remove">Remove</button>
+					</div>
+				</template>
+			</td>
+		</tr>
 	</table>
 	<script>
 	( function () {
@@ -253,6 +305,23 @@ function lis_directory_render_listing_meta_box( $post ) {
 		}
 		select.addEventListener( 'change', sync );
 		sync();
+	}() );
+
+	( function () {
+		var container = document.getElementById( 'lis_listing_faqs_rows' );
+		var addBtn = document.getElementById( 'lis_listing_faq_add' );
+		var template = document.getElementById( 'lis_listing_faq_row_template' );
+		if ( ! container || ! addBtn || ! template ) {
+			return;
+		}
+		addBtn.addEventListener( 'click', function () {
+			container.appendChild( template.content.cloneNode( true ) );
+		} );
+		container.addEventListener( 'click', function ( e ) {
+			if ( e.target.classList.contains( 'lis-listing-faq-remove' ) ) {
+				e.target.closest( '.lis-listing-faq-row' ).remove();
+			}
+		} );
 	}() );
 	</script>
 	<?php
@@ -328,6 +397,19 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 		$employment_type = sanitize_key( wp_unslash( $_POST['lis_listing_employment_type'] ) );
 		$valid           = lis_directory_get_employment_types();
 		update_post_meta( $post_id, '_lis_listing_employment_type', isset( $valid[ $employment_type ] ) ? $employment_type : '' );
+	}
+	if ( isset( $_POST['lis_listing_faq_question'] ) ) {
+		$questions = (array) wp_unslash( $_POST['lis_listing_faq_question'] );
+		$answers   = isset( $_POST['lis_listing_faq_answer'] ) ? (array) wp_unslash( $_POST['lis_listing_faq_answer'] ) : array();
+		$faqs      = array();
+		foreach ( $questions as $i => $question ) {
+			$question = sanitize_text_field( $question );
+			$answer   = isset( $answers[ $i ] ) ? sanitize_textarea_field( $answers[ $i ] ) : '';
+			if ( '' !== $question && '' !== $answer ) {
+				$faqs[] = array( 'question' => $question, 'answer' => $answer );
+			}
+		}
+		update_post_meta( $post_id, '_lis_listing_faqs', wp_json_encode( $faqs ) );
 	}
 }
 
