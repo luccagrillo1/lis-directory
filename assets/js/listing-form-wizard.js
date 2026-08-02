@@ -21,6 +21,8 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 		var current = 0;
 		var navItems = [];
+		var submitButton = form.querySelector( '.lis-listing-submit-button' );
+		var submitWrap = submitButton ? submitButton.closest( 'p' ) || submitButton : null;
 
 		var wizard = document.createElement( 'div' );
 		wizard.className = 'lis-listing-wizard';
@@ -61,6 +63,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
 					numberEl.textContent = isComplete ? '✓' : String( i + 1 );
 				}
 			} );
+			if ( submitWrap ) {
+				submitWrap.style.display = index === sections.length - 1 ? '' : 'none';
+			}
 			wizard.scrollIntoView( { block: 'start', behavior: 'smooth' } );
 		}
 

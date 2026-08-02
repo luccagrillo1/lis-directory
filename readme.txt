@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.28.0
+Stable tag: 0.28.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.28.1 =
+* Wizard polish: Submit for Review now only shows on the last step,
+  caught by live-testing the actual form for the first time this
+  session.
 
 = 0.28.0 =
 * Add Listing / Edit Listing are now a real multi-step wizard with a

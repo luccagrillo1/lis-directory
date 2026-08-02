@@ -7,6 +7,23 @@ This file is the authoritative project history.
 
 ---
 
+## [0.28.1] — 2026-08-02 — Wizard polish: Submit button on the last step only
+
+First real live-tested fix this session: clicked through the actual
+deployed v0.28.0 wizard via the newly-connected Claude in Chrome
+extension (navigate, screenshot, fill fields, click Continue/Back — the
+whole flow, not just a static screenshot) and caught one redundancy —
+the real "Submit for Review" button sat outside the stepped sections, so
+it showed on every step alongside "Continue," not just the final one.
+`listing-form-wizard.js` now hides it (or its wrapping `<p>`) except on
+the last step.
+
+### Files touched
+
+- `assets/js/listing-form-wizard.js`
+
+---
+
 ## [0.28.0] — 2026-08-02 — Real multi-step wizard for Add/Edit Listing
 
 The bigger rebuild explicitly deferred in v0.27.0 ("not something to risk
