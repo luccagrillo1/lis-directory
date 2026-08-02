@@ -101,10 +101,18 @@ function lis_directory_render_listing_submission_form_shortcode() {
 					<?php endforeach; ?>
 				</select>
 			</p>
-			<p>
+			<div class="lis-listing-submit-editor">
 				<label for="lis_listing_description">Description</label>
-				<textarea id="lis_listing_description" name="lis_listing_description" rows="4"></textarea>
-			</p>
+				<?php
+				wp_editor( '', 'lis_listing_description', array(
+					'textarea_name' => 'lis_listing_description',
+					'textarea_rows' => 6,
+					'media_buttons' => false,
+					'teeny'         => true,
+					'quicktags'     => true,
+				) );
+				?>
+			</div>
 		</div>
 
 		<div class="lis-listing-submit-section">
@@ -258,7 +266,7 @@ function lis_directory_handle_listing_submission() {
 		$errors[] = 'email';
 	}
 
-	$description = isset( $_POST['lis_listing_description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['lis_listing_description'] ) ) : '';
+	$description = isset( $_POST['lis_listing_description'] ) ? wp_kses_post( wp_unslash( $_POST['lis_listing_description'] ) ) : '';
 	$address     = isset( $_POST['lis_listing_address'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_listing_address'] ) ) : '';
 	$phone       = isset( $_POST['lis_listing_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_listing_phone'] ) ) : '';
 	$website     = isset( $_POST['lis_listing_website'] ) ? esc_url_raw( wp_unslash( $_POST['lis_listing_website'] ) ) : '';

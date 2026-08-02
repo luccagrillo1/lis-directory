@@ -132,10 +132,18 @@ function lis_directory_render_listing_edit_form_shortcode() {
 					<?php endforeach; ?>
 				</select>
 			</p>
-			<p>
+			<div class="lis-listing-submit-editor">
 				<label for="lis_listing_description">Description</label>
-				<textarea id="lis_listing_description" name="lis_listing_description" rows="4"><?php echo esc_textarea( $listing->post_content ); ?></textarea>
-			</p>
+				<?php
+				wp_editor( $listing->post_content, 'lis_listing_description', array(
+					'textarea_name' => 'lis_listing_description',
+					'textarea_rows' => 6,
+					'media_buttons' => false,
+					'teeny'         => true,
+					'quicktags'     => true,
+				) );
+				?>
+			</div>
 			<?php if ( 'local-business' !== $type ) : ?>
 				<p class="description">Directory type and its specific details (<?php echo 'job-listing' === $type ? 'salary, employment type' : 'bedrooms, bathrooms, sq ft'; ?>) aren't editable here yet — contact us if those need to change.</p>
 			<?php endif; ?>
@@ -296,7 +304,7 @@ function lis_directory_handle_listing_update() {
 	wp_update_post( array(
 		'ID'           => $listing_id,
 		'post_title'   => $business_name,
-		'post_content' => isset( $_POST['lis_listing_description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['lis_listing_description'] ) ) : '',
+		'post_content' => isset( $_POST['lis_listing_description'] ) ? wp_kses_post( wp_unslash( $_POST['lis_listing_description'] ) ) : '',
 	) );
 
 	wp_set_post_terms( $listing_id, array( $term->term_id ), 'lis_listing_category' );

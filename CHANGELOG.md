@@ -7,6 +7,45 @@ This file is the authoritative project history.
 
 ---
 
+## [0.27.0] — 2026-08-02 — Rich-text description, airier form styling
+
+Lucca shared a screenshot of Directorist's own real "Add Listing" flow —
+a multi-step wizard with a rich-text editor and clean, underline-input
+typography — asking for the submission form to take cues from it. A full
+multi-step wizard is a much bigger rebuild (real step navigation, partial
+validation per step) than a CSS pass, and not something to risk without
+being able to see it live myself — deliberately not attempted here. Took
+the two changes that mattered most and were safely scoped:
+
+- **Description is now a real rich-text editor** (`wp_editor()` — WordPress's
+  own TinyMCE, `teeny` mode for a simpler toolbar, `quicktags` for the
+  Visual/Text tab pair, `media_buttons` off since inline images would be
+  redundant with the listing's own photo gallery) instead of a plain
+  `<textarea>`, on both `[lis_listing_submit]` and `[lis_listing_edit]`.
+  Save handlers switched from `sanitize_textarea_field()` to
+  `wp_kses_post()` accordingly — this field can now legitimately contain
+  HTML.
+- **Section styling reworked** to match the airier, minimal look in the
+  reference: no more gray boxed cards — a thin divider between sections,
+  italic accent-colored headings (the plugin's existing green, not
+  Directorist's own gold — staying consistent with the rest of this
+  plugin's palette rather than importing a second accent color), and
+  underline-only inputs instead of bordered boxes.
+
+### Files touched
+
+- `includes/listings-submission.php`
+- `includes/listings-edit.php`
+- `assets/css/listings.css`
+
+### Known limitation
+
+Still could not visually verify — no wp-admin login session for the
+draft page. Built carefully from the markup and the reference
+screenshot, but another screenshot after this deploys would confirm it.
+
+---
+
 ## [0.26.0] — 2026-08-02 — Fixed: Add Listing form was rendering unstyled
 
 ### Real bug found and fixed
