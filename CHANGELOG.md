@@ -7,6 +7,52 @@ This file is the authoritative project history.
 
 ---
 
+## [0.19.0] — 2026-08-01 — Directorist parity, phase 4: demo listings + draft page tree
+
+### Found mid-phase: the live site was still on v0.16.4
+
+Six new demo listings' type-specific meta (`_lis_listing_type`, bedrooms,
+bathrooms, sqft, salary, employment_type) came back missing from a REST GET
+immediately after being set via REST POST. Root cause: every zip since
+v0.16.4 (v0.17.0, v0.18.0) had only been pushed to GitHub / handed to Lucca
+as a download — nothing had actually been installed on the live site yet.
+WordPress's REST API only persists submitted meta for keys that are
+actually registered via `register_post_meta()`; the still-running old code
+doesn't register any of the new Phase 1 fields, so they were silently
+dropped, no error. The category assignments and the pages themselves saved
+fine — those only depend on taxonomies/post types that already existed in
+v0.16.4. Sent v0.18.0 to Lucca to install; **once confirmed live, the
+type/bedrooms/bathrooms/sqft/salary/employment_type meta for listing IDs
+6415–6420 needs to be re-submitted**, since it never actually saved the
+first time.
+
+### What changed
+
+* New `[lis_listing_grid type="real-estate-sale" count="12"]` shortcode
+  (`includes/listings-account.php`) — a standalone grid pre-filtered to one
+  directory type, for embedding on an ordinary page. Needed because the
+  real filtered-browsing experience is the `lis_listing` post-type/taxonomy
+  archive (a real WP query against `templates/archive-listing.php`), which
+  a plain page can't embed directly.
+* 6 demo listings created (2 each: Real Estate Sale, Real Estate Rent, Job
+  Listing). Confirmed via REST first that Real Estate/Job Listing have
+  **zero real Directorist data on this site** — all 108 real published
+  listings are Local Business Directory only — so these are honestly
+  `[Demo]`-prefixed fictional entries, not real business data repurposed.
+  Local Business needed no demo addition; the existing real "Talus Rock
+  Retreat" listing already covers that type.
+* New draft page tree: **"LIS Directory (Preview)"** (draft, top-level,
+  unlinked from live nav, contains the search widget) with 8 draft
+  children — Local Business, Real Estate — For Sale, Real Estate — For
+  Rent, Job Listings, Add Listing, Compare Listings, Vendor Profile, My
+  Dashboard. Mirrors the live Directorist page tree's actual structure
+  minus what was already ruled out of scope (WooCommerce checkout pages)
+  or made redundant by how this framework works (Search Result — the
+  search widget already routes to the real archive; Single Category — the
+  taxonomy archive handles this natively, no page needed).
+
+---
+
 ## [0.18.0] — 2026-08-01 — Directorist parity, phases 2+3
 
 ### What changed

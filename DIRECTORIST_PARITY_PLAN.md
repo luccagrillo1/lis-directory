@@ -110,3 +110,34 @@ durable record in case of a context compaction mid-run.
   widget, Compare Listings, Author Profile, Dashboard. Moving to Phase 4
   (demo listings + the actual draft page tree, the deliverable Lucca can
   click through).
+- 2026-08-01: **Discovered the live site is still running v0.16.4** — every
+  zip since (v0.17.0, v0.18.0) was only ever pushed to GitHub/handed to
+  Lucca as a download, never actually installed. Caught this because 6 new
+  demo listings' type-specific meta (`_lis_listing_type`, bedrooms,
+  bathrooms, sqft, salary, employment_type) came back missing from a
+  REST GET right after being set via REST POST — `register_post_meta()`
+  for those keys only exists in the new code, so the still-running old
+  code silently drops them (WordPress only persists REST-submitted meta
+  for keys that are actually registered; no error, just silently ignored).
+  Sent v0.18.0 to Lucca to install. **Follow-up once it's confirmed live:**
+  re-submit the type/bedrooms/bathrooms/sqft/salary/employment_type meta
+  for listing IDs 6415–6420 (the demo listings), since it never actually
+  saved the first time. The category assignments and the pages themselves
+  DID save fine — those don't depend on any of the new code, only on
+  taxonomies/post types that already existed in v0.16.4.
+- 2026-08-01: v0.19.0 — added `[lis_listing_grid type="..." count="12"]`
+  (standalone type-filtered grid, for the draft pages below since a plain
+  page can't embed the real CPT-archive query directly), created 6 demo
+  listings (2 Real Estate Sale, 2 Real Estate Rent, 2 Job Listing — Real
+  Estate/Job Listing have **zero real Directorist data** to seed from,
+  confirmed via REST: all 108 real listings are Local Business only, so
+  these are honestly-labeled `[Demo]`-prefixed fictional entries, not
+  real business data), and built the actual draft page tree: "LIS
+  Directory (Preview)" (draft, top-level, search widget) with children
+  Local Business / Real Estate — For Sale / Real Estate — For Rent / Job
+  Listings / Add Listing / Compare Listings / Vendor Profile / My
+  Dashboard — all draft, all under the one parent, unlinked from live nav.
+  Skipped from the live tree: Search Result (redundant — the search
+  widget already routes to the real archive), Single Category (the
+  taxonomy archive handles this natively), and the WooCommerce
+  checkout-flow pages (out of scope from the start, see above).

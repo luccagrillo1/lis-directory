@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.18.0
+Stable tag: 0.19.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -106,6 +106,12 @@ variations is a wp-admin task, not something this plugin does for you).
   Edit only appears for users whose role actually has edit access
   (Author/Contributor+); most front-end registrants are Subscribers and
   will just see status + View.
+* `[lis_listing_grid type="real-estate-sale" count="12"]` — a standalone
+  grid pre-filtered to one directory type, for embedding on an ordinary
+  page (the real filtered-browsing experience is the `lis_listing` archive
+  itself; this is the lightweight version for a landing page). `type` is
+  one of `local-business`, `real-estate-sale`, `real-estate-rent`,
+  `job-listing`; omit it to show all types.
 
 == Setup: WooCommerce Subscriptions ==
 
@@ -143,6 +149,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.19.0 =
+* Directorist parity, phase 4 (see DIRECTORIST_PARITY_PLAN.md): added
+  `[lis_listing_grid]`, 6 demo listings (Real Estate Sale/Rent, Job
+  Listing — clearly `[Demo]`-labeled, since there's no real Directorist
+  data for those three directory types to seed from), and the actual
+  draft page tree ("LIS Directory (Preview)" + 8 child pages) for review.
 
 = 0.18.0 =
 * Directorist parity, phases 2+3 (see DIRECTORIST_PARITY_PLAN.md):

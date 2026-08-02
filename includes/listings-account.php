@@ -26,6 +26,53 @@ define( 'LIS_DIRECTORY_COMPARE_MAX', 4 );
 add_shortcode( 'lis_listing_compare', 'lis_directory_render_compare_shortcode' );
 add_shortcode( 'lis_listing_author_profile', 'lis_directory_render_author_profile_shortcode' );
 add_shortcode( 'lis_listing_dashboard', 'lis_directory_render_dashboard_shortcode' );
+add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
+
+/**
+ * [lis_listing_grid type="real-estate-sale" count="12"] — a standalone grid
+ * for embedding on an ordinary page, pre-filtered to one directory type.
+ * Exists because the real filtered browsing experience lives on the
+ * `lis_listing` post-type archive / category archive (routed by
+ * templates/archive-listing.php against the actual WP query), which isn't
+ * something a plain page can embed directly — this is the lightweight
+ * version for the draft page tree's per-type landing pages (Real Estate
+ * Sale/Rent, Job Listings), reusing the same card markup as Author Profile
+ * via lis_directory_render_listing_card().
+ */
+function lis_directory_render_grid_shortcode( $atts ) {
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	lis_directory_enqueue_compare_assets();
+
+	$atts  = shortcode_atts( array( 'type' => '', 'count' => 12 ), $atts, 'lis_listing_grid' );
+	$types = lis_directory_get_listing_types();
+	$type  = isset( $types[ $atts['type'] ] ) ? $atts['type'] : '';
+
+	$query_args = array(
+		'post_type'      => 'lis_listing',
+		'post_status'    => 'publish',
+		'posts_per_page' => max( 1, (int) $atts['count'] ),
+	);
+
+	if ( $type ) {
+		$query_args['meta_query'] = array( array( 'key' => '_lis_listing_type', 'value' => $type ) );
+	}
+
+	$listings = get_posts( $query_args );
+
+	if ( empty( $listings ) ) {
+		return '<p class="lis-listing-empty">No listings here yet.</p>';
+	}
+
+	ob_start();
+	?>
+	<div class="lis-listing-grid">
+		<?php foreach ( $listings as $listing ) : ?>
+			<?php echo lis_directory_render_listing_card( $listing ); // phpcs:ignore -- escaped inside helper. ?>
+		<?php endforeach; ?>
+	</div>
+	<?php
+	return ob_get_clean();
+}
 add_action( 'wp', 'lis_directory_enqueue_compare_on_listing_views' );
 
 /**
