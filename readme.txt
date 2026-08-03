@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.30.3
+Stable tag: 0.30.4
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.30.4 =
+* Correction: the wizard now centers vertically on the page (in the
+  space between breadcrumb and footer) with left-aligned text, instead
+  of the 0.30.3 behavior of centering horizontally with centered text.
 
 = 0.30.3 =
 * Centered the Add Listing / Edit Listing onboarding block on the page

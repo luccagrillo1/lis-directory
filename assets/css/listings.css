@@ -921,8 +921,17 @@
 
 .lis-listing-submit-form {
 	max-width: 900px;
-	margin: 0 auto;
 	padding-top: 28px; /* Breathing room now that the page banner/title area is disabled on this page - without it the progress bar sits flush against the breadcrumb bar. */
+}
+
+/* Vertically (not horizontally) center the wizard within its content
+   area, scoped to only pages that actually contain this form so
+   ordinary long-form pages/posts aren't affected. */
+.entry-content:has(.lis-listing-submit-form) {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	min-height: 60vh;
 }
 
 .lis-listing-wizard {
@@ -967,7 +976,6 @@
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	font-weight: 700;
-	text-align: center;
 }
 
 .lis-listing-wizard-panel-question {
@@ -978,14 +986,12 @@
 	color: #2f3a20;
 	letter-spacing: -0.01em;
 	line-height: 1.25;
-	text-align: center;
 }
 
 .lis-listing-wizard-panel-hint {
 	margin: 0 0 24px;
 	color: #999;
 	font-size: 0.92em;
-	text-align: center;
 }
 
 .lis-listing-wizard-panel-question + p,

@@ -7,6 +7,22 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.4] — 2026-08-03 — Correction: vertical, not horizontal, centering
+
+0.30.3 misread the ask as horizontal centering (moving the whole block
+to the middle of the page width, center-aligning its text). What was
+actually wanted was vertical centering - the wizard block sitting
+centered in the empty space between the breadcrumb and the footer,
+staying left-aligned as before. Reverted the `margin: 0 auto` on
+`.lis-listing-submit-form` and the `text-align: center` on the
+section/question/hint text. Added `.entry-content:has(.lis-listing-submit-form)
+{ display:flex; flex-direction:column; justify-content:center;
+min-height:60vh; }` - scoped via `:has()` to only the page(s) that
+actually contain this form, so ordinary long-form pages/posts are
+unaffected.
+
+---
+
 ## [0.30.3] — 2026-08-03 — Center the onboarding wizard on the page
 
 The wizard block (`.lis-listing-submit-form`) was left-anchored inside
