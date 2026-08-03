@@ -89,8 +89,19 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			question.className = 'lis-listing-wizard-panel-question';
 			question.textContent = panel.dataset.panelQuestion || '';
 
-			panel.insertBefore( question, panel.firstChild );
-			panel.insertBefore( section, question );
+			// The section label (e.g. "GET STARTED") stays pinned at the
+			// panel's top, same as the progress bar above it. Everything
+			// else - the question, hint, the real field markup, and the
+			// controls - lives in `body`, which vertically centers itself
+			// within whatever space is left below the label.
+			var body = document.createElement( 'div' );
+			body.className = 'lis-listing-wizard-panel-body';
+			while ( panel.firstChild ) {
+				body.appendChild( panel.firstChild );
+			}
+			body.insertBefore( question, body.firstChild );
+			panel.appendChild( section );
+			panel.appendChild( body );
 
 			if ( panel.dataset.panelHint ) {
 				var hint = document.createElement( 'p' );
@@ -147,7 +158,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			} );
 			controls.appendChild( next );
 
-			panel.appendChild( controls );
+			body.appendChild( controls );
 		} );
 
 		// Review panel: not part of `panels` (those map 1:1 to real form
@@ -183,10 +194,14 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			reviewControls.appendChild( submitWrap );
 		}
 
+		var reviewBody = document.createElement( 'div' );
+		reviewBody.className = 'lis-listing-wizard-panel-body';
+		reviewBody.appendChild( reviewQuestion );
+		reviewBody.appendChild( reviewList );
+		reviewBody.appendChild( reviewControls );
+
 		reviewPanel.appendChild( reviewSection );
-		reviewPanel.appendChild( reviewQuestion );
-		reviewPanel.appendChild( reviewList );
-		reviewPanel.appendChild( reviewControls );
+		reviewPanel.appendChild( reviewBody );
 		stage.appendChild( reviewPanel );
 
 		function escapeHtml( str ) {
@@ -309,7 +324,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				void incoming.offsetWidth; // eslint-disable-line no-void -- force reflow so the transition actually plays.
 				incoming.classList.add( 'is-active' );
 
-				var incomingNext = incoming.querySelector( ':scope > .lis-listing-wizard-controls > .lis-listing-wizard-next' );
+				var incomingNext = incoming.querySelector( '.lis-listing-wizard-controls > .lis-listing-wizard-next' );
 				if ( incomingNext ) {
 					var incomingSeq = activeSequence();
 					var incomingIndex = incomingSeq.indexOf( incoming );

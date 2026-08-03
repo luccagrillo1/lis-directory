@@ -7,6 +7,25 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.5] — 2026-08-03 — Pin progress bar + section label to the top
+
+Follow-up to 0.30.4: the progress bar and each panel's small section
+label (e.g. "GET STARTED") were being vertically centered along with
+everything else, when they should stay pinned at the top like a normal
+page header, with only the question/hint/field/controls block below
+them centering in the remaining space.
+
+Restructured `listing-form-wizard.js` so each panel now wraps
+everything except the section label in a new `.lis-listing-wizard-panel-body`
+div (question, hint, the real field markup, and Back/Continue), applied
+to both the regular panels and the review panel. CSS chains `flex: 1`
+from `.lis-listing-submit-form` down through `.lis-listing-wizard` →
+`.lis-listing-wizard-stage` → the active `.lis-listing-wizard-panel`,
+with the progress bar and section label as `flex-shrink: 0` and
+`.lis-listing-wizard-panel-body` as `flex: 1; justify-content: center`.
+
+---
+
 ## [0.30.4] — 2026-08-03 — Correction: vertical, not horizontal, centering
 
 0.30.3 misread the ask as horizontal centering (moving the whole block
