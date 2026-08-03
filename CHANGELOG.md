@@ -7,6 +7,24 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.1] — 2026-08-03 — Fix: Submit button was invisible on the review screen
+
+Found via live click-through verification of v0.30.0 in Chrome (search
+Google → Starbucks Coffee Company → walked every panel to the review
+screen). The real "Submit for Review" / "Save Changes" button element
+was present in the DOM and correctly moved into the review panel's
+controls, but never had its `display: none` (set at wizard init, when
+every button was expected to stay hidden until the review step) cleared
+back to visible once it landed there — so on both `[lis_listing_submit]`
+and `[lis_listing_edit]`, the review screen rendered with no way to
+actually submit. This has been true since the wizard was first rewritten
+into the one-question-per-panel format earlier this cycle, so no real
+submission could have gone through the new flow at all until now.
+One-line fix in `listing-form-wizard.js`: reset `submitWrap.style.display`
+to `''` at the same point it's appended into `reviewControls`.
+
+---
+
 ## [0.30.0] — 2026-08-03 — Real onboarding-flow rebuild + Google-search-vs-manual fork
 
 ### Add Listing is now a real onboarding flow, not a form

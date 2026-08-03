@@ -176,6 +176,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		} );
 		reviewControls.appendChild( reviewBack );
 		if ( submitWrap ) {
+			submitWrap.style.display = ''; // Was hidden at init; only ever shown here, inside the review panel.
 			reviewControls.appendChild( submitWrap );
 		}
 
