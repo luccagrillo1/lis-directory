@@ -101,7 +101,10 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 			if ( panel === forkPanel ) {
 				panel.querySelectorAll( '.lis-listing-fork-choice' ).forEach( function ( choiceButton ) {
-					choiceButton.addEventListener( 'click', function () {
+					choiceButton.addEventListener( 'click', function ( event ) {
+						if ( event.target.closest( '.lis-listing-fork-choice-info' ) ) {
+							return; // Clicking the "?" info bubble shouldn't also pick this path.
+						}
 						form.dataset.entryMode = choiceButton.dataset.forkChoice;
 						form.dispatchEvent( new CustomEvent( 'lis-directory:entry-mode', {
 							bubbles: true,

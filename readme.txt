@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.30.1
+Stable tag: 0.30.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.30.2 =
+* Simplified the Add Listing intro fork cards - title only, with a "?"
+  tooltip for the explanation instead of always-visible text.
+* Fixed spacing: progress bar no longer sits flush against the
+  breadcrumb bar, and "GET STARTED" now reads as part of the progress
+  bar instead of floating separately.
 
 = 0.30.1 =
 * Fixed: the real Submit button on the new Add Listing / Edit Listing

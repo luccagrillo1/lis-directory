@@ -921,6 +921,7 @@
 
 .lis-listing-submit-form {
 	max-width: 900px;
+	padding-top: 28px; /* Breathing room now that the page banner/title area is disabled on this page - without it the progress bar sits flush against the breadcrumb bar. */
 }
 
 .lis-listing-wizard {
@@ -933,7 +934,7 @@
 	border-radius: 999px;
 	background: #e8e8e0;
 	overflow: hidden;
-	margin-bottom: 32px;
+	margin-bottom: 14px;
 }
 
 .lis-listing-wizard-progress-bar {
@@ -1035,11 +1036,10 @@
 
 .lis-listing-fork-choice {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 8px;
-	text-align: left;
-	padding: 22px;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 24px 20px;
 	border: 2px solid #e2e2da;
 	border-radius: 12px;
 	background: #fff;
@@ -1053,15 +1053,56 @@
 }
 
 .lis-listing-fork-choice-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
 	font-size: 1.1em;
 	font-weight: 700;
 	color: #2f3a20;
 }
 
-.lis-listing-fork-choice-desc {
-	font-size: 0.88em;
-	color: #777;
+.lis-listing-fork-choice-info {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #e2e2da;
+	color: #666;
+	font-size: 0.68em;
+	font-weight: 700;
+	cursor: help;
+	position: relative;
+	flex-shrink: 0;
+}
+
+.lis-listing-fork-choice-info:hover .lis-listing-fork-choice-tooltip,
+.lis-listing-fork-choice-info:focus .lis-listing-fork-choice-tooltip,
+.lis-listing-fork-choice-info:focus-visible .lis-listing-fork-choice-tooltip {
+	opacity: 1;
+	visibility: visible;
+}
+
+.lis-listing-fork-choice-tooltip {
+	position: absolute;
+	bottom: 130%;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 220px;
+	padding: 10px 12px;
+	background: #2f3a20;
+	color: #fff;
+	font-size: 0.82em;
+	font-weight: 400;
 	line-height: 1.4;
+	text-align: left;
+	border-radius: 8px;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.15s ease;
+	pointer-events: none;
+	z-index: 5;
 }
 
 .lis-listing-wizard-review-list {

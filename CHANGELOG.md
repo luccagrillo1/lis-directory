@@ -7,6 +7,34 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.2] — 2026-08-03 — Fork panel visual cleanup + layout fixes
+
+Follow-up to Lucca's design feedback on the live Add Listing page:
+
+- Removed the page's H1 title and intro paragraph (done directly on the
+  WordPress page/Astra "Disable Banner Area" setting, not plugin code -
+  the breadcrumb stays, only the banner/title block is hidden).
+- Fixed a layout regression from disabling that banner: the wizard's
+  progress bar was left sitting flush against the breadcrumb bar with
+  no breathing room. Added `padding-top` to `.lis-listing-submit-form`.
+- Tightened `.lis-listing-wizard-progress`'s bottom margin (32px to
+  14px) so the "GET STARTED" section label reads as part of the
+  progress bar instead of a separate floating element.
+- Simplified the intro fork cards: each was showing a title plus a
+  permanently-visible description paragraph, which read as busy for a
+  first screen. Now each card shows only the title with a small "?"
+  info bubble; hovering or focusing it reveals the same explanation
+  text in a tooltip. Added `event.target.closest()` guard in
+  `listing-form-wizard.js` so clicking the "?" doesn't also trigger
+  that card's fork choice.
+- Site-wide (via Customizer Additional CSS, not this plugin - applies
+  to every page, not just listing pages): footer now sticks to the
+  bottom of the viewport on short pages instead of leaving a gap below
+  it, using the standard flex-column `#page` / `flex:1 0 auto`
+  `#content` pattern.
+
+---
+
 ## [0.30.1] — 2026-08-03 — Fix: Submit button was invisible on the review screen
 
 Found via live click-through verification of v0.30.0 in Chrome (search

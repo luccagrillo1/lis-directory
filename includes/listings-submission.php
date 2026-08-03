@@ -116,12 +116,20 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		<div class="lis-listing-panel lis-listing-fork-panel" data-panel-section="Get Started" data-panel-question="How do you want to add your listing?">
 			<div class="lis-listing-fork-choices">
 				<button type="button" class="lis-listing-fork-choice" data-fork-choice="google">
-					<span class="lis-listing-fork-choice-title">Find it on Google</span>
-					<span class="lis-listing-fork-choice-desc">Search for your business and we'll fill in the address, phone, website, and hours for you — you'll just confirm the details and write your description.</span>
+					<span class="lis-listing-fork-choice-title">
+						Find it on Google
+						<span class="lis-listing-fork-choice-info" tabindex="0">?
+							<span class="lis-listing-fork-choice-tooltip">Search for your business and we'll fill in the address, phone, website, and hours for you — you'll just confirm the details and write your description.</span>
+						</span>
+					</span>
 				</button>
 				<button type="button" class="lis-listing-fork-choice" data-fork-choice="manual">
-					<span class="lis-listing-fork-choice-title">Enter details manually</span>
-					<span class="lis-listing-fork-choice-desc">Type everything in yourself, one step at a time.</span>
+					<span class="lis-listing-fork-choice-title">
+						Enter details manually
+						<span class="lis-listing-fork-choice-info" tabindex="0">?
+							<span class="lis-listing-fork-choice-tooltip">Type everything in yourself, one step at a time.</span>
+						</span>
+					</span>
 				</button>
 			</div>
 		</div>
