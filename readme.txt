@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.29.1
+Stable tag: 0.30.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,17 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.30.0 =
+* Add Listing is now a real one-question-per-panel onboarding flow
+  (progress bar, big bold question, clean input, elegant transition),
+  ending in a review screen before the real submit.
+* New: choose "Find it on Google" or "Enter details manually" right at
+  the start - the Google path skips the Address/Phone/Website/Hours
+  steps since they get auto-filled, landing you on Category next.
+* Fixed: Add Listing / Edit Listing form inputs were rendering totally
+  unstyled and the raw file picker wasn't hidden, due to a leftover CSS
+  class mismatch from an earlier refactor - now fixed.
 
 = 0.29.1 =
 * Rebuilt Places autocomplete on Google's new PlaceAutocompleteElement -

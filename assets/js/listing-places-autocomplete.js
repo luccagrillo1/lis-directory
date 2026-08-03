@@ -14,6 +14,13 @@
  * "Search for your business" field above Business Name rather than
  * bound onto the existing plain <input> — the new element renders its
  * own shadow-DOM input, it can't attach to one that already exists.
+ *
+ * On [lis_listing_submit], the search box only appears once the visitor
+ * picks "Find it on Google" on the wizard's intro fork panel (which sets
+ * form.dataset.entryMode and fires `lis-directory:entry-mode`) — someone
+ * who picks "Enter manually" never sees it. [lis_listing_edit] has no
+ * fork, so there entryMode is never set and the search box is inserted
+ * immediately, same as before this fork existed.
  */
 window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocomplete || function () {
 	var GOOGLE_DAY_TO_NAME = [ 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday' ];
@@ -66,60 +73,83 @@ window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocom
 			return;
 		}
 
-		var wrap = document.createElement( 'p' );
-		wrap.className = 'lis-listing-places-search';
+		function insertSearch() {
+			if ( nameInput.dataset.placesInserted ) {
+				return;
+			}
+			nameInput.dataset.placesInserted = '1';
 
-		var label = document.createElement( 'label' );
-		label.textContent = 'Search for your business (optional)';
+			var wrap = document.createElement( 'p' );
+			wrap.className = 'lis-listing-places-search';
 
-		var searchHolder = document.createElement( 'div' );
-		searchHolder.className = 'lis-listing-places-search-holder';
+			var label = document.createElement( 'label' );
+			label.textContent = 'Search for your business (optional)';
 
-		var hint = document.createElement( 'small' );
-		hint.textContent = 'Find it on Google and we’ll fill in the address, phone, website, and hours for you.';
+			var searchHolder = document.createElement( 'div' );
+			searchHolder.className = 'lis-listing-places-search-holder';
 
-		wrap.appendChild( label );
-		wrap.appendChild( searchHolder );
-		wrap.appendChild( hint );
-		nameInput.closest( 'p' ).insertAdjacentElement( 'beforebegin', wrap );
+			var hint = document.createElement( 'small' );
+			hint.textContent = 'Find it on Google and we’ll fill in the address, phone, website, and hours for you.';
 
-		google.maps.importLibrary( 'places' ).then( function ( places ) {
-			var autocompleteEl = new places.PlaceAutocompleteElement();
-			searchHolder.appendChild( autocompleteEl );
+			wrap.appendChild( label );
+			wrap.appendChild( searchHolder );
+			wrap.appendChild( hint );
+			nameInput.closest( 'p' ).insertAdjacentElement( 'beforebegin', wrap );
 
-			autocompleteEl.addEventListener( 'gmp-select', function ( event ) {
-				var prediction = event.placePrediction;
-				if ( ! prediction ) {
-					return;
-				}
-				var place = prediction.toPlace();
-				place.fetchFields( {
-					fields: [ 'displayName', 'formattedAddress', 'internationalPhoneNumber', 'nationalPhoneNumber', 'websiteURI', 'regularOpeningHours' ],
-				} ).then( function () {
-					if ( place.displayName ) {
-						nameInput.value = place.displayName;
+			google.maps.importLibrary( 'places' ).then( function ( places ) {
+				var autocompleteEl = new places.PlaceAutocompleteElement();
+				searchHolder.appendChild( autocompleteEl );
+
+				autocompleteEl.addEventListener( 'gmp-select', function ( event ) {
+					var prediction = event.placePrediction;
+					if ( ! prediction ) {
+						return;
 					}
+					var place = prediction.toPlace();
+					place.fetchFields( {
+						fields: [ 'displayName', 'formattedAddress', 'internationalPhoneNumber', 'nationalPhoneNumber', 'websiteURI', 'regularOpeningHours' ],
+					} ).then( function () {
+						if ( place.displayName ) {
+							nameInput.value = place.displayName;
+						}
 
-					var addressEl = form.querySelector( '#lis_listing_address' );
-					if ( addressEl && place.formattedAddress ) {
-						addressEl.value = place.formattedAddress;
-					}
+						var addressEl = form.querySelector( '#lis_listing_address' );
+						if ( addressEl && place.formattedAddress ) {
+							addressEl.value = place.formattedAddress;
+						}
 
-					var phoneEl = form.querySelector( '#lis_listing_phone' );
-					if ( phoneEl ) {
-						phoneEl.value = place.nationalPhoneNumber || place.internationalPhoneNumber || phoneEl.value;
-					}
+						var phoneEl = form.querySelector( '#lis_listing_phone' );
+						if ( phoneEl ) {
+							phoneEl.value = place.nationalPhoneNumber || place.internationalPhoneNumber || phoneEl.value;
+						}
 
-					var websiteEl = form.querySelector( '#lis_listing_website' );
-					if ( websiteEl && place.websiteURI ) {
-						websiteEl.value = place.websiteURI;
-					}
+						var websiteEl = form.querySelector( '#lis_listing_website' );
+						if ( websiteEl && place.websiteURI ) {
+							websiteEl.value = place.websiteURI;
+						}
 
-					if ( place.regularOpeningHours && place.regularOpeningHours.periods ) {
-						fillHours( form, place.regularOpeningHours.periods );
-					}
+						if ( place.regularOpeningHours && place.regularOpeningHours.periods ) {
+							fillHours( form, place.regularOpeningHours.periods );
+						}
+					} );
 				} );
 			} );
+		}
+
+		// No fork on this form (e.g. [lis_listing_edit]) - show the search
+		// box immediately, same as before the fork existed.
+		if ( ! form.querySelector( '.lis-listing-fork-panel' ) ) {
+			insertSearch();
+			return;
+		}
+
+		if ( 'google' === form.dataset.entryMode ) {
+			insertSearch();
+		}
+		form.addEventListener( 'lis-directory:entry-mode', function ( e ) {
+			if ( e.detail && 'google' === e.detail.mode ) {
+				insertSearch();
+			}
 		} );
 	} );
 };

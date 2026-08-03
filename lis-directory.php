@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.29.1
+ * Version:           0.30.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.29.1 (rebuilt Places autocomplete on PlaceAutocompleteElement — the classic Autocomplete class is retired for any Google Cloud project created after March 2025)
+ * LIS Directory — v0.30.0 (real one-question-per-panel onboarding flow for Add Listing, with a Google-search-vs-manual fork up front)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.29.1' );
+define( 'LIS_DIRECTORY_VERSION', '0.30.0' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );

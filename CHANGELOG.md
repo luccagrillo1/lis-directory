@@ -7,6 +7,70 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.0] — 2026-08-03 — Real onboarding-flow rebuild + Google-search-vs-manual fork
+
+### Add Listing is now a real onboarding flow, not a form
+
+Lucca's spec: "progress bar, little section name, big bold questions,
+clean input below that, one question per panel, a nice elegant
+transition, and a final preview at the end." Rebuilt
+`listing-form-wizard.js` from scratch — the v0.28.0/0.29.x sidebar-nav
+wizard (numbered step list down the side) is gone entirely. Both
+`listings-submission.php` and `listings-edit.php` markup went from 7
+grouped `.lis-listing-submit-section` blocks to ~13 flat
+`.lis-listing-panel` divs (one question each), carrying
+`data-panel-section` / `data-panel-question` / `data-panel-hint` so the
+actual copy lives in the PHP templates, not hardcoded in JS. Panels
+crossfade sequentially (200ms) rather than all animating at once. A
+dynamically-built review panel at the end summarizes every field
+(handles TinyMCE, checkboxes, per-day hours, photo counts, selects,
+grouped social links) with the real Submit button moved into it.
+
+### New: search Google or enter manually, right at the start
+
+Follow-up ask: fork the flow up front so Google-found businesses skip
+straight past the fields Google already knows. `[lis_listing_submit]`
+now opens on a choice panel — "Find it on Google" vs "Enter details
+manually." Choosing Google keeps the existing Places search (see
+0.29.1) but now only inserts it after that choice, and the wizard skips
+the Address/Phone/Website/Business Hours panels entirely for the rest
+of the walkthrough (marked via `data-google-fillable="true"`) since
+Google already filled them — landing the user on Category next instead.
+Those fields still show up on the review screen so they can double
+check what Google filled in before submitting. Picking "Enter manually"
+shows every panel in the original order, no search box at all.
+`[lis_listing_edit]` is untouched by the fork (no fork panel, all
+panels always shown) since an existing listing already has real values.
+
+### Fixed: submission-form inputs were unstyled and the raw file input was showing
+
+Found while updating the CSS for the above: `assets/css/listings.css`
+still styled inputs/selects/the hidden file-input via
+`.lis-listing-submit-section`, a wrapper class the panel markup stopped
+using entirely earlier this cycle when the wizard rewrite began. Every
+text/email/url/time input and select on the live Add Listing and Edit
+Listing forms has been rendering completely unstyled (default browser
+chrome) and the native file picker for photos wasn't hidden — since
+nothing else on the standalone Add Listing page happens to render a
+`.lis-listing-submit-section`, this had zero visual signal pointing at
+it. Retargeted every rule at `.lis-listing-panel`. Also removed the now
+fully-dead sidebar-nav CSS (`.lis-listing-wizard-nav*`,
+`-body`, `-steps`, `-progress-label`) and the dead
+`.lis-listing-submit-section h3` rules (no more `<h3>` — replaced by
+the JS-injected `.lis-listing-wizard-panel-question`).
+
+### Known limitation
+
+If someone picks "Find it on Google" but then backs out without
+actually selecting a business, Address/Phone/Website/Hours stay empty
+but are still skipped from the walkthrough — they'd need to go back to
+`.lis-listing-fork-choice[data-fork-choice="manual"]`'s panel... there's
+no in-flow way to switch from Google mode back to manual mode once
+chosen (only a page reload). Acceptable for now; revisit if this comes
+up in practice.
+
+---
+
 ## [0.29.1] — 2026-08-02 — Places autocomplete rebuilt; SurveyMonkey-style typography
 
 ### Places autocomplete: rebuilt on PlaceAutocompleteElement

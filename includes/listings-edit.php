@@ -119,14 +119,16 @@ function lis_directory_render_listing_edit_form_shortcode() {
 		<input type="hidden" name="lis_listing_redirect_to" value="<?php echo esc_url( $current_url ); ?>" />
 		<?php wp_nonce_field( 'lis_listing_update_' . $listing_id, 'lis_listing_update_nonce' ); ?>
 
-		<div class="lis-listing-submit-section">
-			<h3>Basics</h3>
+		<div class="lis-listing-panel" data-panel-section="Basics" data-panel-question="What's your business called?">
 			<p>
-				<label for="lis_listing_business_name">Business Name</label>
+				<label for="lis_listing_business_name" class="screen-reader-text">Business Name</label>
 				<input type="text" id="lis_listing_business_name" name="lis_listing_business_name" value="<?php echo esc_attr( $listing->post_title ); ?>" required />
 			</p>
+		</div>
+
+		<div class="lis-listing-panel" data-panel-section="Basics" data-panel-question="Which category fits best?">
 			<p>
-				<label for="lis_listing_category">Category</label>
+				<label for="lis_listing_category" class="screen-reader-text">Category</label>
 				<select id="lis_listing_category" name="lis_listing_category" required>
 					<option value="">— Select a category —</option>
 					<?php foreach ( $cat_terms as $term ) : ?>
@@ -134,8 +136,11 @@ function lis_directory_render_listing_edit_form_shortcode() {
 					<?php endforeach; ?>
 				</select>
 			</p>
+		</div>
+
+		<div class="lis-listing-panel" data-panel-section="Basics" data-panel-question="Tell us about your business">
 			<div class="lis-listing-submit-editor">
-				<label for="lis_listing_description">Description</label>
+				<label for="lis_listing_description" class="screen-reader-text">Description</label>
 				<?php
 				wp_editor( $listing->post_content, 'lis_listing_description', array(
 					'textarea_name' => 'lis_listing_description',
@@ -151,28 +156,35 @@ function lis_directory_render_listing_edit_form_shortcode() {
 			<?php endif; ?>
 		</div>
 
-		<div class="lis-listing-submit-section">
-			<h3>Contact</h3>
+		<div class="lis-listing-panel" data-panel-section="Contact" data-panel-question="Where are you located?">
 			<p>
-				<label for="lis_listing_address">Address</label>
+				<label for="lis_listing_address" class="screen-reader-text">Address</label>
 				<input type="text" id="lis_listing_address" name="lis_listing_address" value="<?php echo esc_attr( get_post_meta( $listing_id, '_lis_listing_address', true ) ); ?>" />
 			</p>
+		</div>
+
+		<div class="lis-listing-panel" data-panel-section="Contact" data-panel-question="What's your phone number?">
 			<p>
-				<label for="lis_listing_phone">Phone</label>
+				<label for="lis_listing_phone" class="screen-reader-text">Phone</label>
 				<input type="text" id="lis_listing_phone" name="lis_listing_phone" value="<?php echo esc_attr( get_post_meta( $listing_id, '_lis_listing_phone', true ) ); ?>" />
 			</p>
+		</div>
+
+		<div class="lis-listing-panel" data-panel-section="Contact" data-panel-question="What's your website?">
 			<p>
-				<label for="lis_listing_website">Website</label>
+				<label for="lis_listing_website" class="screen-reader-text">Website</label>
 				<input type="url" id="lis_listing_website" name="lis_listing_website" value="<?php echo esc_attr( get_post_meta( $listing_id, '_lis_listing_website', true ) ); ?>" placeholder="https://" />
 			</p>
+		</div>
+
+		<div class="lis-listing-panel" data-panel-section="Contact" data-panel-question="Best email to reach you?">
 			<p>
-				<label for="lis_listing_email">Contact Email</label>
+				<label for="lis_listing_email" class="screen-reader-text">Contact Email</label>
 				<input type="email" id="lis_listing_email" name="lis_listing_email" value="<?php echo esc_attr( get_post_meta( $listing_id, '_lis_listing_email', true ) ?: $current_user->user_email ); ?>" required />
 			</p>
 		</div>
 
-		<div class="lis-listing-submit-section">
-			<h3>Photos &amp; Video</h3>
+		<div class="lis-listing-panel" data-panel-section="Photos &amp; Video" data-panel-question="Your photos">
 			<?php if ( ! empty( $gallery_ids ) ) : ?>
 				<div class="lis-listing-edit-gallery">
 					<?php foreach ( $gallery_ids as $attachment_id ) : ?>
@@ -187,22 +199,23 @@ function lis_directory_render_listing_edit_form_shortcode() {
 				</div>
 			<?php endif; ?>
 			<p>
-				<label for="lis_listing_photos">Add more photos (up to <?php echo (int) LIS_DIRECTORY_SUBMIT_MAX_PHOTOS; ?> at a time)</label>
 				<label for="lis_listing_photos" class="lis-listing-photos-dropzone">
 					<span class="lis-listing-photos-dropzone-label">Click to choose photos, or drag them here</span>
-					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each.</span>
+					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each. Add more, or remove any above.</span>
 				</label>
 				<input type="file" id="lis_listing_photos" name="lis_listing_photos[]" accept="image/png,image/jpeg" multiple />
 				<div class="lis-listing-photos-preview" data-photos-preview></div>
 			</p>
+		</div>
+
+		<div class="lis-listing-panel" data-panel-section="Photos &amp; Video" data-panel-question="Got a video?" data-panel-hint="Optional — YouTube or Vimeo link">
 			<p>
-				<label for="lis_listing_video_url">Video</label>
+				<label for="lis_listing_video_url" class="screen-reader-text">Video</label>
 				<input type="url" id="lis_listing_video_url" name="lis_listing_video_url" value="<?php echo esc_attr( get_post_meta( $listing_id, '_lis_listing_video_url', true ) ); ?>" placeholder="YouTube or Vimeo link" />
 			</p>
 		</div>
 
-		<div class="lis-listing-submit-section">
-			<h3>Business Hours <small>(leave a day blank if closed)</small></h3>
+		<div class="lis-listing-panel" data-panel-section="Business Hours" data-panel-question="When are you open?" data-panel-hint="Leave a day blank if closed">
 			<table class="lis-listing-submit-hours-table">
 				<?php foreach ( LIS_DIRECTORY_WEEKDAYS as $day => $label ) : ?>
 					<tr>
@@ -217,17 +230,15 @@ function lis_directory_render_listing_edit_form_shortcode() {
 			</table>
 		</div>
 
-		<div class="lis-listing-submit-section">
-			<h3>Services</h3>
+		<div class="lis-listing-panel" data-panel-section="Services" data-panel-question="What services do you offer?" data-panel-hint="One per line">
 			<p>
-				<label for="lis_listing_services">One per line</label>
+				<label for="lis_listing_services" class="screen-reader-text">Services</label>
 				<textarea id="lis_listing_services" name="lis_listing_services" rows="4"><?php echo esc_textarea( get_post_meta( $listing_id, '_lis_listing_services', true ) ); ?></textarea>
 			</p>
 		</div>
 
 		<?php if ( ! empty( $feature_terms ) ) : ?>
-			<div class="lis-listing-submit-section">
-				<h3>Features</h3>
+			<div class="lis-listing-panel" data-panel-section="Features" data-panel-question="Any special features?">
 				<div class="lis-listing-submit-checkbox-grid">
 					<?php foreach ( $feature_terms as $feature ) : ?>
 						<label class="lis-listing-submit-checkbox">
@@ -239,15 +250,14 @@ function lis_directory_render_listing_edit_form_shortcode() {
 			</div>
 		<?php endif; ?>
 
-		<div class="lis-listing-submit-section">
-			<h3>Social Media</h3>
+		<div class="lis-listing-panel" data-panel-section="Social Media" data-panel-question="Where can people follow you?" data-panel-hint="All optional">
 			<?php foreach ( array( 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'twitter' => 'X / Twitter', 'linkedin' => 'LinkedIn' ) as $network => $label ) : ?>
-				<p><label for="lis_listing_<?php echo esc_attr( $network ); ?>"><?php echo esc_html( $label ); ?></label><br />
+				<p><label for="lis_listing_<?php echo esc_attr( $network ); ?>"><?php echo esc_html( $label ); ?></label>
 				<input type="url" id="lis_listing_<?php echo esc_attr( $network ); ?>" name="lis_listing_<?php echo esc_attr( $network ); ?>" value="<?php echo esc_attr( get_post_meta( $listing_id, "_lis_listing_{$network}", true ) ); ?>" /></p>
 			<?php endforeach; ?>
 		</div>
 
-		<p><button type="submit" class="lis-listing-submit-button">Save Changes</button></p>
+		<p class="lis-listing-real-submit"><button type="submit" class="lis-listing-submit-button">Save Changes</button></p>
 	</form>
 	<?php
 	return ob_get_clean();
