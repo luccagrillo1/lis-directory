@@ -7,6 +7,23 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.3] — 2026-08-03 — Center the onboarding wizard on the page
+
+The wizard block (`.lis-listing-submit-form`) was left-anchored inside
+its much wider page container, so on wide viewports it hugged the left
+edge with a large empty gap on the right - especially noticeable now
+that the page banner/title is disabled and there's nothing else on the
+page to anchor against. Added `margin: 0 auto` to center the whole
+900px block. Also center-aligned the small section label, the big
+question heading, and the hint text (`.lis-listing-wizard-panel-section`,
+`-panel-question`, `-panel-hint`) so each step reads as a centered
+Q&A card rather than left-aligned copy sitting inside a centered box.
+Controls (Back/Continue) and multi-field panels (Business Hours, Social
+Media) are unaffected - only the short label/heading/hint lines that
+appear identically on every panel.
+
+---
+
 ## [0.30.2] — 2026-08-03 — Fork panel visual cleanup + layout fixes
 
 Follow-up to Lucca's design feedback on the live Add Listing page:
