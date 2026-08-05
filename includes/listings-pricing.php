@@ -46,6 +46,8 @@ function lis_directory_init_listing_pricing_woocommerce() {
 
 	add_filter( 'woocommerce_add_cart_item_data', 'lis_directory_add_listing_id_to_cart_item', 10, 2 );
 	add_filter( 'woocommerce_get_item_data', 'lis_directory_show_listing_in_cart_item_data', 10, 2 );
+	add_filter( 'woocommerce_cart_item_name', 'lis_directory_add_listing_to_cart_item_name', 10, 3 );
+	add_filter( 'woocommerce_order_item_name', 'lis_directory_add_listing_to_order_item_name', 10, 2 );
 	add_action( 'woocommerce_checkout_create_order_line_item', 'lis_directory_persist_listing_id_to_order_item', 10, 4 );
 	add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );
@@ -54,63 +56,6 @@ function lis_directory_init_listing_pricing_woocommerce() {
 		add_action( 'woocommerce_subscription_status_cancelled', 'lis_directory_handle_featured_listing_subscription_ended' );
 		add_action( 'woocommerce_subscription_status_expired', 'lis_directory_handle_featured_listing_subscription_ended' );
 	}
-}
-
-/**
- * Show which listing a "Feature My Listing" cart line is for. The site's
- * Cart/Checkout use WooCommerce Blocks, not the classic templates, so the
- * classic `woocommerce_get_item_data` filter (still used for the "Listing"
- * row in `lis_directory_show_listing_in_cart_item_data()` above, kept for
- * any classic-template context that might still render it) is silently
- * ignored by the Blocks UI. Blocks needs data exposed through the Store
- * API and then picked up by a matching front-end filter - see
- * assets/js/feature-listing-cart-filter.js for the other half of this.
- */
-add_action( 'woocommerce_blocks_loaded', 'lis_directory_register_feature_listing_store_api_data' );
-
-function lis_directory_register_feature_listing_store_api_data() {
-	if ( ! function_exists( 'woocommerce_store_api_register_endpoint_data' )
-		|| ! class_exists( '\Automattic\WooCommerce\StoreApi\Schemas\V1\CartItemSchema' ) ) {
-		return;
-	}
-
-	woocommerce_store_api_register_endpoint_data( array(
-		'endpoint'        => \Automattic\WooCommerce\StoreApi\Schemas\V1\CartItemSchema::IDENTIFIER,
-		'namespace'       => 'lis-directory',
-		'data_callback'   => function ( $cart_item ) {
-			if ( empty( $cart_item['lis_listing_id'] ) ) {
-				return array();
-			}
-			return array(
-				'listing_name' => get_the_title( $cart_item['lis_listing_id'] ),
-			);
-		},
-		'schema_callback' => function () {
-			return array(
-				'listing_name' => array(
-					'description' => __( 'The LIS Directory listing this purchase is for.', 'lis-directory' ),
-					'type'        => 'string',
-					'readonly'    => true,
-				),
-			);
-		},
-		'schema_type'     => ARRAY_A,
-	) );
-}
-
-add_action( 'wp_enqueue_scripts', 'lis_directory_enqueue_feature_listing_cart_filter' );
-
-function lis_directory_enqueue_feature_listing_cart_filter() {
-	if ( ! function_exists( 'wc_get_cart_url' ) ) {
-		return;
-	}
-	wp_enqueue_script(
-		'lis-directory-feature-listing-cart-filter',
-		LIS_DIRECTORY_URL . 'assets/js/feature-listing-cart-filter.js',
-		array( 'wc-blocks-checkout' ),
-		LIS_DIRECTORY_VERSION,
-		true
-	);
 }
 
 /**
@@ -142,6 +87,15 @@ function lis_directory_add_listing_id_to_cart_item( $cart_item_data, $product_id
 	return $cart_item_data;
 }
 
+/**
+ * Kept for any WooCommerce context that does call `wc_get_formatted_cart_item_data()`
+ * (the theme's own cart template on this site does not - it never renders
+ * the item-data `<dl>` for any product, confirmed by inspecting the live
+ * markup, not specific to this plugin). `woocommerce_cart_item_name` /
+ * `woocommerce_order_item_name` below are what actually shows on this
+ * site, since those wrap the product name itself rather than a separate,
+ * optional meta block.
+ */
 function lis_directory_show_listing_in_cart_item_data( $item_data, $cart_item ) {
 	if ( ! empty( $cart_item['lis_listing_id'] ) ) {
 		$item_data[] = array(
@@ -150,6 +104,29 @@ function lis_directory_show_listing_in_cart_item_data( $item_data, $cart_item ) 
 		);
 	}
 	return $item_data;
+}
+
+function lis_directory_add_listing_to_cart_item_name( $name, $cart_item, $cart_item_key ) {
+	if ( empty( $cart_item['lis_listing_id'] ) ) {
+		return $name;
+	}
+	$listing_title = get_the_title( $cart_item['lis_listing_id'] );
+	if ( ! $listing_title ) {
+		return $name;
+	}
+	return $name . ' &mdash; Featuring: ' . esc_html( $listing_title );
+}
+
+function lis_directory_add_listing_to_order_item_name( $name, $item ) {
+	$listing_id = $item->get_meta( '_lis_listing_id' );
+	if ( ! $listing_id ) {
+		return $name;
+	}
+	$listing_title = get_the_title( $listing_id );
+	if ( ! $listing_title ) {
+		return $name;
+	}
+	return $name . ' &mdash; Featuring: ' . esc_html( $listing_title );
 }
 
 function lis_directory_persist_listing_id_to_order_item( $item, $cart_item_key, $values, $order ) {

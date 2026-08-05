@@ -7,6 +7,39 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.7] — 2026-08-05 — Correction: this site's Cart/Checkout are classic, not Blocks
+
+0.30.6 misdiagnosed the cause: it assumed this site's Cart/Checkout use
+WooCommerce Blocks (registered Store API extension data + a
+`registerCheckoutFilters` front-end script) because the theme's styling
+looks modern. Live-tested the actual add-to-cart flow again and
+inspected the real DOM: `.woocommerce-cart-form`, `table.shop_table`,
+`form.woocommerce-checkout`, `#order_review` are all present on both
+`/cart/` and `/checkout/` - these are 100% classic-template markers, no
+`wp-block-woocommerce-cart`/`-checkout` wrapper anywhere. The Store API
+registration and its matching JS filter never had any effect and are
+removed (`assets/js/feature-listing-cart-filter.js` deleted).
+
+Separately, the ORIGINAL classic `woocommerce_get_item_data` hook
+(`lis_directory_show_listing_in_cart_item_data()`, from the initial
+Pricing Plans build) also wasn't rendering - not because it's broken,
+but because inspecting the live cart HTML showed *neither* cart line
+(not just "Feature My Listing") has the `<dl class="variation">` item-
+data block at all. This theme's cart/checkout templates simply don't
+call `wc_get_formatted_cart_item_data()` for any product.
+
+Real fix: `woocommerce_cart_item_name` and `woocommerce_order_item_name`
+filters, which wrap the product name text/link itself rather than a
+separate optional meta block - confirmed present and rendering on both
+cart rows in the live DOM. These now append " — Featuring: <listing
+name>" to "Feature My Listing" everywhere the theme actually shows an
+item name: cart, checkout review, order-received, admin order view, and
+emails. The old `woocommerce_get_item_data` hook is left in place
+(harmless, would work automatically if the cart template ever changes
+to one that does render item data).
+
+---
+
 ## [0.30.6] — 2026-08-03 — Show which listing "Feature My Listing" is for, in the cart
 
 Built and live-tested the Featured Listing payment flow end to end this

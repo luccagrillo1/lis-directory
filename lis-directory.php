@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.30.6
+ * Version:           0.30.7
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.30.6 (show which listing a "Feature My Listing" cart line is for, via WooCommerce Store API extension data - the classic cart-item-data hook is ignored by this site's Blocks-based Cart/Checkout)
+ * LIS Directory — v0.30.7 (correction: this site's Cart/Checkout are the classic templates, not Blocks - 0.30.6's Store API fix did nothing; the real fix is a woocommerce_cart_item_name/woocommerce_order_item_name filter, since this theme's cart template never renders the item-data <dl> block at all)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.30.6' );
+define( 'LIS_DIRECTORY_VERSION', '0.30.7' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );

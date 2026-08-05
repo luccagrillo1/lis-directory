@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.30.6
+Stable tag: 0.30.7
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.30.7 =
+* Correction: 0.30.6 targeted the wrong cart type (this site's Cart/
+  Checkout are classic templates, not WooCommerce Blocks). Now uses
+  woocommerce_cart_item_name / woocommerce_order_item_name, confirmed
+  working against the live cart - "Feature My Listing" now actually
+  shows "— Featuring: <listing name>".
 
 = 0.30.6 =
 * The "Feature My Listing" cart line now shows which listing it's for
