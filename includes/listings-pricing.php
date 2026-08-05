@@ -57,6 +57,63 @@ function lis_directory_init_listing_pricing_woocommerce() {
 }
 
 /**
+ * Show which listing a "Feature My Listing" cart line is for. The site's
+ * Cart/Checkout use WooCommerce Blocks, not the classic templates, so the
+ * classic `woocommerce_get_item_data` filter (still used for the "Listing"
+ * row in `lis_directory_show_listing_in_cart_item_data()` above, kept for
+ * any classic-template context that might still render it) is silently
+ * ignored by the Blocks UI. Blocks needs data exposed through the Store
+ * API and then picked up by a matching front-end filter - see
+ * assets/js/feature-listing-cart-filter.js for the other half of this.
+ */
+add_action( 'woocommerce_blocks_loaded', 'lis_directory_register_feature_listing_store_api_data' );
+
+function lis_directory_register_feature_listing_store_api_data() {
+	if ( ! function_exists( 'woocommerce_store_api_register_endpoint_data' )
+		|| ! class_exists( '\Automattic\WooCommerce\StoreApi\Schemas\V1\CartItemSchema' ) ) {
+		return;
+	}
+
+	woocommerce_store_api_register_endpoint_data( array(
+		'endpoint'        => \Automattic\WooCommerce\StoreApi\Schemas\V1\CartItemSchema::IDENTIFIER,
+		'namespace'       => 'lis-directory',
+		'data_callback'   => function ( $cart_item ) {
+			if ( empty( $cart_item['lis_listing_id'] ) ) {
+				return array();
+			}
+			return array(
+				'listing_name' => get_the_title( $cart_item['lis_listing_id'] ),
+			);
+		},
+		'schema_callback' => function () {
+			return array(
+				'listing_name' => array(
+					'description' => __( 'The LIS Directory listing this purchase is for.', 'lis-directory' ),
+					'type'        => 'string',
+					'readonly'    => true,
+				),
+			);
+		},
+		'schema_type'     => ARRAY_A,
+	) );
+}
+
+add_action( 'wp_enqueue_scripts', 'lis_directory_enqueue_feature_listing_cart_filter' );
+
+function lis_directory_enqueue_feature_listing_cart_filter() {
+	if ( ! function_exists( 'wc_get_cart_url' ) ) {
+		return;
+	}
+	wp_enqueue_script(
+		'lis-directory-feature-listing-cart-filter',
+		LIS_DIRECTORY_URL . 'assets/js/feature-listing-cart-filter.js',
+		array( 'wc-blocks-checkout' ),
+		LIS_DIRECTORY_VERSION,
+		true
+	);
+}
+
+/**
  * URL that adds the configured Featured Listing product to the cart, tagged
  * with which listing it's for. Empty string if no product is configured yet
  * (Settings > LIS Directory Settings) — callers should hide the upgrade

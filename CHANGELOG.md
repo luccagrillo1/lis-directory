@@ -7,6 +7,36 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.6] — 2026-08-03 — Show which listing "Feature My Listing" is for, in the cart
+
+Built and live-tested the Featured Listing payment flow end to end this
+session: created the "Feature My Listing" WooCommerce product ($19,
+virtual, hidden from shop browsing), assigned it in LIS Directory
+Settings, and confirmed add-to-cart works. Found one gap while testing:
+the cart line just said "Feature My Listing" with no indication of
+*which* listing was being paid for - functionally fine (the order-item
+meta linking it to the right listing was always correct, see
+`lis_directory_persist_listing_id_to_order_item()`), but confusing for
+someone with more than one listing.
+
+Root cause: this site's Cart/Checkout use WooCommerce Blocks, not the
+classic templates, so `lis_directory_show_listing_in_cart_item_data()`'s
+classic `woocommerce_get_item_data` filter (added in the original
+Pricing Plans work) is silently ignored by Blocks - it's still there for
+any classic-template context, but does nothing here.
+
+Fixed properly rather than working around it: registered the listing
+name as Store API extension data
+(`lis_directory_register_feature_listing_store_api_data()`, hooked on
+`woocommerce_blocks_loaded`), and added a matching front-end filter
+(`assets/js/feature-listing-cart-filter.js`, using
+`wc.blocksCheckout.registerCheckoutFilters`'s `cartItemName` filter) that
+appends "— Featuring: <listing name>" to the cart line. This is the
+supported extensibility path for WooCommerce Blocks; the classic filter
+was never going to work here no matter how it was written.
+
+---
+
 ## [0.30.5] — 2026-08-03 — Pin progress bar + section label to the top
 
 Follow-up to 0.30.4: the progress bar and each panel's small section
