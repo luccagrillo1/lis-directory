@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.30.7
+Stable tag: 0.30.8
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.30.8 =
+* Removed Compare Listings entirely - the "+ Compare" button, the
+  comparison table shortcode, and all related CSS/JS.
 
 = 0.30.7 =
 * Correction: 0.30.6 targeted the wrong cart type (this site's Cart/

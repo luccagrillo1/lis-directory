@@ -7,6 +7,33 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.8] — 2026-08-05 — Removed Compare Listings
+
+Removed by request. Was one of the original Directorist-parity pieces
+(DIRECTORIST_PARITY_PLAN.md phase 3) - a cookie-backed "+ Compare"
+button on every listing card/single page, feeding a `[lis_listing_compare]`
+side-by-side comparison table (up to 4 listings, no login required,
+same as Directorist's own).
+
+Removed entirely rather than just hidden:
+- `[lis_listing_compare]` shortcode and its render function
+- The "+ Compare" button from the archive card, single-listing header,
+  and the shared `lis_directory_render_listing_card()` helper (used by
+  Author Profile and the `[lis_listing_grid]` shortcode)
+- `assets/js/listing-compare.js` (client-side cookie list logic) - file
+  deleted
+- Its enqueue path (`lis_directory_enqueue_compare_assets()`, the
+  `wp`-hooked `lis_directory_enqueue_compare_on_listing_views()`) and
+  the cookie reader (`lis_directory_get_compare_ids()`)
+- All `.lis-listing-compare-*` CSS
+
+`includes/listings-account.php`'s top docblock updated - it now
+describes two remaining pieces (Author Profile, Dashboard) instead of
+three. No other feature depended on Compare Listings, so this was a
+clean removal with no follow-on changes needed elsewhere.
+
+---
+
 ## [0.30.7] — 2026-08-05 — Correction: this site's Cart/Checkout are classic, not Blocks
 
 0.30.6 misdiagnosed the cause: it assumed this site's Cart/Checkout use

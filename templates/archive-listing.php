@@ -85,7 +85,6 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 							<p class="lis-listing-card-facts lis-listing-card-facts--salary"><?php echo esc_html( $salary ); ?></p>
 						<?php endif; ?>
 						<p class="lis-listing-card-excerpt"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 16 ) ); ?></p>
-						<button type="button" class="lis-listing-compare-btn" data-id="<?php echo (int) $post_id; ?>">+ Compare</button>
 						<?php if ( ! empty( $features ) ) : ?>
 							<div class="lis-listing-card-tags">
 								<?php foreach ( $features as $feature ) : ?>
