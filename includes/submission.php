@@ -124,6 +124,12 @@ function lis_directory_render_submission_form_shortcode() {
 		</p>
 
 		<p>
+			<label for="lis_pv_business_card">Business Card (optional)</label><br />
+			<input type="file" id="lis_pv_business_card" name="lis_pv_business_card" accept="image/png,image/jpeg" />
+			<br /><small>A photo or scan of your actual business card, standard size (3.5&quot; x 2&quot;). If you upload one, it can be shown as-is in the "business card" ticker style instead of the usual name/tagline card.</small>
+		</p>
+
+		<p>
 			<label for="lis_pv_contact_email">Contact Email</label><br />
 			<input type="email" id="lis_pv_contact_email" name="lis_pv_contact_email" value="<?php echo esc_attr( $current_user->user_email ); ?>" required />
 		</p>
@@ -144,6 +150,9 @@ function lis_directory_submission_error_message( $key ) {
 		'lis_pv_logo_color_type'            => 'Logo must be a real PNG file with a transparent background.',
 		'lis_pv_logo_color_too_large'       => 'Logo must be under 2MB.',
 		'lis_pv_logo_color_upload_failed'   => 'Logo failed to upload — please try again.',
+		'lis_pv_business_card_type'         => 'Business card must be a real PNG or JPEG file.',
+		'lis_pv_business_card_too_large'    => 'Business card must be under 2MB.',
+		'lis_pv_business_card_upload_failed'=> 'Business card failed to upload — please try again.',
 		'save_failed'                       => 'Something went wrong saving your submission — please try again.',
 	);
 	return isset( $messages[ $key ] ) ? $messages[ $key ] : 'Please check your submission and try again.';
@@ -198,7 +207,8 @@ function lis_directory_handle_vendor_submission() {
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
-	$logo_color_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', true, $errors );
+	$logo_color_id     = lis_directory_handle_logo_upload( 'lis_pv_logo_color', true, $errors );
+	$business_card_id  = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
 
 	if ( ! empty( $errors ) ) {
 		wp_safe_redirect( add_query_arg( 'lis_pv_error', implode( ',', $errors ), $redirect_base ) );
@@ -228,6 +238,9 @@ function lis_directory_handle_vendor_submission() {
 	update_post_meta( $post_id, '_lis_pv_link_url', $link_url );
 	if ( $logo_color_id ) {
 		update_post_meta( $post_id, '_lis_pv_logo_color_id', $logo_color_id );
+	}
+	if ( $business_card_id ) {
+		update_post_meta( $post_id, '_lis_pv_business_card_id', $business_card_id );
 	}
 
 	// Present when the vendor arrived via the WooCommerce thank-you page link
@@ -303,5 +316,62 @@ function lis_directory_handle_logo_upload( $field_name, $required, array &$error
 function lis_directory_restrict_logo_mimes( $mimes ) {
 	return array(
 		'png' => 'image/png',
+	);
+}
+
+/**
+ * Business card upload — optional (unlike the logo), and PNG-or-JPEG rather
+ * than PNG-only, since this is a photo/scan of a real printed card, not
+ * something that ever needs the CSS black/white recolor trick the logo does.
+ * Same validation shape as lis_directory_handle_logo_upload() otherwise:
+ * 2MB cap, real-image check via getimagesize(), restricted upload_mimes.
+ *
+ * @return int Attachment ID, or 0 if nothing was uploaded (errors appended to $errors only on a real problem, not on "left blank").
+ */
+function lis_directory_handle_business_card_upload( $field_name, array &$errors ) {
+	$has_file = ! empty( $_FILES[ $field_name ]['name'] ) && UPLOAD_ERR_NO_FILE !== $_FILES[ $field_name ]['error'];
+
+	if ( ! $has_file ) {
+		return 0;
+	}
+
+	if ( UPLOAD_ERR_OK !== $_FILES[ $field_name ]['error'] ) {
+		$errors[] = $field_name . '_upload_failed';
+		return 0;
+	}
+
+	$max_bytes = 2 * MB_IN_BYTES;
+	if ( $_FILES[ $field_name ]['size'] > $max_bytes ) {
+		$errors[] = $field_name . '_too_large';
+		return 0;
+	}
+
+	$filetype = wp_check_filetype_and_ext( $_FILES[ $field_name ]['tmp_name'], $_FILES[ $field_name ]['name'] );
+	if ( empty( $filetype['ext'] ) || ! in_array( $filetype['ext'], array( 'png', 'jpg', 'jpeg' ), true ) ) {
+		$errors[] = $field_name . '_type';
+		return 0;
+	}
+
+	if ( false === @getimagesize( $_FILES[ $field_name ]['tmp_name'] ) ) { // phpcs:ignore -- deliberate suppression, failure handled below.
+		$errors[] = $field_name . '_type';
+		return 0;
+	}
+
+	add_filter( 'upload_mimes', 'lis_directory_restrict_business_card_mimes' );
+	$attachment_id = media_handle_upload( $field_name, 0 );
+	remove_filter( 'upload_mimes', 'lis_directory_restrict_business_card_mimes' );
+
+	if ( is_wp_error( $attachment_id ) ) {
+		$errors[] = $field_name . '_upload_failed';
+		return 0;
+	}
+
+	return (int) $attachment_id;
+}
+
+function lis_directory_restrict_business_card_mimes( $mimes ) {
+	return array(
+		'png'  => 'image/png',
+		'jpg|jpeg' => 'image/jpeg',
 	);
 }

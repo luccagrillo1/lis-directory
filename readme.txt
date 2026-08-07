@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.30.9
+Stable tag: 0.31.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,13 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.0 =
+* Vendor Showcase: new optional Business Card upload (front-end
+  submission form + admin meta box), and a new
+  `[lis_preferred_vendor_ticker style="business-cards"]` display that
+  shows each vendor's uploaded card image directly instead of the
+  usual name/tagline card.
 
 = 0.30.9 =
 * Widened the Vendor Showcase ticker's cards to match the standalone

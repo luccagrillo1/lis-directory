@@ -147,20 +147,25 @@ function lis_directory_get_heading_styles_once() {
 
 /**
  * [lis_preferred_vendor_ticker] — horizontally auto-scrolling row of every
- * active vendor, across all categories. Two display styles:
+ * active vendor, across all categories. Three display styles:
  * `style="cards"` (default) — the same card as [lis_preferred_vendor_card].
  * `style="logos"` — logos only, no name/tagline text (added after v0.5.2 as
  * a second display option, alongside the original card version). In logos
  * mode, `tone="black"` / `tone="white"` recolors each vendor's single
  * uploaded logo via CSS instead of requiring a separate upload per tone —
  * default `tone="color"` shows the logo as uploaded.
+ * `style="business-cards"` — each vendor's own uploaded business card image
+ * (see _lis_pv_business_card_id, includes/submission.php /
+ * includes/meta.php), shown as-is at standard business-card proportions
+ * instead of the constructed name/tagline card. Vendors with no business
+ * card uploaded are skipped, same as vendors with no logo in logos mode.
  * Placement is manual; there is no auto-injection into Directorist pages.
  */
 add_shortcode( 'lis_preferred_vendor_ticker', 'lis_directory_render_vendor_ticker_shortcode' );
 
 function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 	$atts  = shortcode_atts( array( 'style' => 'cards', 'tone' => 'color' ), $atts, 'lis_preferred_vendor_ticker' );
-	$style = ( 'logos' === $atts['style'] ) ? 'logos' : 'cards';
+	$style = in_array( $atts['style'], array( 'logos', 'business-cards' ), true ) ? $atts['style'] : 'cards';
 	$tone  = in_array( $atts['tone'], array( 'black', 'white' ), true ) ? $atts['tone'] : 'color';
 
 	$vendors = lis_directory_get_all_active_vendors();
@@ -171,21 +176,31 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 
 	$items = array();
 	foreach ( $vendors as $vendor ) {
-		$items[] = ( 'logos' === $style )
-			? lis_directory_render_vendor_logo_html( $vendor, $tone )
-			: lis_directory_render_vendor_card_html( $vendor );
+		if ( 'logos' === $style ) {
+			$items[] = lis_directory_render_vendor_logo_html( $vendor, $tone );
+		} elseif ( 'business-cards' === $style ) {
+			$items[] = lis_directory_render_vendor_business_card_html( $vendor );
+		} else {
+			$items[] = lis_directory_render_vendor_card_html( $vendor );
+		}
 	}
-	$items = array_filter( $items ); // A vendor with no logo renders '' in logos mode — drop it, not an empty slot.
+	$items = array_filter( $items ); // A vendor with no logo/business card renders '' in that mode — drop it, not an empty slot.
 
 	if ( empty( $items ) ) {
-		return lis_directory_card_admin_hint( 'logos' === $style
-			? 'No active vendor showcase entries have a logo uploaded yet — the logo ticker has nothing to show.'
-			: 'No active vendor showcase entries yet — the ticker has nothing to show.'
+		$empty_messages = array(
+			'logos'          => 'No active vendor showcase entries have a logo uploaded yet — the logo ticker has nothing to show.',
+			'business-cards' => 'No active vendor showcase entries have a business card uploaded yet — the business card ticker has nothing to show.',
+			'cards'          => 'No active vendor showcase entries yet — the ticker has nothing to show.',
 		);
+		return lis_directory_card_admin_hint( $empty_messages[ $style ] );
 	}
 
 	$styles = lis_directory_get_ticker_styles_once();
-	$styles .= ( 'logos' === $style ) ? lis_directory_get_ticker_logo_styles_once() : '';
+	if ( 'logos' === $style ) {
+		$styles .= lis_directory_get_ticker_logo_styles_once();
+	} elseif ( 'business-cards' === $style ) {
+		$styles .= lis_directory_get_ticker_bizcard_styles_once();
+	}
 	$items_html = implode( '', $items );
 
 	ob_start();
@@ -230,6 +245,49 @@ function lis_directory_render_vendor_logo_html( $vendor, $tone = 'color' ) {
 	</<?php echo esc_html( $tag ); ?>>
 	<?php
 	return ob_get_clean();
+}
+
+/**
+ * Business-card ticker item — the vendor's own uploaded business card image
+ * shown as-is (no name/tagline overlay, since the card graphic already has
+ * whatever design/text the vendor wants on it), linked if they have a
+ * Directorist listing URL. Returns '' for a vendor with no business card
+ * uploaded, since there's nothing to show — same pattern as the logo-only
+ * ticker item just above.
+ */
+function lis_directory_render_vendor_business_card_html( $vendor ) {
+	$card_id  = (int) get_post_meta( $vendor->ID, '_lis_pv_business_card_id', true );
+	$card_url = $card_id ? wp_get_attachment_image_url( $card_id, 'large' ) : '';
+	if ( ! $card_url ) {
+		return '';
+	}
+
+	$link_url = get_post_meta( $vendor->ID, '_lis_pv_link_url', true );
+	$name     = get_the_title( $vendor );
+	$tag      = $link_url ? 'a' : 'div';
+
+	ob_start();
+	?>
+	<<?php echo esc_html( $tag ); ?> class="lis-pv-ticker-bizcard-item"<?php if ( $link_url ) : ?> href="<?php echo esc_url( $link_url ); ?>" target="_blank" rel="noopener noreferrer"<?php endif; ?>>
+		<img class="lis-pv-ticker-bizcard" src="<?php echo esc_url( $card_url ); ?>" alt="<?php echo esc_attr( $name . ' business card' ); ?>" loading="lazy" />
+	</<?php echo esc_html( $tag ); ?>>
+	<?php
+	return ob_get_clean();
+}
+
+/** See lis_directory_get_card_styles_once() — same "return, don't echo" reasoning. */
+function lis_directory_get_ticker_bizcard_styles_once() {
+	static $printed = false;
+	if ( $printed ) {
+		return '';
+	}
+	$printed = true;
+
+	$css_path = LIS_DIRECTORY_PATH . 'assets/css/vendor-ticker-bizcards.css';
+	if ( ! file_exists( $css_path ) ) {
+		return '';
+	}
+	return '<style id="lis-pv-ticker-bizcards-style">' . file_get_contents( $css_path ) . '</style>'; // phpcs:ignore -- static local asset, not user input.
 }
 
 /** See lis_directory_get_card_styles_once() — same "return, don't echo" reasoning. */

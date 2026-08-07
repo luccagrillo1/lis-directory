@@ -7,6 +7,52 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.0] — 2026-08-06 — Vendor Showcase: business card upload + new ticker style
+
+Lucca's ask: a new Vendor Showcase display where the "panels" are each
+vendor's own business card image, uploaded during onboarding.
+
+**New optional upload**, both places a vendor's fields get set:
+- Front-end submission form (`[lis_preferred_vendor_submit]`,
+  includes/submission.php): new "Business Card (optional)" file field,
+  PNG or JPEG, 2MB cap — deliberately optional (unlike the required
+  logo) since this is a brand-new field and shouldn't block anyone
+  from completing signup. Handled by a new
+  `lis_directory_handle_business_card_upload()`, same validation shape
+  as the existing logo handler (real-image check via getimagesize(),
+  restricted upload_mimes) but PNG-or-JPEG rather than PNG-only - this
+  is a photo/scan of an already-designed printed card, not something
+  that ever needs the logo's CSS black/white recolor trick.
+- Admin meta box ("Vendor Details", includes/meta.php): new "Business
+  Card" row reusing the same media-picker field UI as Logo
+  (`lis_directory_render_logo_field()`, now takes an optional
+  `$description` override so its help text isn't wrong for a
+  non-logo field) - so staff can add or update a vendor's business
+  card themselves, including backfilling one for a vendor who signed
+  up before this field existed.
+- New meta key `_lis_pv_business_card_id`, registered alongside the
+  existing vendor meta fields.
+
+**New ticker style**: `[lis_preferred_vendor_ticker style="business-cards"]`
+shows each vendor's uploaded card image directly - no constructed
+name/tagline overlay, since the card graphic already has whatever
+design the vendor wants on it. Sized to standard US business card
+proportions (3.5in x 2in = 1.75:1, displayed at 350x200px,
+`object-fit: contain` so nothing gets cropped). Vendors with no
+business card uploaded are skipped, same pattern as vendors with no
+logo in the existing `style="logos"` ticker.
+
+Nothing about the existing `style="cards"` (default) or `style="logos"`
+tickers changed - this is purely additive, a third option alongside
+them.
+
+**Known limitation**: none of the existing real vendor entries have a
+business card uploaded yet (the field is brand new) - the new ticker
+style will show nothing until at least one vendor has one added, either
+through a fresh submission or an admin backfill via the meta box.
+
+---
+
 ## [0.30.9] — 2026-08-06 — Ticker vendor cards: match the Single Card's slim proportions
 
 Lucca's feedback on the live "Preferred Vendor Preview" page: the

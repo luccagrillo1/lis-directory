@@ -24,14 +24,15 @@ add_action( 'admin_enqueue_scripts', 'lis_directory_admin_enqueue' );
 
 function lis_directory_register_meta() {
 	$fields = array(
-		'_lis_pv_tagline'        => 'string',
-		'_lis_pv_link_url'       => 'string',
-		'_lis_pv_logo_color_id'  => 'integer',
-		'_lis_pv_status'         => 'string',
-		'_lis_pv_term_start'     => 'string',
-		'_lis_pv_term_end'       => 'string',
-		'_lis_pv_wc_order_id'    => 'integer',
-		'_lis_pv_contact_email'  => 'string',
+		'_lis_pv_tagline'          => 'string',
+		'_lis_pv_link_url'         => 'string',
+		'_lis_pv_logo_color_id'    => 'integer',
+		'_lis_pv_business_card_id' => 'integer',
+		'_lis_pv_status'           => 'string',
+		'_lis_pv_term_start'       => 'string',
+		'_lis_pv_term_end'         => 'string',
+		'_lis_pv_wc_order_id'      => 'integer',
+		'_lis_pv_contact_email'    => 'string',
 	);
 
 	foreach ( $fields as $key => $type ) {
@@ -60,10 +61,11 @@ function lis_directory_add_meta_box() {
 function lis_directory_render_meta_box( $post ) {
 	wp_nonce_field( 'lis_pv_save_meta', 'lis_pv_meta_nonce' );
 
-	$tagline    = get_post_meta( $post->ID, '_lis_pv_tagline', true );
-	$link_url   = get_post_meta( $post->ID, '_lis_pv_link_url', true );
-	$logo_color = (int) get_post_meta( $post->ID, '_lis_pv_logo_color_id', true );
-	$status     = get_post_meta( $post->ID, '_lis_pv_status', true );
+	$tagline       = get_post_meta( $post->ID, '_lis_pv_tagline', true );
+	$link_url      = get_post_meta( $post->ID, '_lis_pv_link_url', true );
+	$logo_color    = (int) get_post_meta( $post->ID, '_lis_pv_logo_color_id', true );
+	$business_card = (int) get_post_meta( $post->ID, '_lis_pv_business_card_id', true );
+	$status        = get_post_meta( $post->ID, '_lis_pv_status', true );
 	$term_start = get_post_meta( $post->ID, '_lis_pv_term_start', true );
 	$term_end   = get_post_meta( $post->ID, '_lis_pv_term_end', true );
 	$wc_order   = get_post_meta( $post->ID, '_lis_pv_wc_order_id', true );
@@ -94,6 +96,10 @@ function lis_directory_render_meta_box( $post ) {
 		<tr>
 			<th>Logo</th>
 			<td><?php lis_directory_render_logo_field( 'lis_pv_logo_color_id', $logo_color ); ?></td>
+		</tr>
+		<tr>
+			<th>Business Card</th>
+			<td><?php lis_directory_render_logo_field( 'lis_pv_business_card_id', $business_card, 'PNG or JPEG &mdash; a photo/scan of their actual business card, standard 3.5&quot; x 2&quot; size. Used by the "business card" ticker style instead of the constructed name/tagline card.' ); ?></td>
 		</tr>
 		<tr>
 			<th><label for="lis_pv_status">Status</label></th>
@@ -127,7 +133,7 @@ function lis_directory_render_meta_box( $post ) {
 	<?php
 }
 
-function lis_directory_render_logo_field( $field_id, $attachment_id ) {
+function lis_directory_render_logo_field( $field_id, $attachment_id, $description = "PNG only, transparent background — recolored to black/white automatically wherever that's needed." ) {
 	$image_url = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'medium' ) : '';
 	?>
 	<div class="lis-pv-logo-field">
@@ -136,7 +142,7 @@ function lis_directory_render_logo_field( $field_id, $attachment_id ) {
 		<br />
 		<button type="button" class="button lis-pv-upload-logo" data-target="<?php echo esc_attr( $field_id ); ?>">Select Image</button>
 		<button type="button" class="button lis-pv-remove-logo" data-target="<?php echo esc_attr( $field_id ); ?>" style="<?php echo $image_url ? '' : 'display:none;'; ?>">Remove</button>
-		<p class="description">PNG only, transparent background — recolored to black/white automatically wherever that's needed.</p>
+		<p class="description"><?php echo wp_kses_post( $description ); ?></p>
 	</div>
 	<?php
 }
@@ -162,6 +168,10 @@ function lis_directory_save_meta_box( $post_id ) {
 
 	if ( isset( $_POST['lis_pv_logo_color_id'] ) ) {
 		update_post_meta( $post_id, '_lis_pv_logo_color_id', absint( $_POST['lis_pv_logo_color_id'] ) );
+	}
+
+	if ( isset( $_POST['lis_pv_business_card_id'] ) ) {
+		update_post_meta( $post_id, '_lis_pv_business_card_id', absint( $_POST['lis_pv_business_card_id'] ) );
 	}
 
 	if ( isset( $_POST['lis_pv_status'] ) && array_key_exists( $_POST['lis_pv_status'], LIS_DIRECTORY_STATUSES ) ) {

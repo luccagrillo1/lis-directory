@@ -1,0 +1,31 @@
+/* Extra rules for [lis_preferred_vendor_ticker style="business-cards"] — the
+   base .lis-pv-ticker / .lis-pv-ticker-track / .lis-pv-ticker-group rules in
+   vendor-ticker.css already handle the scroll/loop mechanics; this file only
+   covers the business-card item, which shows the vendor's own uploaded card
+   image as-is rather than the constructed name/tagline card.
+
+   Sized to standard US business card proportions (3.5in x 2in = 1.75:1) —
+   350x200px is that exact ratio at a size that reads clearly in a scrolling
+   ticker. `object-fit: contain` shows the whole uploaded card without
+   cropping (unlike a photo, a business card's edges and corner text matter),
+   letterboxing on the shorter axis if a vendor's upload isn't exactly 1.75:1. */
+
+.lis-pv-ticker-bizcard-item {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 350px;
+	height: 200px;
+	padding: 8px;
+	box-sizing: border-box;
+}
+
+.lis-pv-ticker-bizcard {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	border-radius: 6px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+	background: #fff;
+}
