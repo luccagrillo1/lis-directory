@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.30.8
+Stable tag: 0.30.9
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.30.9 =
+* Widened the Vendor Showcase ticker's cards to match the standalone
+  Single Card's proportions - long names/taglines no longer wrap onto
+  extra lines and blow up the ticker's height.
 
 = 0.30.8 =
 * Removed Compare Listings entirely - the "+ Compare" button, the

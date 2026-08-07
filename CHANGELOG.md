@@ -7,6 +7,29 @@ This file is the authoritative project history.
 
 ---
 
+## [0.30.9] — 2026-08-06 — Ticker vendor cards: match the Single Card's slim proportions
+
+Lucca's feedback on the live "Preferred Vendor Preview" page: the
+"Ticker — all active vendors" cards were much taller than the standalone
+"Single card" example, and he wanted the ticker to have that same
+slimmer look.
+
+Both use the exact same card markup
+(`lis_directory_render_vendor_card_html()` - one function, shared by
+both the single-card shortcode and the ticker's "cards" mode), so the
+height difference was pure CSS: `vendor-ticker.css` constrained each
+ticker card to `width: 320px`, while the standalone card
+(`vendor-card.css`) only caps at `max-width: 420px`. At 320px, a longer
+vendor name or tagline (e.g. "Bonner Mobile Detailing" / "Professional
+mobile detailing, wherever you are.") wraps onto 2-3 lines, and since
+`.lis-pv-card-inner` is a flex row (logo left, text right), that extra
+wrapped height stretches the whole card taller - exactly what showed up
+live. Widened `.lis-pv-ticker .lis-pv-card` to `420px`, matching the
+Single Card's own width, so ticker cards get the same amount of room
+for text and wrap (or don't) exactly the same way.
+
+---
+
 ## [0.30.8] — 2026-08-05 — Removed Compare Listings
 
 Removed by request. Was one of the original Directorist-parity pieces

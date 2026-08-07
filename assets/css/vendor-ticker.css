@@ -23,8 +23,8 @@
 
 .lis-pv-ticker .lis-pv-card {
 	flex-shrink: 0;
-	width: 320px;
-	max-width: 320px;
+	width: 420px;
+	max-width: 420px;
 }
 
 @keyframes lis-pv-ticker-scroll {
