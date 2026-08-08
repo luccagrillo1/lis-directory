@@ -61,18 +61,26 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 					<div class="lis-listing-card-body">
 						<div class="lis-listing-card-title-row">
 							<p class="lis-listing-card-title"><?php the_title(); ?></p>
-							<?php if ( null !== $is_open ) : ?>
-								<span class="lis-listing-open-status lis-listing-open-status--sm <?php echo $is_open ? 'is-open' : 'is-closed'; ?>"><?php echo $is_open ? 'Open' : 'Closed'; ?></span>
+							<?php if ( null !== $is_open || $category ) : ?>
+								<span class="lis-listing-card-title-right">
+									<?php if ( null !== $is_open ) : ?>
+										<span class="lis-listing-open-status lis-listing-open-status--sm <?php echo $is_open ? 'is-open' : 'is-closed'; ?>"><?php echo $is_open ? 'Open' : 'Closed'; ?></span>
+									<?php endif; ?>
+									<?php if ( $category ) : ?>
+										<span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span>
+									<?php endif; ?>
+								</span>
 							<?php endif; ?>
 						</div>
-						<div class="lis-listing-card-meta-row">
-							<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo 'real-estate-rent' === $type ? 'Rented' : 'Sold'; ?></span><?php endif; ?>
-							<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
-							<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
-							<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Verified</span><?php endif; ?>
-							<?php if ( $category ) : ?><span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span><?php endif; ?>
-							<?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?></span><?php endif; ?>
-						</div>
+						<?php if ( $sold || $featured || $popular || $verified || $avg_rating ) : ?>
+							<div class="lis-listing-card-meta-row">
+								<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo 'real-estate-rent' === $type ? 'Rented' : 'Sold'; ?></span><?php endif; ?>
+								<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
+								<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
+								<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Verified</span><?php endif; ?>
+								<?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?></span><?php endif; ?>
+							</div>
+						<?php endif; ?>
 						<?php if ( ( 'real-estate-sale' === $type || 'real-estate-rent' === $type ) && ( $bedrooms || $bathrooms || $sqft ) ) : ?>
 							<p class="lis-listing-card-facts">
 								<?php echo esc_html( implode( ' · ', array_filter( array(

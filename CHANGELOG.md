@@ -7,6 +7,45 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.1] — 2026-08-08 — Listings archive card polish
+
+Lucca's ask, from a screenshot of the live Listings page: "fix the view
+icons and move the category to around the pink area" (top-right of each
+card).
+
+**Grid/List/Map view-toggle icons** (assets/css/listings.css): the SVG
+icons and the correct `width: 38px` button sizing were both deployed, but
+the buttons still rendered full-width and empty on the live site. Root
+cause: the Astra theme styles every `<button>` globally (padding,
+box-shadow, appearance), which inflated the toggle buttons and hid the
+inline SVGs. Fixed by resetting `padding`/`min-width`/`box-shadow`/
+`appearance` on `.lis-listing-view-btn`, adding a one-level-deeper
+`.lis-listing-view-toggle .lis-listing-view-btn` block so those resets
+out-specify the theme, and pinning the SVG to `18×18` with
+`stroke: currentColor` (so it's grey when inactive, white on the green
+active button).
+
+**Category badge moved to the card's top-right**
+(templates/archive-listing.php + assets/css/listings.css): the category
+badge used to sit in the meta-row below the title; it now lives in a new
+`.lis-listing-card-title-right` group inside the title-row, pushed to the
+right edge via `margin-left: auto` (the title-row is already flex +
+space-between). The meta-row (Sold/Featured/Popular/Verified/rating) is
+now only rendered when it actually has content, so cards whose only badge
+was the category — the common case — no longer leave an empty gap under
+the title.
+
+**Files:** assets/css/listings.css, templates/archive-listing.php,
+lis-directory.php (version).
+
+**Known limitation:** unverified in a live browser at ship time — Claude
+in Chrome was disconnected when this shipped, so the theme-specificity
+fix is reasoned from the deployed CSS/HTML, not confirmed on-screen. If
+the toggle buttons are still inflated after deploy, the reset block needs
+another specificity bump (add `.lis-listing-toolbar` in front).
+
+---
+
 ## [0.31.0] — 2026-08-06 — Vendor Showcase: business card upload + new ticker style
 
 Lucca's ask: a new Vendor Showcase display where the "panels" are each

@@ -225,13 +225,41 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	flex: 0 0 auto;
 	width: 38px;
 	height: 34px;
+	min-width: 0;
+	padding: 0;
+	margin: 0;
+	line-height: 0;
 	background: #fff;
 	border: none;
 	border-right: 1px solid #ddd;
+	border-radius: 0;
+	box-shadow: none;
+	-webkit-appearance: none;
+	appearance: none;
 	color: #888;
 	cursor: pointer;
+}
+
+/* Scoped one level up so these win over the theme's global button styles
+   (Astra pads/box-shadows every <button>, which was inflating these to full
+   width and hiding the icons). */
+.lis-listing-view-toggle .lis-listing-view-btn {
+	width: 38px;
+	min-width: 0;
+	padding: 0;
+	box-shadow: none;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.lis-listing-view-toggle .lis-listing-view-btn svg {
+	display: block;
+	width: 18px;
+	height: 18px;
+	stroke: currentColor;
 }
 
 .lis-listing-view-btn:last-child {
@@ -348,6 +376,18 @@
 	font-weight: 600;
 	margin: 0;
 	line-height: 1.3;
+}
+
+/* Open-status + category badge, pushed to the card's top-right corner
+   (title-row is flex + space-between, so this group hugs the right edge). */
+.lis-listing-card-title-right {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 8px;
+	flex-shrink: 0;
+	margin-left: auto;
 }
 
 .lis-listing-card-meta-row {

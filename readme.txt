@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.0
+Stable tag: 0.31.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,15 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.1 =
+* Listings archive cards: fixed the Grid/List/Map view-toggle icons,
+  which the theme's global button styles were inflating to full width
+  and hiding — they now render as proper compact icon buttons.
+* Listings archive cards: the category badge now sits in the card's
+  top-right corner instead of below the title, and the badge/rating
+  meta-row is hidden entirely when a card has nothing else to show
+  (no more empty gap under the title).
 
 = 0.31.0 =
 * Vendor Showcase: new optional Business Card upload (front-end
