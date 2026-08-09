@@ -7,6 +7,21 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.12] — 2026-08-09 — Thank-you screen after submit
+
+A successful `[lis_listing_submit]` used to show a green success banner on top
+of the still-rendered wizard (so the whole form sat there under it). It now
+renders a dedicated, centered thank-you screen — checkmark, "Thanks — your
+listing is in!", a short review-queue message, and Submit-another / Browse-the-
+directory buttons — and returns early so the form isn't shown. Same PRG redirect
+(`?lis_listing_submitted=1`) as before; only the success view changed. The edit
+form's "changes saved" banner is unchanged (a banner is right for an edit).
+
+**Files:** includes/listings-submission.php, assets/css/listings.css,
+lis-directory.php (version), readme.txt.
+
+---
+
 ## [0.31.11] — 2026-08-09 — Suggest-a-feature with admin veto
 
 The Features step of the add-listing / edit-listing forms now has a "Don't see

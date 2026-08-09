@@ -75,10 +75,24 @@ function lis_directory_render_listing_submission_form_shortcode() {
 
 	ob_start();
 
+	// On a successful submit we land here via a redirect (?lis_listing_submitted=1).
+	// Show a dedicated thank-you screen instead of the form — not a banner
+	// sitting on top of the still-present wizard — and stop here.
 	if ( isset( $_GET['lis_listing_submitted'] ) ) {
 		?>
-		<div class="lis-listing-submit-success">Thanks! Your listing is in for review — we'll publish it once it's approved.</div>
+		<div class="lis-listing-thankyou">
+			<div class="lis-listing-thankyou-icon" aria-hidden="true">
+				<svg viewBox="0 0 52 52" width="56" height="56" role="img"><circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5" opacity="0.35"/><path fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="M16 27.5l7 7 14-16"/></svg>
+			</div>
+			<h2 class="lis-listing-thankyou-title">Thanks — your listing is in!</h2>
+			<p class="lis-listing-thankyou-text">We've received your submission and it's in the review queue. We'll publish it as soon as it's approved — you can check its status any time from your dashboard.</p>
+			<div class="lis-listing-thankyou-actions">
+				<a class="lis-listing-thankyou-btn" href="<?php echo esc_url( $current_url ); ?>">Submit another listing</a>
+				<a class="lis-listing-thankyou-btn lis-listing-thankyou-btn--ghost" href="<?php echo esc_url( get_post_type_archive_link( 'lis_listing' ) ); ?>">Browse the directory</a>
+			</div>
+		</div>
 		<?php
+		return ob_get_clean();
 	}
 
 	if ( ! empty( $_GET['lis_listing_error'] ) ) {
