@@ -7,6 +7,22 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.6] — 2026-08-09 — Single listing: balanced two-column layout
+
+Reviewing the new directory pages against Directorist: a single listing
+with no business hours left its right sidebar empty, so the whole page sat
+in a narrow left column with a big blank gap on the right. Moved the
+contact box (address/phone/website/email) and the map out of the main
+column into the sidebar, so the two-column layout is reliably filled and
+the description stays a readable width. Sidebar is now sticky, its map is
+taller to suit the narrower column, and if a listing genuinely has no
+contact/map/hours the layout collapses to a single centered column instead
+of leaving dead space (via :has()).
+
+**Files:** templates/single-listing.php, assets/css/listings.css, lis-directory.php.
+
+---
+
 ## [0.31.5] — 2026-08-09 — Vendor Showcase generator: initial stock sync
 
 Bug found in live testing: the Vendor Showcase get_variation lookup showed

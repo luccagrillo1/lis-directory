@@ -704,6 +704,29 @@
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+	position: sticky;
+	top: 24px;
+}
+
+/* Contact box + map now live in the sidebar, so drop their standalone
+   bottom margins (the sidebar's own gap handles spacing) and give the map a
+   taller aspect ratio that reads well in the narrower column. */
+.lis-listing-sidebar .lis-listing-meta,
+.lis-listing-sidebar .lis-listing-map {
+	margin: 0;
+}
+
+.lis-listing-sidebar .lis-listing-map {
+	padding-bottom: 62%;
+}
+
+/* If a listing has no contact info, map, or hours the sidebar is empty —
+   let the main column span the full width instead of leaving a blank gap. */
+.lis-listing-columns:not(:has(.lis-listing-sidebar > *)) {
+	grid-template-columns: 1fr;
+}
+.lis-listing-columns:not(:has(.lis-listing-sidebar > *)) .lis-listing-main {
+	max-width: 820px;
 }
 
 .lis-listing-hours-box {

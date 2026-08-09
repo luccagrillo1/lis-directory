@@ -137,56 +137,6 @@ while ( have_posts() ) :
 					<?php endif; ?>
 				<?php endif; ?>
 
-				<?php if ( $address || $phone || $website || $email ) : ?>
-					<div class="lis-listing-meta">
-						<?php if ( $address ) : ?>
-							<div class="lis-listing-meta-row">
-								<span class="lis-listing-meta-label">Address</span>
-								<a href="<?php echo esc_url( 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $address ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $address ); ?></a>
-							</div>
-						<?php endif; ?>
-						<?php if ( $phone ) : ?>
-							<div class="lis-listing-meta-row">
-								<span class="lis-listing-meta-label">Phone</span>
-								<a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a>
-							</div>
-						<?php endif; ?>
-						<?php if ( $website ) : ?>
-							<div class="lis-listing-meta-row">
-								<span class="lis-listing-meta-label">Website</span>
-								<a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $website ); ?></a>
-							</div>
-						<?php endif; ?>
-						<?php if ( $email ) : ?>
-							<div class="lis-listing-meta-row">
-								<span class="lis-listing-meta-label">Email</span>
-								<a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a>
-							</div>
-						<?php endif; ?>
-					</div>
-				<?php endif; ?>
-
-				<?php if ( $address && $maps_api_key ) : ?>
-					<div class="lis-listing-map">
-						<div class="lis-listing-map-canvas" data-address="<?php echo esc_attr( $address ); ?>"></div>
-					</div>
-					<script>
-					window.lisDirectoryInitMaps = window.lisDirectoryInitMaps || function () {
-						document.querySelectorAll( '.lis-listing-map-canvas[data-address]' ).forEach( function ( el ) {
-							var geocoder = new google.maps.Geocoder();
-							geocoder.geocode( { address: el.dataset.address }, function ( results, status ) {
-								if ( 'OK' !== status || ! results[0] ) {
-									return;
-								}
-								var map = new google.maps.Map( el, { center: results[0].geometry.location, zoom: 15 } );
-								new google.maps.Marker( { map: map, position: results[0].geometry.location } );
-							} );
-						} );
-					};
-					</script>
-					<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr( $maps_api_key ); ?>&callback=lisDirectoryInitMaps&loading=async" async defer></script>
-				<?php endif; ?>
-
 				<div class="lis-listing-section">
 					<h2>Description</h2>
 					<div class="lis-listing-content"><?php the_content(); ?></div>
@@ -291,6 +241,56 @@ while ( have_posts() ) :
 			</div>
 
 			<div class="lis-listing-sidebar">
+				<?php if ( $address || $phone || $website || $email ) : ?>
+					<div class="lis-listing-meta">
+						<?php if ( $address ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Address</span>
+								<a href="<?php echo esc_url( 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $address ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $address ); ?></a>
+							</div>
+						<?php endif; ?>
+						<?php if ( $phone ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Phone</span>
+								<a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a>
+							</div>
+						<?php endif; ?>
+						<?php if ( $website ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Website</span>
+								<a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $website ); ?></a>
+							</div>
+						<?php endif; ?>
+						<?php if ( $email ) : ?>
+							<div class="lis-listing-meta-row">
+								<span class="lis-listing-meta-label">Email</span>
+								<a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a>
+							</div>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( $address && $maps_api_key ) : ?>
+					<div class="lis-listing-map">
+						<div class="lis-listing-map-canvas" data-address="<?php echo esc_attr( $address ); ?>"></div>
+					</div>
+					<script>
+					window.lisDirectoryInitMaps = window.lisDirectoryInitMaps || function () {
+						document.querySelectorAll( '.lis-listing-map-canvas[data-address]' ).forEach( function ( el ) {
+							var geocoder = new google.maps.Geocoder();
+							geocoder.geocode( { address: el.dataset.address }, function ( results, status ) {
+								if ( 'OK' !== status || ! results[0] ) {
+									return;
+								}
+								var map = new google.maps.Map( el, { center: results[0].geometry.location, zoom: 15 } );
+								new google.maps.Marker( { map: map, position: results[0].geometry.location } );
+							} );
+						} );
+					};
+					</script>
+					<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr( $maps_api_key ); ?>&callback=lisDirectoryInitMaps&loading=async" async defer></script>
+				<?php endif; ?>
+
 				<?php if ( array_filter( $week ) ) : ?>
 					<div class="lis-listing-hours-box">
 						<h2>Business Hours <?php if ( null !== $is_open ) : ?><span class="lis-listing-open-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>"><?php echo $is_open ? 'Open now' : 'Closed'; ?></span><?php endif; ?></h2>
