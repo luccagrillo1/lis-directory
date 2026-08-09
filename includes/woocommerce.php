@@ -148,6 +148,28 @@ function lis_directory_render_settings_page() {
 			<?php wp_nonce_field( 'lis_directory_generate_vendor_showcase', 'lis_vs_gen_nonce' ); ?>
 			<?php submit_button( $vs_product_id ? 'Top up Vendor Showcase variations' : 'Generate Vendor Showcase product', 'secondary', 'submit', false ); ?>
 		</form>
+
+		<hr />
+		<h3>Testing tool</h3>
+		<p class="description" style="max-width:640px;">
+			Creates a throwaway <strong>$0, non-subscription</strong> product tagged to
+			the first available vendor category, so the full pay &rarr; thank-you
+			submission-link &rarr; category-lock flow can be exercised end-to-end with a
+			free order (no card, no charge). Delete the product, its test order, and any
+			test vendor afterward.
+		</p>
+		<?php if ( isset( $_GET['lis_vs_test'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<?php if ( 0 === strpos( (string) $_GET['lis_vs_test'], 'ok' ) ) : ?>
+				<div class="notice notice-success inline"><p>Test spot created. <?php echo isset( $_GET['lis_vs_test_pid'] ) ? '<a href="' . esc_url( get_permalink( (int) $_GET['lis_vs_test_pid'] ) ) . '">View the $0 test product</a>.' : ''; ?></p></div>
+			<?php else : ?>
+				<div class="notice notice-error inline"><p>Could not create a test spot (no available category, or WooCommerce inactive).</p></div>
+			<?php endif; ?>
+		<?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="lis_directory_create_test_spot" />
+			<?php wp_nonce_field( 'lis_directory_create_test_spot', 'lis_vs_test_nonce' ); ?>
+			<?php submit_button( 'Create $0 test spot', 'secondary', 'submit', false ); ?>
+		</form>
 	</div>
 	<?php
 }
@@ -162,6 +184,7 @@ function lis_directory_init_woocommerce_integration() {
 	add_action( 'lis_directory_vendor_status_changed', 'lis_directory_sync_stock_on_status_change', 10, 2 );
 	add_action( 'woocommerce_thankyou', 'lis_directory_maybe_show_submission_link' );
 	add_action( 'admin_post_lis_directory_generate_vendor_showcase', 'lis_directory_handle_generate_vendor_showcase' );
+	add_action( 'admin_post_lis_directory_create_test_spot', 'lis_directory_handle_create_test_spot' );
 
 	if ( class_exists( 'WC_Subscriptions' ) ) {
 		add_action( 'woocommerce_subscription_status_cancelled', 'lis_directory_handle_subscription_ended' );
@@ -394,6 +417,102 @@ function lis_directory_generate_vendor_showcase_product() {
 	}
 
 	return array( 'added' => $added, 'product_id' => $product_id );
+}
+
+/**
+ * admin-post handler for the "Create $0 test spot" testing button.
+ */
+function lis_directory_handle_create_test_spot() {
+	if ( ! current_user_can( 'manage_woocommerce' ) && ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'You do not have permission to do this.' );
+	}
+	if ( ! isset( $_POST['lis_vs_test_nonce'] ) || ! wp_verify_nonce( $_POST['lis_vs_test_nonce'], 'lis_directory_create_test_spot' ) ) {
+		wp_die( 'Security check failed.' );
+	}
+
+	$result   = lis_directory_create_test_vendor_spot();
+	$redirect = admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' );
+
+	if ( is_wp_error( $result ) ) {
+		$redirect = add_query_arg( 'lis_vs_test', 'error', $redirect );
+	} else {
+		$redirect = add_query_arg( array( 'lis_vs_test' => 'ok', 'lis_vs_test_pid' => (int) $result['product_id'] ), $redirect );
+	}
+	wp_safe_redirect( $redirect );
+	exit;
+}
+
+/**
+ * Creates a disposable $0, non-subscription variable product with a single
+ * variation tagged to the first vendor category that has no active vendor —
+ * just enough to exercise the pay → thank-you submission-link → category-lock
+ * flow with a free order (a real subscription would demand a saved card).
+ * Non-subscription and $0 on purpose so checkout needs no payment method.
+ *
+ * @return array|WP_Error { product_id, variation_id, category, term_id }.
+ */
+function lis_directory_create_test_vendor_spot() {
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		return new WP_Error( 'no_wc', 'WooCommerce is not active.' );
+	}
+	$terms = get_terms( array( 'taxonomy' => 'lis_vendor_category', 'hide_empty' => false ) );
+	if ( is_wp_error( $terms ) || empty( $terms ) ) {
+		return new WP_Error( 'no_terms', 'No LIS Vendor Categories exist.' );
+	}
+
+	$term = null;
+	foreach ( $terms as $t ) {
+		if ( ! lis_directory_get_active_vendor_for_category( $t->term_id ) ) {
+			$term = $t;
+			break;
+		}
+	}
+	if ( ! $term ) {
+		return new WP_Error( 'no_available', 'Every category already has an active vendor.' );
+	}
+	$name = html_entity_decode( $term->name, ENT_QUOTES );
+
+	$product = new WC_Product_Variable();
+	$product->set_name( 'TEST — Vendor Spot ($0, delete me)' );
+	$product->set_status( 'publish' );
+	$product->set_catalog_visibility( 'hidden' );
+	$product->set_virtual( true );
+
+	$attr = new WC_Product_Attribute();
+	$attr->set_name( 'Vendor Category' );
+	$attr->set_options( array( $name ) );
+	$attr->set_visible( true );
+	$attr->set_variation( true );
+	$product->set_attributes( array( $attr ) );
+	$product->update_meta_data( '_lis_vendor_showcase_test', '1' );
+	$product_id = $product->save();
+	if ( ! $product_id ) {
+		return new WP_Error( 'save_failed', 'Could not create the test product.' );
+	}
+
+	$var = new WC_Product_Variation();
+	$var->set_parent_id( $product_id );
+	$var->set_attributes( array( 'vendor-category' => $name ) );
+	$var->set_regular_price( 0 );
+	$var->set_price( 0 );
+	$var->set_virtual( true );
+	$var->update_meta_data( '_lis_pv_category_term_id', $term->term_id );
+	$variation_id = $var->save();
+	update_post_meta( $variation_id, 'attribute_vendor-category', $name );
+
+	if ( class_exists( 'WC_Product_Variable' ) ) {
+		WC_Product_Variable::sync( $product_id );
+	}
+	if ( function_exists( 'wc_delete_product_transients' ) ) {
+		wc_delete_product_transients( $product_id );
+	}
+
+	return array(
+		'product_id'   => $product_id,
+		'variation_id' => $variation_id,
+		'category'     => $name,
+		'term_id'      => $term->term_id,
+	);
 }
 
 /**

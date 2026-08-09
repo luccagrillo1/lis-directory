@@ -7,6 +7,22 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.4] — 2026-08-09 — Vendor Showcase: $0 test-spot dev tool
+
+Adds a "Create $0 test spot" button on the settings page. A real Vendor
+Showcase purchase is a subscription, which requires a saved card at
+checkout — awkward to verify end-to-end without real billing. This button
+creates a disposable $0, non-subscription variable product whose single
+variation is tagged (`_lis_pv_category_term_id`) to the first vendor
+category with no active vendor. Buying it is free and needs no payment
+method, so the pay -> thank-you submission-link -> category-lock chain can
+be exercised for real. Throwaway: delete the product, its order, and any
+test vendor afterward.
+
+**Files:** includes/woocommerce.php, lis-directory.php (version).
+
+---
+
 ## [0.31.3] — 2026-08-09 — Vendor Showcase generator: reliable category attribute
 
 Follow-up to 0.31.2. The generated variations all carried the correct
