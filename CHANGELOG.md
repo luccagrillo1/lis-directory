@@ -7,6 +7,30 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.9] — 2026-08-09 — Local-Directory-scoped search, bigger fields, rectangular business cards
+
+Three small polish items from live review:
+
+1. **Directory-scoped search shortcode.** `[lis_listing_search]` gained a
+   `directory="..."` attribute (any key from `lis_directory_get_listing_types()`
+   — `local-business`, `real-estate-sale`, `real-estate-rent`, `job-listing`).
+   When set, the "All Directories" `<select>` is replaced by a hidden `lis_type`
+   field, so the widget is a single-directory search box. `[lis_listing_search
+   directory="local-business"]` is the Local-Directory-only variant that was
+   requested. No new shortcode name — same one, opt-in attribute.
+
+2. **Slightly larger search fields.** Input/select padding 10→13px vertical,
+   font 0.95→1.02em, submit padding bumped to match. Just a touch bigger.
+
+3. **Business-card ticker cards are perfect rectangles.** The bizcard image had
+   `border-radius: 6px`; since a business-card image is a full-bleed rectangle,
+   rounding clipped the corners and left dead white space. Set to 0.
+
+**Files:** includes/listings-search.php, assets/css/listings.css,
+assets/css/vendor-ticker-bizcards.css, readme.txt, lis-directory.php (version).
+
+---
+
 ## [0.31.8] — 2026-08-09 — Add-listing photos: live previews + client-side validation (stop the wizard wipe)
 
 Two problems on the "Photos & Video" step of the add-listing / edit-listing

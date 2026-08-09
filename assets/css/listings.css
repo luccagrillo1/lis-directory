@@ -18,16 +18,16 @@
 .lis-listing-search-select {
 	flex: 1 1 200px;
 	min-width: 160px;
-	padding: 10px 14px;
+	padding: 13px 16px;
 	border: 1px solid #ddd;
 	border-radius: 8px;
-	font-size: 0.95em;
+	font-size: 1.02em;
 	background: #fff;
 }
 
 .lis-listing-search-submit {
 	flex: 0 0 auto;
-	padding: 10px 24px;
+	padding: 13px 26px;
 	border: none;
 	border-radius: 8px;
 	background: #576846;

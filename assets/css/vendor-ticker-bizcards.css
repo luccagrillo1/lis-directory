@@ -25,7 +25,10 @@
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
-	border-radius: 6px;
+	/* Perfect rectangle — no border-radius. A business-card image is a
+	   full-bleed rectangle, so rounding the corners clipped the image and
+	   left dead white space in each corner. */
+	border-radius: 0;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 	background: #fff;
 }

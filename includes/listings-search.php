@@ -71,9 +71,16 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 	wp_enqueue_script( 'lis-directory-listing-search', LIS_DIRECTORY_URL . 'assets/js/listing-search.js', array(), LIS_DIRECTORY_VERSION, true );
 
-	$atts = shortcode_atts( array( 'redirect' => '' ), $atts, 'lis_listing_search' );
+	$atts = shortcode_atts( array( 'redirect' => '', 'directory' => '' ), $atts, 'lis_listing_search' );
 
 	$action = $atts['redirect'] ? $atts['redirect'] : get_post_type_archive_link( 'lis_listing' );
+
+	// `directory="local-business"` (any key from lis_directory_get_listing_types)
+	// locks this form to one directory type: the "All Directories" dropdown is
+	// replaced by a hidden field, so it's a single-directory search box — e.g.
+	// [lis_listing_search directory="local-business"] for the Local Directory.
+	$listing_types = lis_directory_get_listing_types();
+	$locked_type   = isset( $listing_types[ $atts['directory'] ] ) ? $atts['directory'] : '';
 
 	$current_q       = isset( $_GET['lis_q'] ) ? sanitize_text_field( wp_unslash( $_GET['lis_q'] ) ) : '';
 	$current_type    = isset( $_GET['lis_type'] ) ? sanitize_key( wp_unslash( $_GET['lis_type'] ) ) : '';
@@ -91,12 +98,16 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 		<div class="lis-listing-search-row">
 			<input type="text" name="lis_q" class="lis-listing-search-input" placeholder="What are you looking for?" value="<?php echo esc_attr( $current_q ); ?>" />
 
-			<select name="lis_type" class="lis-listing-search-select">
-				<option value="">All Directories</option>
-				<?php foreach ( lis_directory_get_listing_types() as $value => $label ) : ?>
-					<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current_type, $value ); ?>><?php echo esc_html( $label ); ?></option>
-				<?php endforeach; ?>
-			</select>
+			<?php if ( $locked_type ) : ?>
+				<input type="hidden" name="lis_type" value="<?php echo esc_attr( $locked_type ); ?>" />
+			<?php else : ?>
+				<select name="lis_type" class="lis-listing-search-select">
+					<option value="">All Directories</option>
+					<?php foreach ( $listing_types as $value => $label ) : ?>
+						<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current_type, $value ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			<?php endif; ?>
 
 			<?php if ( ! is_wp_error( $categories ) && ! empty( $categories ) ) : ?>
 				<select name="lis_category" class="lis-listing-search-select">

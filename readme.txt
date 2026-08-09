@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.8
+Stable tag: 0.31.9
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -93,7 +93,11 @@ variations is a wp-admin task, not something this plugin does for you).
   and a `pre_get_posts`/`the_posts` hook applies the filters there, so
   results use the same archive template rather than a separate results
   page. `redirect="https://..."` to point it somewhere other than the
-  default archive.
+  default archive. `directory="local-business"` (or any directory-type key:
+  `real-estate-sale`, `real-estate-rent`, `job-listing`) locks the form to a
+  single directory and hides the "All Directories" dropdown — e.g.
+  `[lis_listing_search directory="local-business"]` for a Local-Directory-only
+  search box.
 * `[lis_listing_compare]` — side-by-side comparison (up to 4) of whatever
   listings the visitor has added via the "+ Compare" button on archive
   cards, the single listing page, or Author Profile cards. Cookie-backed,
@@ -149,6 +153,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.9 =
+* [lis_listing_search] gained a `directory="..."` attribute that locks the form to one directory type and hides the "All Directories" box — use `[lis_listing_search directory="local-business"]` for a Local-Directory-only search.
+* Search fields are slightly larger/easier to tap.
+* Vendor Showcase business-card ticker cards are now perfect rectangles (no rounded corners) so full-bleed card images no longer leave dead white space in the corners.
 
 = 0.31.8 =
 * Add-listing photos now show live thumbnail previews when picked or dropped (a markup bug had stopped them rendering).
