@@ -7,6 +7,17 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.7] — 2026-08-09 — Single listing gallery adapts to image count
+
+Continued page review: a listing with a single photo showed it as a lone
+quarter-width thumbnail (the strip was a fixed 4-column grid). The gallery
+now uses an auto-fit grid, and a single image fills full-width as a proper
+hero (380px tall); two or three photos split the row evenly.
+
+**Files:** assets/css/listings.css, lis-directory.php (version).
+
+---
+
 ## [0.31.6] — 2026-08-09 — Single listing: balanced two-column layout
 
 Reviewing the new directory pages against Directorist: a single listing

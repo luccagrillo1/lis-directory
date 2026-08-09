@@ -491,7 +491,7 @@
 
 .lis-listing-gallery-strip {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 	gap: 8px;
 	margin-bottom: 24px;
 	border-radius: 14px;
@@ -500,9 +500,17 @@
 
 .lis-listing-gallery-img {
 	width: 100%;
-	height: 200px;
+	height: 220px;
 	object-fit: cover;
 	display: block;
+}
+
+/* A lone gallery image reads as a full-width hero, not a stray thumbnail. */
+.lis-listing-gallery-strip:has(.lis-listing-gallery-img:only-child) {
+	grid-template-columns: 1fr;
+}
+.lis-listing-gallery-strip:has(.lis-listing-gallery-img:only-child) .lis-listing-gallery-img {
+	height: 380px;
 }
 
 .lis-listing-single-thumb {
