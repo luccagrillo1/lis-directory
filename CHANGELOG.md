@@ -7,6 +7,21 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.5] — 2026-08-09 — Vendor Showcase generator: initial stock sync
+
+Bug found in live testing: the Vendor Showcase get_variation lookup showed
+taken categories (e.g. Lodging, already held by an active vendor) as "1 in
+stock" and therefore buyable. The generator created every variation
+in-stock, and categories taken *before* the product existed never fired
+the stock-sync hook against these new variations. Fix: after building/
+repairing variations, call lis_directory_sync_stock_for_category() for every
+category, so taken ones go to 0 / out-of-stock. Re-run the generator to
+apply to an existing product.
+
+**Files:** includes/woocommerce.php, lis-directory.php (version).
+
+---
+
 ## [0.31.4] — 2026-08-09 — Vendor Showcase: $0 test-spot dev tool
 
 Adds a "Create $0 test spot" button on the settings page. A real Vendor

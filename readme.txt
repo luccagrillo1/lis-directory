@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.4
+Stable tag: 0.31.5
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.5 =
+* Vendor Showcase generator now syncs stock on build: categories that already have an active vendor start out-of-stock (their spot is not buyable). Re-run the generator to apply.
 
 = 0.31.4 =
 * Added a "Create $0 test spot" button (settings page) that spins up a disposable free, non-subscription category product, so the vendor pay-to-submit flow can be tested end-to-end without a card or charge.

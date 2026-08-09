@@ -409,6 +409,14 @@ function lis_directory_generate_vendor_showcase_product() {
 		}
 	}
 
+	// Initial stock sync: a category that already has an active vendor must
+	// start out-of-stock so its spot isn't buyable. Without this, categories
+	// taken *before* this product existed (their activation never fired the
+	// stock-sync hook against these variations) would stay in stock.
+	foreach ( $terms as $term ) {
+		lis_directory_sync_stock_for_category( $term->term_id );
+	}
+
 	if ( class_exists( 'WC_Product_Variable' ) ) {
 		WC_Product_Variable::sync( $product_id );
 	}
