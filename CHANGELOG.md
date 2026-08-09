@@ -7,6 +7,47 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.2] — 2026-08-09 — Vendor Showcase product generator
+
+Lucca settled the monetization model on **upgrades, not tiers**: a base
+listing (the existing front-end submission), a paid **Featured** upgrade
+(the existing "Feature My Listing" product), and a **Vendor Showcase**
+(preferred-vendor) upgrade. This ships the last piece.
+
+**New: one-click Vendor Showcase generator** (includes/woocommerce.php,
+on the LIS Directory settings page). Building the showcase by hand meant a
+variable WooCommerce Subscription product with a variation per vendor
+category × billing period — ~50 variations, each needing the
+`_lis_pv_category_term_id` tag and stock-of-1. A button now does it:
+
+- Creates a single **"Vendor Showcase"** product
+  (`WC_Product_Variable_Subscription` when WooCommerce Subscriptions is
+  active, else `WC_Product_Variable`), as a **draft**, catalog-hidden,
+  virtual, sold-individually.
+- Attributes: **Vendor Category** (every `lis_vendor_category` term) ×
+  **Billing** (Monthly / Annually).
+- One variation per (category, period): **$100/mo** or **$1,000/yr**
+  (annual = 2 months free), `manage_stock` on with **stock = 1** so a
+  category can only be held by one vendor, tagged with
+  `_lis_pv_category_term_id` (drives the existing stock-sync +
+  thank-you-page submission link) and a `_lis_pv_billing_period` marker.
+- **Idempotent** — keyed on that marker, so re-running only fills gaps
+  (e.g. after a new category is added) and never overwrites prices edited
+  by hand. Button label flips to "Top up…" once the product exists, and
+  the page shows the current product + status.
+
+Nothing is charged or published automatically — the product stays a draft
+until an admin publishes it.
+
+**Files:** includes/woocommerce.php, lis-directory.php (version).
+
+**Known limitations:** the generator sets flat $100 / $1,000 across every
+category; per-category price overrides are done by hand afterward.
+Publishing, and pointing the vendor-recruitment page at the product, are
+still manual.
+
+---
+
 ## [0.31.1] — 2026-08-08 — Listings archive card polish
 
 Lucca's ask, from a screenshot of the live Listings page: "fix the view
