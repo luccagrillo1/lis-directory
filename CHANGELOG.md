@@ -7,6 +7,40 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.8] — 2026-08-09 — Add-listing photos: live previews + client-side validation (stop the wizard wipe)
+
+Two problems on the "Photos & Video" step of the add-listing / edit-listing
+wizard, both reported from live testing:
+
+1. **No thumbnail previews.** The preview container is authored inside a
+   `<p>` in the template, but the HTML parser hoists a block-level `<div>`
+   out of a `<p>`, so it ended up as a sibling — and the JS looked for it via
+   `input.closest('p').querySelector(...)`, which then returned `null`, so
+   `renderPreview()` bailed and no thumbnails ever showed. Fixed by scoping
+   the lookup to the whole `.lis-listing-panel`, and by moving the preview
+   `<div>` out of the `<p>` in both templates so the markup is valid.
+
+2. **An oversized photo wiped the entire wizard.** A photo over 2MB (or a
+   non-PNG/JPG) was only caught server-side, which reloads the page — and a
+   browser can never repopulate a file input, so the whole multi-step form
+   (everything already typed) was lost, dumping the person back at step 1.
+   Now photos are validated the instant they're picked or dropped: bad files
+   are rejected before they can ever be submitted, with an inline message
+   ("Skipped 'x.jpg' — it's 3.4MB, over the 2MB limit…"), the count is capped
+   at 6, and `input.files` is rebuilt (via DataTransfer) from just the valid
+   ones. The destructive server round-trip no longer happens for this case.
+
+Also revokes each preview's object URL on load to avoid leaking blob URLs.
+
+**Files:** assets/js/listing-photos.js, includes/listings-submission.php,
+includes/listings-edit.php, assets/css/listings.css, lis-directory.php (version).
+
+**Known limitation:** other (text-field) server-side validation errors still
+reload the wizard to step 1 — addressed separately when the submission flow
+is unified around the scope picker.
+
+---
+
 ## [0.31.7] — 2026-08-09 — Single listing gallery adapts to image count
 
 Continued page review: a listing with a single photo showed it as a lone

@@ -1393,6 +1393,25 @@
 	display: block;
 }
 
+.lis-listing-photos-error {
+	margin-top: 12px;
+	padding: 10px 14px;
+	border-radius: 8px;
+	background: #fbeaea;
+	border: 1px solid #e6c3c3;
+	color: #9a2b2b;
+	font-size: 14px;
+	line-height: 1.45;
+}
+
+.lis-listing-photos-error[hidden] {
+	display: none;
+}
+
+.lis-listing-photos-error > div + div {
+	margin-top: 4px;
+}
+
 .lis-listing-submit-hours-table {
 	width: 100%;
 	border-collapse: collapse;

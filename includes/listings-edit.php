@@ -204,8 +204,8 @@ function lis_directory_render_listing_edit_form_shortcode() {
 					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each. Add more, or remove any above.</span>
 				</label>
 				<input type="file" id="lis_listing_photos" name="lis_listing_photos[]" accept="image/png,image/jpeg" multiple />
-				<div class="lis-listing-photos-preview" data-photos-preview></div>
 			</p>
+			<div class="lis-listing-photos-preview" data-photos-preview></div>
 		</div>
 
 		<div class="lis-listing-panel" data-panel-section="Photos &amp; Video" data-panel-question="Got a video?" data-panel-hint="Optional — YouTube or Vimeo link">

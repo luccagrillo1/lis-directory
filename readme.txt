@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.7
+Stable tag: 0.31.8
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.8 =
+* Add-listing photos now show live thumbnail previews when picked or dropped (a markup bug had stopped them rendering).
+* Oversized (>2MB) or wrong-type photos are now caught the instant they're chosen, with an inline message — so a bad photo no longer fails on submit and wipes the whole multi-step form.
 
 = 0.31.7 =
 * Single listing gallery now adapts to the number of photos: one photo fills as a full-width hero instead of a small thumbnail; multiple photos flow in an even grid.
