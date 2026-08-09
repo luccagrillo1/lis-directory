@@ -7,6 +7,30 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.3] — 2026-08-09 — Vendor Showcase generator: reliable category attribute
+
+Follow-up to 0.31.2. The generated variations all carried the correct
+`_lis_pv_category_term_id` tag (so stock-sync and the thank-you submission
+link worked), but the WooCommerce **Vendor Category** *display* attribute
+was empty on most variations, so the product page's category dropdown read
+"Any" and couldn't resolve to a specific variation. Cause: term names like
+"Arts & Entertainment" come back HTML-encoded, and `set_attributes`' fuzzy
+option-matching dropped anything with `&`, em dashes or accents.
+
+Fix (includes/woocommerce.php):
+- Decode entities once (`html_entity_decode`) and use the decoded name for
+  both the parent attribute options and each variation's value.
+- Added a **repair pass** that writes `attribute_vendor-category` /
+  `attribute_billing` post meta directly from each variation's own
+  category tag + billing marker — guaranteeing it equals the parent
+  option. Because it's driven by the marker meta, **re-running the
+  generator repairs a product built by 0.31.2** (no need to delete and
+  rebuild).
+
+**Files:** includes/woocommerce.php, lis-directory.php (version).
+
+---
+
 ## [0.31.2] — 2026-08-09 — Vendor Showcase product generator
 
 Lucca settled the monetization model on **upgrades, not tiers**: a base

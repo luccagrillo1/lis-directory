@@ -266,6 +266,15 @@ function lis_directory_generate_vendor_showcase_product() {
 		return new WP_Error( 'no_terms', 'No LIS Vendor Categories exist yet.' );
 	}
 
+	// Decode entities up front: term names like "Arts & Entertainment" come back
+	// HTML-encoded, and a variation's attribute value must equal the parent
+	// option's decoded form or WooCommerce reads the category as "Any". Keyed by
+	// term_id so the repair pass below can look each one up.
+	$cat_names = array();
+	foreach ( $terms as $term ) {
+		$cat_names[ $term->term_id ] = html_entity_decode( $term->name, ENT_QUOTES );
+	}
+
 	$use_sub = class_exists( 'WC_Subscriptions' ) && class_exists( 'WC_Product_Variable_Subscription' );
 
 	$product_id = lis_directory_get_vendor_showcase_product_id();
@@ -279,7 +288,7 @@ function lis_directory_generate_vendor_showcase_product() {
 
 		$attr_cat = new WC_Product_Attribute();
 		$attr_cat->set_name( 'Vendor Category' );
-		$attr_cat->set_options( wp_list_pluck( $terms, 'name' ) );
+		$attr_cat->set_options( array_values( $cat_names ) );
 		$attr_cat->set_visible( true );
 		$attr_cat->set_variation( true );
 
@@ -301,7 +310,7 @@ function lis_directory_generate_vendor_showcase_product() {
 		$product = wc_get_product( $product_id );
 		$attrs   = $product->get_attributes();
 		if ( isset( $attrs['vendor-category'] ) ) {
-			$attrs['vendor-category']->set_options( wp_list_pluck( $terms, 'name' ) );
+			$attrs['vendor-category']->set_options( array_values( $cat_names ) );
 			$product->set_attributes( $attrs );
 			$product->save();
 		}
@@ -333,7 +342,7 @@ function lis_directory_generate_vendor_showcase_product() {
 				: new WC_Product_Variation();
 			$var->set_parent_id( $product_id );
 			$var->set_attributes( array(
-				'vendor-category' => $term->name,
+				'vendor-category' => $cat_names[ $term->term_id ],
 				'billing'         => $plan['label'],
 			) );
 			$var->set_regular_price( $plan['price'] );
@@ -355,6 +364,25 @@ function lis_directory_generate_vendor_showcase_product() {
 			}
 			$var->save();
 			$added++;
+		}
+	}
+
+	// Repair pass: write each child's WooCommerce variation-attribute meta
+	// directly from its own category tag + billing marker. Setting the meta
+	// straight (instead of trusting set_attributes' fuzzy option matching)
+	// guarantees it equals the parent option, so the product page's Vendor
+	// Category / Billing dropdowns resolve to the right variation even for
+	// names with "&", em dashes or accents — and it fixes variations an
+	// earlier build left reading as "Any".
+	$fresh = wc_get_product( $product_id );
+	foreach ( $fresh->get_children() as $child_id ) {
+		$tid    = (int) get_post_meta( $child_id, '_lis_pv_category_term_id', true );
+		$period = get_post_meta( $child_id, '_lis_pv_billing_period', true );
+		if ( $tid && isset( $cat_names[ $tid ] ) ) {
+			update_post_meta( $child_id, 'attribute_vendor-category', $cat_names[ $tid ] );
+		}
+		if ( $period ) {
+			update_post_meta( $child_id, 'attribute_billing', 'year' === $period ? 'Annually' : 'Monthly' );
 		}
 	}
 

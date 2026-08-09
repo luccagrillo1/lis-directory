@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.2
+Stable tag: 0.31.3
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -149,6 +149,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.3 =
+* Vendor Showcase generator fix: the product-page Vendor Category dropdown now resolves correctly for every category (names with "&", dashes or accents were previously read as "Any"). Re-running the generator repairs a product built by the previous version.
 
 = 0.31.2 =
 * Vendor Showcase: added a one-click generator on the LIS Directory
