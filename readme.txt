@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.12
+Stable tag: 0.31.13
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.13 =
+* Added a "Standard Listing product" generator in LIS Directory Settings — a monthly/annual subscription base tier (placeholder prices you edit in WooCommerce). First piece of moving every listing through checkout.
 
 = 0.31.12 =
 * After submitting a listing you now get a dedicated thank-you screen (checkmark, message, and next-step buttons) instead of a small success banner sitting on top of the still-visible form.

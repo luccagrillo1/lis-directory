@@ -7,6 +7,28 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.13] — 2026-08-09 — Standard Listing product (base paid tier) — groundwork for the all-paid unified checkout
+
+Decision (with Lucca): every listing becomes paid, all three tiers hand off to
+WooCommerce checkout at the end of the wizard, and a listing auto-publishes when
+its order completes. Featured (#6598) and Vendor Showcase (generated) products
+already exist; the missing piece was a product for a plain Standard listing.
+
+This version adds that: a "Standard Listing product" generator on the LIS
+Directory Settings page — a variable **subscription** with Monthly/Annually
+billing variations (placeholder $15/mo · $150/yr the admin edits in WooCommerce),
+no category exclusivity. Marked with `_lis_standard_listing_product` meta and
+found via `lis_directory_get_standard_listing_product_id()`; idempotent top-up
+like the Showcase generator. Created as a hidden draft to price + publish.
+
+This is groundwork only — the wizard plan-selection step, the submit→checkout
+handoff, and the order-complete auto-publish come next (tracked as #4b–#4d).
+
+**Files:** includes/listings-pricing.php (generator + setting), includes/woocommerce.php
+(settings-page button), lis-directory.php (version), readme.txt.
+
+---
+
 ## [0.31.12] — 2026-08-09 — Thank-you screen after submit
 
 A successful `[lis_listing_submit]` used to show a green success banner on top

@@ -150,6 +150,37 @@ function lis_directory_render_settings_page() {
 		</form>
 
 		<hr />
+		<h2>Standard Listing product</h2>
+		<?php if ( isset( $_GET['lis_std_gen'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only, no state change. ?>
+			<?php if ( 'ok' === $_GET['lis_std_gen'] ) : ?>
+				<div class="notice notice-success inline"><p>Standard Listing product updated &mdash; added <?php echo isset( $_GET['lis_std_added'] ) ? (int) $_GET['lis_std_added'] : 0; ?> new variation(s).</p></div>
+			<?php else : ?>
+				<div class="notice notice-error inline"><p>Could not build the Standard Listing product. Make sure WooCommerce is active.</p></div>
+			<?php endif; ?>
+		<?php endif; ?>
+		<p class="description" style="max-width:640px;">
+			Builds the base <strong>Standard Listing</strong> WooCommerce Subscription
+			product: a Monthly and an Annually billing variation (placeholder prices
+			&mdash; <strong>edit them in WooCommerce</strong>), no category limit. This is
+			the product every plain paid listing checks out through. Created as a
+			<strong>draft</strong>; set your prices, then publish it when you're ready to sell.
+		</p>
+		<?php
+		$std_product_id = lis_directory_get_standard_listing_product_id();
+		if ( $std_product_id ) :
+			?>
+			<p><strong>Current product:</strong>
+				<a href="<?php echo esc_url( get_edit_post_link( $std_product_id ) ); ?>">Standard Listing (#<?php echo (int) $std_product_id; ?>)</a>
+				&mdash; status: <?php echo esc_html( get_post_status( $std_product_id ) ); ?>
+			</p>
+		<?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="lis_directory_generate_standard_listing" />
+			<?php wp_nonce_field( 'lis_directory_generate_standard_listing', 'lis_std_gen_nonce' ); ?>
+			<?php submit_button( $std_product_id ? 'Top up Standard Listing variations' : 'Generate Standard Listing product', 'secondary', 'submit', false ); ?>
+		</form>
+
+		<hr />
 		<h3>Testing tool</h3>
 		<p class="description" style="max-width:640px;">
 			Creates a throwaway <strong>$0, non-subscription</strong> product tagged to
