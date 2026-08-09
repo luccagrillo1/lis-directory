@@ -73,9 +73,23 @@ function lis_directory_handle_toggle_sold() {
 function lis_directory_render_grid_shortcode( $atts ) {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 
-	$atts  = shortcode_atts( array( 'type' => '', 'count' => 12 ), $atts, 'lis_listing_grid' );
+	$atts  = shortcode_atts( array( 'type' => '', 'count' => 12, 'search' => 'auto' ), $atts, 'lis_listing_grid' );
 	$types = lis_directory_get_listing_types();
 	$type  = isset( $types[ $atts['type'] ] ) ? $atts['type'] : '';
+
+	// Show the keyword + category search box above the grid so these per-type
+	// landing pages have the same search parity as the main archive. On by
+	// default for a typed grid (scoped to that directory, so no "All
+	// Directories" box); `search="yes"` forces it on for an all-types grid,
+	// `search="no"` hides it. The form submits to the archive with the filters
+	// applied — same results template, no separate page.
+	$show_search = ( 'no' !== $atts['search'] ) && ( '' !== $type || 'yes' === $atts['search'] );
+	$search_html = '';
+	if ( $show_search ) {
+		$search_html = $type
+			? do_shortcode( '[lis_listing_search directory="' . esc_attr( $type ) . '"]' )
+			: do_shortcode( '[lis_listing_search]' );
+	}
 
 	$query_args = array(
 		'post_type'      => 'lis_listing',
@@ -89,17 +103,19 @@ function lis_directory_render_grid_shortcode( $atts ) {
 
 	$listings = get_posts( $query_args );
 
-	if ( empty( $listings ) ) {
-		return '<p class="lis-listing-empty">No listings here yet.</p>';
-	}
-
 	ob_start();
-	?>
-	<div class="lis-listing-grid">
-		<?php foreach ( $listings as $listing ) : ?>
-			<?php echo lis_directory_render_listing_card( $listing ); // phpcs:ignore -- escaped inside helper. ?>
-		<?php endforeach; ?>
-	</div>
+	if ( $search_html ) : ?>
+		<div class="lis-listing-grid-search"><?php echo $search_html; // phpcs:ignore -- built from the search shortcode, escaped there. ?></div>
+	<?php endif; ?>
+	<?php if ( empty( $listings ) ) : ?>
+		<p class="lis-listing-empty">No listings here yet.</p>
+	<?php else : ?>
+		<div class="lis-listing-grid">
+			<?php foreach ( $listings as $listing ) : ?>
+				<?php echo lis_directory_render_listing_card( $listing ); // phpcs:ignore -- escaped inside helper. ?>
+			<?php endforeach; ?>
+		</div>
+	<?php endif; ?>
 	<?php
 	return ob_get_clean();
 }

@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.9
+Stable tag: 0.31.10
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -115,7 +115,9 @@ variations is a wp-admin task, not something this plugin does for you).
   page (the real filtered-browsing experience is the `lis_listing` archive
   itself; this is the lightweight version for a landing page). `type` is
   one of `local-business`, `real-estate-sale`, `real-estate-rent`,
-  `job-listing`; omit it to show all types.
+  `job-listing`; omit it to show all types. Renders a matching search box
+  above the grid by default when a `type` is set (scoped to that directory);
+  `search="no"` hides it, `search="yes"` forces it on for an all-types grid.
 
 == Setup: WooCommerce Subscriptions ==
 
@@ -153,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.10 =
+* Per-type landing grids ([lis_listing_grid type="..."]) now show the keyword + category search box above them by default, matching the main archive (use search="no" to hide).
+* Fixed the listings archive being squeezed into a narrow centered column with big side gaps — it now fills the theme content width.
 
 = 0.31.9 =
 * [lis_listing_search] gained a `directory="..."` attribute that locks the form to one directory type and hides the "All Directories" box — use `[lis_listing_search directory="local-business"]` for a Local-Directory-only search.

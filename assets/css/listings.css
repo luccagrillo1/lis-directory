@@ -190,6 +190,11 @@
 /* ---------- Archive / grid ---------- */
 
 .lis-listing-archive {
+	/* Astra's .ast-container is a flex row, so a plain block child shrinks to
+	   its content width and margin:0 auto then leaves big dead side gaps. Fill
+	   the content column so the listings use the full theme content width. */
+	width: 100%;
+	flex: 1 1 auto;
 	max-width: 1400px;
 	margin: 0 auto;
 	padding: 24px 32px 48px;
@@ -203,6 +208,11 @@
 	padding: 0;
 	margin: 0 0 24px;
 	max-width: none;
+}
+
+/* Search box that [lis_listing_grid] renders above a per-type landing grid. */
+.lis-listing-grid-search {
+	margin-bottom: 28px;
 }
 
 .lis-listing-toolbar {

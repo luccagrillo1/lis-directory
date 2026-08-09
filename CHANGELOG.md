@@ -7,6 +7,29 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.10] — 2026-08-09 — Search on per-type landing grids + fix archive width
+
+Two parity/layout fixes from live review:
+
+1. **Search box on the per-type landing pages.** `[lis_listing_grid type="..."]`
+   (the Local Business / Real Estate / Job Listings landing grids) now renders
+   the keyword + category search box above the grid by default, scoped to that
+   directory (so no "All Directories" box) — matching what Directorist's "All
+   Listings" page has. `search="no"` hides it; `search="yes"` forces it on for
+   an all-types grid. No page edits needed — behaviour is baked into the
+   shortcode. The form submits to the archive with the filters applied.
+
+2. **Archive width.** Astra's `.ast-container` is a flex row, so the block
+   `.lis-listing-archive` shrank to its content width and `margin:0 auto` then
+   left ~100px of dead space on each side (in a 1200px content area it rendered
+   at ~965px). Added `width:100%; flex:1 1 auto` so it fills the theme content
+   width instead of sitting in a narrow centered column.
+
+**Files:** includes/listings-account.php, assets/css/listings.css,
+readme.txt, lis-directory.php (version).
+
+---
+
 ## [0.31.9] — 2026-08-09 — Local-Directory-scoped search, bigger fields, rectangular business cards
 
 Three small polish items from live review:
