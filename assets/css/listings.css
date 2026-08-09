@@ -1457,6 +1457,33 @@
 	gap: 10px;
 }
 
+.lis-listing-feature-suggest {
+	margin-top: 18px;
+}
+
+.lis-listing-feature-suggest label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.lis-listing-feature-suggest input[type="text"] {
+	width: 100%;
+	max-width: 360px;
+	padding: 12px 14px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	font-size: 1em;
+	background: #fff;
+}
+
+.lis-listing-feature-suggest-hint {
+	display: block;
+	margin-top: 6px;
+	font-size: 0.85em;
+	color: #787c82;
+}
+
 @media (max-width: 600px) {
 	.lis-listing-submit-hours-table th {
 		width: 76px;

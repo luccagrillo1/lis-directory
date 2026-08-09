@@ -90,7 +90,7 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 	$current_features = isset( $_GET['lis_feature'] ) ? array_map( 'sanitize_title', (array) wp_unslash( $_GET['lis_feature'] ) ) : array();
 
 	$categories = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false, 'parent' => 0 ) );
-	$features   = get_terms( array( 'taxonomy' => 'lis_listing_feature', 'hide_empty' => false ) );
+	$features   = lis_directory_get_public_feature_terms();
 
 	ob_start();
 	?>

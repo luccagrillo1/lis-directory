@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.10
+Stable tag: 0.31.11
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.31.11 =
+* Add/edit listing forms now let people suggest a special feature that isn't in the list. It's created but held for review — kept out of the public feature filters and off the public listing until an admin approves it (Listings → Features → Approve), or deletes it to veto.
 
 = 0.31.10 =
 * Per-type landing grids ([lis_listing_grid type="..."]) now show the keyword + category search box above them by default, matching the main archive (use search="no" to hide).

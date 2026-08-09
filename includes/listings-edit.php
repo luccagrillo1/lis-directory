@@ -78,15 +78,25 @@ function lis_directory_render_listing_edit_form_shortcode() {
 	$current_url    = remove_query_arg( array( 'lis_listing_updated', 'lis_listing_error' ) );
 	$current_user   = wp_get_current_user();
 	$cat_terms      = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false ) );
-	$feature_terms  = get_terms( array( 'taxonomy' => 'lis_listing_feature', 'hide_empty' => false ) );
-	if ( is_wp_error( $feature_terms ) ) {
-		$feature_terms = array();
-	}
+	$feature_terms  = lis_directory_get_public_feature_terms();
 
 	$type              = lis_directory_get_listing_type( $listing_id );
 	$categories        = get_the_terms( $listing_id, 'lis_listing_category' );
 	$current_cat_id    = ( $categories && ! is_wp_error( $categories ) && ! empty( $categories ) ) ? $categories[0]->term_id : 0;
 	$current_features  = wp_get_post_terms( $listing_id, 'lis_listing_feature', array( 'fields' => 'ids' ) );
+
+	// Keep this listing's own still-pending suggestion(s) in the checkbox list
+	// so they stay checked and aren't dropped on save (they're excluded from
+	// the public list above until an admin approves them).
+	$known_feature_ids = wp_list_pluck( $feature_terms, 'term_id' );
+	foreach ( (array) $current_features as $cf_id ) {
+		if ( ! in_array( (int) $cf_id, array_map( 'intval', $known_feature_ids ), true ) ) {
+			$cf_term = get_term( $cf_id, 'lis_listing_feature' );
+			if ( $cf_term && ! is_wp_error( $cf_term ) ) {
+				$feature_terms[] = $cf_term;
+			}
+		}
+	}
 	$gallery_raw       = get_post_meta( $listing_id, '_lis_listing_gallery_ids', true );
 	$gallery_ids       = $gallery_raw ? array_filter( array_map( 'absint', explode( ',', $gallery_raw ) ) ) : array();
 	$week              = lis_directory_get_listing_week_hours( $listing_id );
@@ -237,8 +247,8 @@ function lis_directory_render_listing_edit_form_shortcode() {
 			</p>
 		</div>
 
-		<?php if ( ! empty( $feature_terms ) ) : ?>
-			<div class="lis-listing-panel" data-panel-section="Features" data-panel-question="Any special features?">
+		<div class="lis-listing-panel" data-panel-section="Features" data-panel-question="Any special features?">
+			<?php if ( ! empty( $feature_terms ) ) : ?>
 				<div class="lis-listing-submit-checkbox-grid">
 					<?php foreach ( $feature_terms as $feature ) : ?>
 						<label class="lis-listing-submit-checkbox">
@@ -247,8 +257,13 @@ function lis_directory_render_listing_edit_form_shortcode() {
 						</label>
 					<?php endforeach; ?>
 				</div>
-			</div>
-		<?php endif; ?>
+			<?php endif; ?>
+			<p class="lis-listing-feature-suggest">
+				<label for="lis_listing_feature_new">Don't see it? Suggest one</label>
+				<input type="text" id="lis_listing_feature_new" name="lis_listing_feature_new" maxlength="40" placeholder="e.g. Rooftop seating" />
+				<span class="lis-listing-feature-suggest-hint">We'll review it before it shows publicly.</span>
+			</p>
+		</div>
 
 		<div class="lis-listing-panel" data-panel-section="Social Media" data-panel-question="Where can people follow you?" data-panel-hint="All optional">
 			<?php foreach ( array( 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'twitter' => 'X / Twitter', 'linkedin' => 'LinkedIn' ) as $network => $label ) : ?>

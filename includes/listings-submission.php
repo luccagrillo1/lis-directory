@@ -71,10 +71,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 	$current_url  = remove_query_arg( array( 'lis_listing_submitted', 'lis_listing_error' ) );
 	$current_user = wp_get_current_user();
 	$cat_terms    = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false ) );
-	$feature_terms = get_terms( array( 'taxonomy' => 'lis_listing_feature', 'hide_empty' => false ) );
-	if ( is_wp_error( $feature_terms ) ) {
-		$feature_terms = array();
-	}
+	$feature_terms = lis_directory_get_public_feature_terms();
 
 	ob_start();
 
@@ -236,8 +233,8 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			</p>
 		</div>
 
-		<?php if ( ! empty( $feature_terms ) ) : ?>
-			<div class="lis-listing-panel" data-panel-section="Features" data-panel-question="Any special features?">
+		<div class="lis-listing-panel" data-panel-section="Features" data-panel-question="Any special features?">
+			<?php if ( ! empty( $feature_terms ) ) : ?>
 				<div class="lis-listing-submit-checkbox-grid">
 					<?php foreach ( $feature_terms as $feature ) : ?>
 						<label class="lis-listing-submit-checkbox">
@@ -246,8 +243,13 @@ function lis_directory_render_listing_submission_form_shortcode() {
 						</label>
 					<?php endforeach; ?>
 				</div>
-			</div>
-		<?php endif; ?>
+			<?php endif; ?>
+			<p class="lis-listing-feature-suggest">
+				<label for="lis_listing_feature_new">Don't see it? Suggest one</label>
+				<input type="text" id="lis_listing_feature_new" name="lis_listing_feature_new" maxlength="40" placeholder="e.g. Rooftop seating" />
+				<span class="lis-listing-feature-suggest-hint">We'll review it before it shows publicly.</span>
+			</p>
+		</div>
 
 		<div class="lis-listing-panel" data-panel-section="Social Media" data-panel-question="Where can people follow you?" data-panel-hint="All optional">
 			<p>
@@ -415,17 +417,27 @@ function lis_directory_save_submitted_hours( $post_id ) {
  * terms via a tampered request.
  */
 function lis_directory_save_submitted_features( $post_id ) {
-	if ( empty( $_POST['lis_listing_features'] ) || ! is_array( $_POST['lis_listing_features'] ) ) {
-		return;
-	}
-	$submitted_ids = array_map( 'absint', wp_unslash( $_POST['lis_listing_features'] ) );
-	$valid_ids     = array();
-	foreach ( $submitted_ids as $term_id ) {
-		$term = get_term( $term_id, 'lis_listing_feature' );
-		if ( $term && ! is_wp_error( $term ) ) {
-			$valid_ids[] = $term->term_id;
+	$valid_ids = array();
+
+	// Checkbox selections: only IDs that resolve to real existing terms (a
+	// public form must not be able to attach arbitrary term IDs).
+	if ( ! empty( $_POST['lis_listing_features'] ) && is_array( $_POST['lis_listing_features'] ) ) {
+		$submitted_ids = array_map( 'absint', wp_unslash( $_POST['lis_listing_features'] ) );
+		foreach ( $submitted_ids as $term_id ) {
+			$term = get_term( $term_id, 'lis_listing_feature' );
+			if ( $term && ! is_wp_error( $term ) ) {
+				$valid_ids[] = $term->term_id;
+			}
 		}
 	}
+
+	// "Suggest a feature" free text: creates any new term as pending (kept out
+	// of public lists until an admin approves it — see listings-features.php).
+	if ( isset( $_POST['lis_listing_feature_new'] ) ) {
+		$valid_ids = array_merge( $valid_ids, lis_directory_ingest_suggested_features( wp_unslash( $_POST['lis_listing_feature_new'] ) ) );
+	}
+
+	$valid_ids = array_unique( array_map( 'intval', $valid_ids ) );
 	if ( ! empty( $valid_ids ) ) {
 		wp_set_post_terms( $post_id, $valid_ids, 'lis_listing_feature' );
 	}

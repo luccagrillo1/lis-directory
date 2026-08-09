@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.31.10
+ * Version:           0.31.11
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.31.7 (Single listing gallery: adapts to image count — one photo now fills as a hero instead of a lone quarter-width thumbnail, multiple photos flow in an auto-fit grid)
+ * LIS Directory — v0.31.11 (Submitters can suggest a new "special feature"; it's created pending and kept out of public lists until an admin approves — or deletes to veto — from the Features taxonomy screen)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.31.10' );
+define( 'LIS_DIRECTORY_VERSION', '0.31.11' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
@@ -43,6 +43,7 @@ require_once LIS_DIRECTORY_PATH . 'includes/listings-edit.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-search.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-account.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-pricing.php';
+require_once LIS_DIRECTORY_PATH . 'includes/listings-features.php';
 
 register_activation_hook( __FILE__, function () {
 	lis_directory_register_cpt();

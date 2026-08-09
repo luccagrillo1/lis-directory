@@ -67,6 +67,9 @@ while ( have_posts() ) :
 
 	$features = get_the_terms( $post_id, 'lis_listing_feature' );
 	$features = ( $features && ! is_wp_error( $features ) ) ? $features : array();
+	// Hide any feature the listing owner suggested that an admin hasn't
+	// approved yet, so an unreviewed suggestion isn't shown publicly.
+	$features = lis_directory_filter_public_features( $features );
 
 	$is_open  = lis_directory_is_listing_open_now( $post_id );
 	$week     = lis_directory_get_listing_week_hours( $post_id );

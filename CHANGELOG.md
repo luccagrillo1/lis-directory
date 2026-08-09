@@ -7,6 +7,34 @@ This file is the authoritative project history.
 
 ---
 
+## [0.31.11] — 2026-08-09 — Suggest-a-feature with admin veto
+
+The Features step of the add-listing / edit-listing forms now has a "Don't see
+it? Suggest one" text field. A suggestion is turned into a real
+`lis_listing_feature` term immediately (so it can attach to the listing) but
+flagged pending via `_lis_feature_pending` term meta.
+
+Pending suggestions are kept **out of every public surface** until approved:
+the submission/edit checkbox lists, the search widget's Features filter, and
+the public single-listing feature list all use a new
+`lis_directory_get_public_feature_terms()` / `lis_directory_filter_public_features()`
+that exclude pending terms. The edit form still shows a listing's own pending
+suggestion (so editing doesn't silently drop it).
+
+**Admin veto/approve:** the Features taxonomy screen (Listings → Features) gets
+a Status column ("● Pending review — suggested by X — Approve" vs "● Live") and
+an "Approve suggestion" row action (nonce-checked `admin-post` handler clears
+the pending meta). Deleting the term is the veto. New terms are created case-
+insensitively deduped against existing ones; max 3 suggestions per submit, 40
+chars each.
+
+**Files:** includes/listings-features.php (new), lis-directory.php (require +
+version), includes/listings-submission.php (save + form), includes/listings-edit.php
+(form + keep-own-pending), includes/listings-search.php (filter list),
+templates/single-listing.php (hide pending), assets/css/listings.css, readme.txt.
+
+---
+
 ## [0.31.10] — 2026-08-09 — Search on per-type landing grids + fix archive width
 
 Two parity/layout fixes from live review:
