@@ -7,6 +7,17 @@ This file is the authoritative project history.
 
 ---
 
+## [0.35.4] — 2026-08-09 — Fix hidden logo/business-card uploads
+
+The photo dropzone visually hides its file input via `.lis-listing-panel input[type="file"]`,
+which also hid the Vendor Showcase logo and business-card file inputs (no visible
+"choose file"). Scoped the hide to `#lis_listing_photos` only; other uploads now
+render as normal visible file inputs.
+
+**Files:** assets/css/listings.css, lis-directory.php, readme.txt.
+
+---
+
 ## [0.35.3] — 2026-08-09 — "No set hours" toggle
 
 Business Hours step now leads with a "No set hours (by appointment / not

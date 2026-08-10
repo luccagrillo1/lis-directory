@@ -1409,12 +1409,20 @@
 }
 
 /* Photos: hide the raw file input, style its own label as the clickable "button" instead of relying on the ugly native browser control. */
-.lis-listing-panel input[type="file"] {
+/* Only the multi-photo input is visually hidden (it has its own dropzone
+   label). Other uploads — logo, business card — stay visible inputs. */
+#lis_listing_photos {
 	position: absolute;
 	width: 1px;
 	height: 1px;
 	opacity: 0;
 	overflow: hidden;
+}
+
+.lis-listing-panel input[type="file"]:not(#lis_listing_photos) {
+	display: block;
+	margin-top: 6px;
+	font-size: 0.95em;
 }
 
 .lis-listing-photos-dropzone {
