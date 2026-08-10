@@ -16,11 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'admin_init', 'lis_directory_maybe_reconcile_vendor_categories' );
 add_action( 'created_lis_listing_category', 'lis_directory_mirror_listing_category', 10, 1 );
 add_action( 'edited_lis_listing_category', 'lis_directory_mirror_listing_category', 10, 1 );
 add_action( 'delete_lis_listing_category', 'lis_directory_mirror_delete_listing_category', 10, 4 );
-add_action( 'created_lis_vendor_category', 'lis_directory_topup_showcase_on_new_category' );
 
 /**
  * One-time (per install) reconcile so existing listing categories get mirrored

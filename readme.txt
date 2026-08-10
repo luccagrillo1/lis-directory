@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.0
+Stable tag: 0.36.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.1 =
+* Hotfix: the category-mirror added in 0.36.0 tried to sync all 233 listing categories and regenerate the whole Showcase product on every admin page load, slowing wp-admin. Removed the heavy one-time reconcile and per-category product regeneration; the lightweight live sync (a single category added/renamed/removed) stays.
 
 = 0.36.0 =
 * Vendor Showcase categories now mirror the directory's listing categories automatically. Adding, renaming, or removing a listing category syncs to the Showcase category set, and the Showcase product tops up its monthly/annual variations for any new category — no separate list to maintain.

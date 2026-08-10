@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.36.0
+ * Version:           0.36.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.36.0 (Vendor Showcase categories now mirror the directory's listing categories automatically — added/renamed/deleted listing categories sync to lis_vendor_category, and the Showcase product tops up its variations for new ones)
+ * LIS Directory — v0.36.1 (HOTFIX: the one-time category reconcile + per-category product regeneration was too heavy (233 cats, ~466 variations) and re-ran on every admin load, bogging down wp-admin. Removed those auto-ops; kept the lightweight live create/rename/delete category mirror.)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.36.0' );
+define( 'LIS_DIRECTORY_VERSION', '0.36.1' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );

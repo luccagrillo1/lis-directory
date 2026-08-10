@@ -7,6 +7,21 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.1] — 2026-08-09 — Hotfix: category reconcile was too heavy
+
+0.36.0's `admin_init` reconcile mirrored all 233 listing categories and re-ran
+the whole Showcase product generator (~466 variations). It timed out before
+setting its done-flag, so it re-fired on every admin page load and bogged down
+wp-admin. Removed the `admin_init` reconcile and the `created_lis_vendor_category`
+full-regenerate. Kept only the lightweight live hooks (one listing category
+created/renamed/deleted -> mirror that one term). The mass 233-slot approach was
+wrong anyway; the Showcase should use the listing's selected category directly
+(next step) rather than a variation per category.
+
+**Files:** includes/vendor-category-sync.php, lis-directory.php, readme.txt.
+
+---
+
 ## [0.36.0] — 2026-08-09 — Showcase categories mirror the directory categories
 
 New `includes/vendor-category-sync.php`. The Vendor Showcase taxonomy
