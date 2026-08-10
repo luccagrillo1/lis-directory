@@ -7,6 +7,17 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.3] — 2026-08-09 — Batched Showcase cleanup
+
+Deleting ~228 vendor-category terms in one request timed out (504). Reworked
+`lis_directory_showcase_cleanup()` to trash the product first, then delete empty
+terms in bounded batches of 40, reporting how many remain; the settings page
+auto-re-submits until clear. Safe, no more timeouts.
+
+**Files:** includes/vendor-category-sync.php, includes/woocommerce.php.
+
+---
+
 ## [0.36.2] — 2026-08-09 — Retire category-mirror + cleanup tool
 
 User chose the single-product Showcase model. Removed the live category-mirror

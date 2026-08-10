@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.2
+Stable tag: 0.36.3
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.3 =
+* Made the Showcase category cleanup batched (deleting hundreds of terms at once timed out): it trashes the product first, then deletes empty vendor categories 40 at a time and auto-continues until clear.
 
 = 0.36.2 =
 * Retired the category-mirror approach for good and added a one-click "Showcase category cleanup" (LIS Directory Settings) that removes the stray empty vendor categories it created and trashes the oversized per-category Showcase product. Prep for the Showcase using the listing's own category via a single product.

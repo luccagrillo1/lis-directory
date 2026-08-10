@@ -159,24 +159,9 @@ function lis_directory_vendor_category_for_listing_category( $listing_term_id ) 
  * @return array { deleted_categories:int, kept_categories:int, trashed_product:int }
  */
 function lis_directory_showcase_cleanup() {
-	$deleted = 0;
-	$kept    = 0;
-	$terms   = get_terms( array( 'taxonomy' => 'lis_vendor_category', 'hide_empty' => false ) );
-	if ( ! is_wp_error( $terms ) ) {
-		foreach ( $terms as $term ) {
-			// Only remove empty ones (no vendor assigned), so an active showcase
-			// vendor never loses its category.
-			if ( 0 === (int) $term->count ) {
-				wp_delete_term( $term->term_id, 'lis_vendor_category' );
-				$deleted++;
-			} else {
-				$kept++;
-			}
-		}
-	}
-
-	// Trash the bloated per-category Showcase product; the single-product model
-	// creates a fresh one. Also clear the sync flag.
+	// Trash the bloated per-category Showcase product first (quick, one op; the
+	// single-product model creates a fresh one). Idempotent: once trashed it's
+	// no longer found, so re-runs skip it.
 	$trashed = 0;
 	if ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ) {
 		$pid = lis_directory_get_vendor_showcase_product_id();
@@ -187,7 +172,28 @@ function lis_directory_showcase_cleanup() {
 	}
 	delete_option( 'lis_directory_vendor_cat_synced' );
 
-	return array( 'deleted_categories' => $deleted, 'kept_categories' => $kept, 'trashed_product' => $trashed );
+	// Delete empty vendor categories in a BOUNDED batch — deleting hundreds of
+	// terms in one request times out. Report how many remain so it can be
+	// re-run until clear. Never touch a category still held by a vendor.
+	$batch     = 40;
+	$deleted   = 0;
+	$remaining = 0;
+	$terms     = get_terms( array( 'taxonomy' => 'lis_vendor_category', 'hide_empty' => false ) );
+	if ( ! is_wp_error( $terms ) ) {
+		foreach ( $terms as $term ) {
+			if ( 0 !== (int) $term->count ) {
+				continue; // in use — keep
+			}
+			if ( $deleted < $batch ) {
+				wp_delete_term( $term->term_id, 'lis_vendor_category' );
+				$deleted++;
+			} else {
+				$remaining++;
+			}
+		}
+	}
+
+	return array( 'trashed_product' => $trashed, 'deleted' => $deleted, 'remaining' => $remaining );
 }
 
 function lis_directory_handle_showcase_cleanup() {
@@ -197,7 +203,7 @@ function lis_directory_handle_showcase_cleanup() {
 	check_admin_referer( 'lis_directory_showcase_cleanup', 'lis_sc_nonce' );
 	$r        = lis_directory_showcase_cleanup();
 	$redirect = admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' );
-	$redirect = add_query_arg( array( 'lis_sc' => 'done', 'lis_sc_d' => (int) $r['deleted_categories'], 'lis_sc_k' => (int) $r['kept_categories'] ), $redirect );
+	$redirect = add_query_arg( array( 'lis_sc' => 'done', 'lis_sc_d' => (int) $r['deleted'], 'lis_sc_r' => (int) $r['remaining'] ), $redirect );
 	wp_safe_redirect( $redirect );
 	exit;
 }

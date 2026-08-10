@@ -214,8 +214,12 @@ function lis_directory_render_settings_page() {
 
 		<hr />
 		<h2>Showcase category cleanup</h2>
-		<?php if ( isset( $_GET['lis_sc'] ) && 'done' === $_GET['lis_sc'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only. ?>
-			<div class="notice notice-success inline"><p>Cleanup done &mdash; removed <?php echo isset( $_GET['lis_sc_d'] ) ? (int) $_GET['lis_sc_d'] : 0; ?> empty vendor categories (kept <?php echo isset( $_GET['lis_sc_k'] ) ? (int) $_GET['lis_sc_k'] : 0; ?> in use) and trashed the old per-category Showcase product.</p></div>
+		<?php if ( isset( $_GET['lis_sc'] ) && 'done' === $_GET['lis_sc'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only.
+			$sc_remaining = isset( $_GET['lis_sc_r'] ) ? (int) $_GET['lis_sc_r'] : 0; ?>
+			<div class="notice notice-success inline"><p>Removed <?php echo isset( $_GET['lis_sc_d'] ) ? (int) $_GET['lis_sc_d'] : 0; ?> empty vendor categories this pass<?php echo $sc_remaining ? ' &mdash; ' . (int) $sc_remaining . ' still to go, running again…' : ' &mdash; all clear.'; ?></p></div>
+			<?php if ( $sc_remaining > 0 ) : ?>
+				<script>window.addEventListener('load',function(){var f=[].slice.call(document.querySelectorAll('form')).filter(function(x){return x.querySelector('input[value="lis_directory_showcase_cleanup"]');})[0];if(f){setTimeout(function(){HTMLFormElement.prototype.submit.call(f);},600);}});</script>
+			<?php endif; ?>
 		<?php endif; ?>
 		<p class="description" style="max-width:640px;">
 			Undo the retired "mirror every listing category as a Showcase slot" experiment:
