@@ -223,14 +223,27 @@ function lis_directory_render_settings_page() {
 			category, photos, hours, and contact fields. Preview the field mapping
 			against real data first — nothing is written until the mapping is confirmed.
 		</p>
+		<?php if ( isset( $_GET['lis_dm'] ) && 'ran' === $_GET['lis_dm'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only. ?>
+			<div class="notice notice-success inline"><p>Migration complete &mdash; created <?php echo isset( $_GET['lis_dm_c'] ) ? (int) $_GET['lis_dm_c'] : 0; ?>, skipped <?php echo isset( $_GET['lis_dm_s'] ) ? (int) $_GET['lis_dm_s'] : 0; ?> (already migrated), errors <?php echo isset( $_GET['lis_dm_e'] ) ? (int) $_GET['lis_dm_e'] : 0; ?>.</p></div>
+		<?php endif; ?>
 		<?php if ( $dm_stats['exists'] ) : ?>
 			<p><strong>Directorist listings:</strong> <?php echo (int) $dm_stats['total']; ?> &middot; <strong>already migrated:</strong> <?php echo (int) $dm_stats['migrated']; ?></p>
 			<p>
-				<a class="button" href="<?php echo esc_url( add_query_arg( 'lis_dm_preview', '1', admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' ) ) ); ?>">Preview data (dry run)</a>
+				<a class="button" href="<?php echo esc_url( add_query_arg( 'lis_dm_preview', '1', admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' ) ) ); ?>">Preview mapping (dry run)</a>
 			</p>
-			<?php if ( isset( $_GET['lis_dm_preview'] ) && function_exists( 'lis_directory_migration_render_preview' ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview. ?>
-				<div style="max-width:900px;"><?php lis_directory_migration_render_preview(); ?></div>
+			<?php if ( isset( $_GET['lis_dm_preview'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview. ?>
+				<div style="max-width:900px;">
+					<h3>What would be created (first 3)</h3>
+					<?php if ( function_exists( 'lis_directory_migration_render_mapped_preview' ) ) { lis_directory_migration_render_mapped_preview(); } ?>
+					<h3 style="margin-top:24px;">Raw source data (first 3)</h3>
+					<?php if ( function_exists( 'lis_directory_migration_render_preview' ) ) { lis_directory_migration_render_preview(); } ?>
+				</div>
 			<?php endif; ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('Create lis_listing posts for all not-yet-migrated Directorist listings? This is safe to re-run (it skips ones already migrated), but review the dry-run preview first.');" style="margin-top:16px;">
+				<input type="hidden" name="action" value="lis_directory_migration_run" />
+				<?php wp_nonce_field( 'lis_directory_migration_run', 'lis_dm_nonce' ); ?>
+				<?php submit_button( 'Run migration (create ' . ( (int) $dm_stats['total'] - (int) $dm_stats['migrated'] ) . ' listings)', 'primary', 'submit', false ); ?>
+			</form>
 		<?php else : ?>
 			<p><em>Directorist (<code>at_biz_dir</code>) isn't active, so there's nothing to migrate.</em></p>
 		<?php endif; ?>

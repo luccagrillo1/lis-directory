@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.33.3
+ * Version:           0.34.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.33.3 (Groundwork for Directorist→LIS migration: read-only dry-run preview of at_biz_dir listings on the settings page, so the field mapping can be built against real data before anything is written)
+ * LIS Directory — v0.34.0 (Directorist→LIS migration writer + listing expiration: maps at_biz_dir listings to lis_listing preserving owner, expiry, category, photos, contact + a daily expiry cron. Dry-run mapped preview; real run is a guarded admin button — not auto-run.)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.33.3' );
+define( 'LIS_DIRECTORY_VERSION', '0.34.0' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
@@ -45,6 +45,7 @@ require_once LIS_DIRECTORY_PATH . 'includes/listings-search.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-account.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-pricing.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-features.php';
+require_once LIS_DIRECTORY_PATH . 'includes/listings-expiry.php';
 
 register_activation_hook( __FILE__, function () {
 	lis_directory_register_cpt();

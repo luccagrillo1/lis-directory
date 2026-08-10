@@ -7,6 +7,31 @@ This file is the authoritative project history.
 
 ---
 
+## [0.34.0] — 2026-08-09 — Directorist migration writer + listing expiration
+
+**Migration (#14).** `includes/directorist-migration.php` gained the real writer:
+`lis_directory_migrate_map()` (pure field mapping) + `lis_directory_migrate_one()`
+(idempotent create, records `_lis_migrated_from`). Maps, per confirmed data model:
+title/content, **post_author (owner preserved)**, status (expired→draft+flag),
+`_address/_phone/_email/_website`, `_featured`, **`_expiry_date`→`_lis_listing_expiry`**,
+`_directory_type` 1374 → `local-business`, `at_biz_dir-category` names →
+`lis_listing_category` (created if missing), and `_listing_prv_img`+`_listing_img`
+(JSON) → featured image + `_lis_listing_gallery_ids` (attachments reused, not
+re-uploaded). Settings page shows a **mapped dry-run preview** ("what would be
+created") + raw source dump, and a guarded **Run migration** button (JS confirm,
+nonce, admin-only). Not auto-run. (Business hours `_bdbh` mapping deferred — its
+format is complex; noted as follow-up.)
+
+**Expiration (#15).** New `includes/listings-expiry.php`: `_lis_listing_expiry`
+meta + a daily cron (`lis_directory_daily_expiry_check`) that sets any published
+listing past its expiry to draft and flags `_lis_listing_expired`. `_lis_listing_never_expire`
+opts out. Gives migrated expirations (and paid terms) a real effect.
+
+**Files:** includes/directorist-migration.php, includes/listings-expiry.php (new),
+includes/woocommerce.php (settings section), lis-directory.php, readme.txt.
+
+---
+
 ## [0.33.3] — 2026-08-09 — Directorist migration groundwork (dry-run preview)
 
 First step of moving Directorist listings into `lis_listing`. Added

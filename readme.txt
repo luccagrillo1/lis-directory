@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.33.3
+Stable tag: 0.34.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.34.0 =
+* Directorist migration is now buildable end-to-end: a "Run migration" tool maps each at_biz_dir listing to a lis_listing, preserving the owner, expiration date, category, photos, phone/email/website/address, and featured status (idempotent — safe to re-run). A dry-run "Preview mapping" shows exactly what would be created first. Nothing runs automatically.
+* Listings now support expiration: a daily check unpublishes any listing past its expiry, so migrated Directorist expirations (and future paid terms) carry through.
 
 = 0.33.3 =
 * Groundwork for migrating Directorist listings into this plugin: a read-only "Directorist → LIS migration" section on the Settings page with a dry-run preview of the real Directorist data, so the field mapping (owner, expiration, category, photos, hours, contact) can be confirmed before anything is written. No listings are migrated yet.
