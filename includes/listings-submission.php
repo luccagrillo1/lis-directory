@@ -124,28 +124,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			<input type="text" id="lis_listing_hp" name="lis_listing_hp" tabindex="-1" autocomplete="off" />
 		</div>
 
-		<div class="lis-listing-panel lis-listing-fork-panel" data-panel-section="Get Started" data-panel-question="How do you want to add your listing?">
-			<div class="lis-listing-fork-choices">
-				<button type="button" class="lis-listing-fork-choice" data-fork-choice="google">
-					<span class="lis-listing-fork-choice-title">
-						Find it on Google
-						<span class="lis-listing-fork-choice-info" tabindex="0">?
-							<span class="lis-listing-fork-choice-tooltip">Search for your business and we'll fill in the address, phone, website, and hours for you — you'll just confirm the details and write your description.</span>
-						</span>
-					</span>
-				</button>
-				<button type="button" class="lis-listing-fork-choice" data-fork-choice="manual">
-					<span class="lis-listing-fork-choice-title">
-						Enter details manually
-						<span class="lis-listing-fork-choice-info" tabindex="0">?
-							<span class="lis-listing-fork-choice-tooltip">Type everything in yourself, one step at a time.</span>
-						</span>
-					</span>
-				</button>
-			</div>
-		</div>
-
-		<div class="lis-listing-panel" data-panel-section="Basics" data-panel-question="What's your business called?">
+		<div class="lis-listing-panel" data-panel-section="Get Started" data-panel-question="What's your business called?" data-panel-hint="Start typing to find it on Google — or just type your name and fill the rest in yourself.">
 			<p>
 				<label for="lis_listing_business_name" class="screen-reader-text">Business Name</label>
 				<input type="text" id="lis_listing_business_name" name="lis_listing_business_name" required />

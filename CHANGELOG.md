@@ -7,6 +7,33 @@ This file is the authoritative project history.
 
 ---
 
+## [0.32.1] — 2026-08-09 — One merged business-lookup flow (no Google/manual fork)
+
+Removed the intro fork panel ("How do you want to add your listing? Find it on
+Google / Enter details manually"). The wizard now opens directly on the
+business-name step, and the Google Places search box is always shown there:
+
+- Start typing → pick your business from Google → it fills business name,
+  address, phone, website, and hours; an inline **confirmation** ("✓ Pulled from
+  Google: address, phone, website, hours. Everything's editable…") makes it
+  obvious what was prefilled and that it's all editable.
+- Ignore the search and just type → everything stays manual, no path to choose
+  up front.
+
+This works because the autocomplete script already inserted its search box
+immediately whenever a form had no fork panel (that's how [lis_listing_edit]
+always behaved) — removing the fork panel from [lis_listing_submit] makes both
+forms behave the same. The address/phone/website/hours steps now always show
+(previously skipped on the Google path), so a Google-filled listing is reviewed
+step by step and any field can be overridden. The old `data-google-fillable`
+attributes are now inert but harmless.
+
+**Files:** includes/listings-submission.php (fork panel removed), assets/js/listing-places-autocomplete.js
+(always-insert + confirmation), assets/css/listings.css (confirmation style),
+lis-directory.php, readme.txt.
+
+---
+
 ## [0.32.0] — 2026-08-09 — Unified paid submission: plan step → checkout → auto-publish
 
 Implements the all-paid model (#4b–#4d) for the Standard and Featured tiers:

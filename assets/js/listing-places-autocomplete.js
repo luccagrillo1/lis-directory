@@ -15,12 +15,11 @@
  * bound onto the existing plain <input> — the new element renders its
  * own shadow-DOM input, it can't attach to one that already exists.
  *
- * On [lis_listing_submit], the search box only appears once the visitor
- * picks "Find it on Google" on the wizard's intro fork panel (which sets
- * form.dataset.entryMode and fires `lis-directory:entry-mode`) — someone
- * who picks "Enter manually" never sees it. [lis_listing_edit] has no
- * fork, so there entryMode is never set and the search box is inserted
- * immediately, same as before this fork existed.
+ * One merged flow (no "Google vs manual" fork): the search box is always
+ * inserted on the business-name step of both [lis_listing_submit] and
+ * [lis_listing_edit]. Picking a Google result fills the details (and shows
+ * an inline confirmation of what was pulled); ignoring it and just typing
+ * keeps everything manual — the visitor never has to choose a path up front.
  */
 window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocomplete || function () {
 	var GOOGLE_DAY_TO_NAME = [ 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday' ];
@@ -91,9 +90,14 @@ window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocom
 			var hint = document.createElement( 'small' );
 			hint.textContent = 'Find it on Google and we’ll fill in the address, phone, website, and hours for you.';
 
+			var confirm = document.createElement( 'small' );
+			confirm.className = 'lis-listing-places-confirm';
+			confirm.hidden = true;
+
 			wrap.appendChild( label );
 			wrap.appendChild( searchHolder );
 			wrap.appendChild( hint );
+			wrap.appendChild( confirm );
 			nameInput.closest( 'p' ).insertAdjacentElement( 'beforebegin', wrap );
 
 			google.maps.importLibrary( 'places' ).then( function ( places ) {
@@ -109,6 +113,8 @@ window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocom
 					place.fetchFields( {
 						fields: [ 'displayName', 'formattedAddress', 'internationalPhoneNumber', 'nationalPhoneNumber', 'websiteURI', 'regularOpeningHours' ],
 					} ).then( function () {
+						var filled = [];
+
 						if ( place.displayName ) {
 							nameInput.value = place.displayName;
 						}
@@ -116,40 +122,42 @@ window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocom
 						var addressEl = form.querySelector( '#lis_listing_address' );
 						if ( addressEl && place.formattedAddress ) {
 							addressEl.value = place.formattedAddress;
+							filled.push( 'address' );
 						}
 
 						var phoneEl = form.querySelector( '#lis_listing_phone' );
-						if ( phoneEl ) {
-							phoneEl.value = place.nationalPhoneNumber || place.internationalPhoneNumber || phoneEl.value;
+						if ( phoneEl && ( place.nationalPhoneNumber || place.internationalPhoneNumber ) ) {
+							phoneEl.value = place.nationalPhoneNumber || place.internationalPhoneNumber;
+							filled.push( 'phone' );
 						}
 
 						var websiteEl = form.querySelector( '#lis_listing_website' );
 						if ( websiteEl && place.websiteURI ) {
 							websiteEl.value = place.websiteURI;
+							filled.push( 'website' );
 						}
 
 						if ( place.regularOpeningHours && place.regularOpeningHours.periods ) {
 							fillHours( form, place.regularOpeningHours.periods );
+							filled.push( 'hours' );
 						}
+
+						// Intuitive confirmation of what we pulled from Google, so
+						// it's obvious the fields are prefilled (and editable) — vs
+						// staying quiet if they'd rather enter everything themselves.
+						hint.hidden = true;
+						confirm.hidden = false;
+						confirm.textContent = filled.length
+							? '✓ Pulled from Google: ' + filled.join( ', ' ) + '. Everything’s editable as you go — change anything that isn’t right.'
+							: '✓ Found on Google. Fill in the rest below — everything’s editable.';
 					} );
 				} );
 			} );
 		}
 
-		// No fork on this form (e.g. [lis_listing_edit]) - show the search
-		// box immediately, same as before the fork existed.
-		if ( ! form.querySelector( '.lis-listing-fork-panel' ) ) {
-			insertSearch();
-			return;
-		}
-
-		if ( 'google' === form.dataset.entryMode ) {
-			insertSearch();
-		}
-		form.addEventListener( 'lis-directory:entry-mode', function ( e ) {
-			if ( e.detail && 'google' === e.detail.mode ) {
-				insertSearch();
-			}
-		} );
+		// One merged flow, no fork: the Google search always shows on the
+		// business-name step. Pick a result and we fill the details for you;
+		// ignore it and just type, and everything stays yours to enter by hand.
+		insertSearch();
 	} );
 };

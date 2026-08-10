@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.32.0
+Stable tag: 0.32.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.32.1 =
+* Merged the "Find it on Google / Enter manually" choice into one flow. The add-listing wizard now opens on the business-name step with Google search built in: start typing to find your business (auto-fills address, phone, website, hours), or just type your name and fill the rest in yourself. When Google fills fields, an inline confirmation shows what it pulled — all still editable.
 
 = 0.32.0 =
 * The add-listing wizard now ends with a "Choose your plan" step (Standard / Featured, monthly or annually) and hands off to WooCommerce checkout; the listing auto-publishes when the order completes, and a post-payment thank-you shows on the order-received page.

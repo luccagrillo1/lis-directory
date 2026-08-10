@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.32.0
+ * Version:           0.32.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.32.0 (Unified paid flow: 'Choose your plan' last step, submit hands off to WooCommerce checkout, order-complete auto-publishes the listing + grants Featured; post-payment thank-you. Falls back to free-pending until products are published.)
+ * LIS Directory — v0.32.1 (Merged the Google/manual fork into one flow: the add-listing wizard starts on the business-name step with Google search built in — pick a result to auto-fill, or just type to enter manually; inline confirmation of what Google filled)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.32.0' );
+define( 'LIS_DIRECTORY_VERSION', '0.32.1' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );

@@ -1303,6 +1303,15 @@
 	margin-top: 6px;
 }
 
+.lis-listing-places-search small.lis-listing-places-confirm {
+	color: #2e7d32;
+	font-weight: 600;
+}
+
+.lis-listing-places-search small[hidden] {
+	display: none;
+}
+
 .lis-listing-panel input[type="text"],
 .lis-listing-panel input[type="email"],
 .lis-listing-panel input[type="url"],
