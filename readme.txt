@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.33.0
+Stable tag: 0.33.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.33.1 =
+* Added a "Featured Listing product" generator (LIS Directory Settings) that builds a monthly/annual subscription ($19/mo, $190/yr) and repoints the Featured Listing Product setting at it — so Featured has a real annual price instead of the same flat fee for both. Adjust prices and publish it when ready.
 
 = 0.33.0 =
 * Vendor Showcase is now a plan option inside the one add-listing wizard — no separate application form. Pick "Vendor Showcase" on the plan step to reveal its fields (open category slot, tagline, logo, business card); submitting creates the listing and the pending vendor entry together and sends you to the category's subscription checkout. Paying auto-activates the showcase (shows your card, locks the category). Only open categories are offered.

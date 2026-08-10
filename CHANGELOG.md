@@ -7,6 +7,21 @@ This file is the authoritative project history.
 
 ---
 
+## [0.33.1] — 2026-08-09 — Featured as a monthly/annual subscription (real annual price)
+
+The Featured tier was a simple one-price product, so the plan step showed the
+same amount for monthly and annual. Added a Featured Listing generator (mirrors
+the Standard one): a variable **subscription** with Monthly ($19) and Annually
+($190) variations, marked `_lis_featured_listing_product`, and generating it
+repoints `lis_directory_featured_listing_product_id` at the new product. Draft +
+hidden; adjust prices and publish. The old simple "Feature My Listing" product
+is left untouched (trashable once the new one is live).
+
+**Files:** includes/listings-pricing.php (generator + handler + hook),
+includes/woocommerce.php (settings button), lis-directory.php, readme.txt.
+
+---
+
 ## [0.33.0] — 2026-08-09 — Vendor Showcase folded into the one wizard (#13)
 
 Vendor Showcase is now the third selectable plan on the add-listing wizard's

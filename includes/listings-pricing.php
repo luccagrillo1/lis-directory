@@ -58,6 +58,7 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_thankyou', 'lis_directory_listing_order_thankyou' );
 	add_action( 'admin_post_lis_directory_generate_standard_listing', 'lis_directory_handle_generate_standard_listing' );
+	add_action( 'admin_post_lis_directory_generate_featured_listing', 'lis_directory_handle_generate_featured_listing' );
 
 	if ( class_exists( 'WC_Subscriptions' ) ) {
 		add_action( 'woocommerce_subscription_status_cancelled', 'lis_directory_handle_featured_listing_subscription_ended' );
@@ -600,6 +601,146 @@ function lis_directory_handle_generate_standard_listing() {
 		$redirect = add_query_arg( 'lis_std_gen', 'error', $redirect );
 	} else {
 		$redirect = add_query_arg( array( 'lis_std_gen' => 'ok', 'lis_std_added' => (int) $result['added'] ), $redirect );
+	}
+	wp_safe_redirect( $redirect );
+	exit;
+}
+
+/* ------------------------------------------------------------------ *
+ * Featured Listing product — same monthly/annual variable-subscription *
+ * shape as Standard (so it has a real annual price, not one flat fee),  *
+ * just a higher tier. Generating it repoints the Featured Listing        *
+ * Product setting to the generated product.                              *
+ * ------------------------------------------------------------------ */
+
+function lis_directory_get_generated_featured_product_id() {
+	$ids = get_posts( array(
+		'post_type'        => 'product',
+		'post_status'      => array( 'publish', 'draft', 'pending', 'private' ),
+		'posts_per_page'   => 1,
+		'fields'           => 'ids',
+		'meta_query'       => array(
+			array( 'key' => '_lis_featured_listing_product', 'value' => '1' ),
+		),
+		'suppress_filters' => false,
+	) );
+	return $ids ? (int) $ids[0] : 0;
+}
+
+/**
+ * Builds (or tops up) a "Featured Listing" variable-subscription product with
+ * Monthly ($19) and Annually ($190) variations, and points
+ * lis_directory_featured_listing_product_id at it. Idempotent.
+ *
+ * @return array|WP_Error { added:int, product_id:int } on success.
+ */
+function lis_directory_generate_featured_listing_product() {
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		return new WP_Error( 'no_wc', 'WooCommerce is not active.' );
+	}
+	$use_sub = class_exists( 'WC_Subscriptions' ) && class_exists( 'WC_Product_Variable_Subscription' );
+
+	$product_id = lis_directory_get_generated_featured_product_id();
+	if ( ! $product_id ) {
+		$product = $use_sub ? new WC_Product_Variable_Subscription() : new WC_Product_Variable();
+		$product->set_name( 'Featured Listing' );
+		$product->set_status( 'draft' );
+		$product->set_catalog_visibility( 'hidden' );
+		$product->set_virtual( true );
+		$product->set_sold_individually( true );
+
+		$attr_bill = new WC_Product_Attribute();
+		$attr_bill->set_name( 'Billing' );
+		$attr_bill->set_options( array( 'Monthly', 'Annually' ) );
+		$attr_bill->set_visible( true );
+		$attr_bill->set_variation( true );
+
+		$product->set_attributes( array( $attr_bill ) );
+		$product->update_meta_data( '_lis_featured_listing_product', '1' );
+		$product_id = $product->save();
+		if ( ! $product_id ) {
+			return new WP_Error( 'save_failed', 'Could not create the Featured Listing product.' );
+		}
+	} else {
+		$product = wc_get_product( $product_id );
+	}
+
+	$existing = array();
+	foreach ( $product->get_children() as $child_id ) {
+		$period = get_post_meta( $child_id, '_lis_featured_billing_period', true );
+		if ( $period ) {
+			$existing[ $period ] = true;
+		}
+	}
+
+	$plans = array(
+		array( 'label' => 'Monthly',  'price' => 19,  'period' => 'month' ),
+		array( 'label' => 'Annually', 'price' => 190, 'period' => 'year' ),
+	);
+
+	$added = 0;
+	foreach ( $plans as $plan ) {
+		if ( isset( $existing[ $plan['period'] ] ) ) {
+			continue;
+		}
+		$var = ( $use_sub && class_exists( 'WC_Product_Subscription_Variation' ) )
+			? new WC_Product_Subscription_Variation()
+			: new WC_Product_Variation();
+		$var->set_parent_id( $product_id );
+		$var->set_attributes( array( 'billing' => $plan['label'] ) );
+		$var->set_regular_price( $plan['price'] );
+		$var->set_price( $plan['price'] );
+		$var->set_virtual( true );
+		$var->update_meta_data( '_lis_featured_billing_period', $plan['period'] );
+		if ( $use_sub ) {
+			$var->update_meta_data( '_subscription_price', $plan['price'] );
+			$var->update_meta_data( '_subscription_period', $plan['period'] );
+			$var->update_meta_data( '_subscription_period_interval', '1' );
+			$var->update_meta_data( '_subscription_length', '0' );
+			$var->update_meta_data( '_subscription_sign_up_fee', '0' );
+			$var->update_meta_data( '_subscription_trial_length', '0' );
+			$var->update_meta_data( '_subscription_trial_period', 'day' );
+		}
+		$var->save();
+		$added++;
+	}
+
+	$fresh = wc_get_product( $product_id );
+	foreach ( $fresh->get_children() as $child_id ) {
+		$period = get_post_meta( $child_id, '_lis_featured_billing_period', true );
+		if ( $period ) {
+			update_post_meta( $child_id, 'attribute_billing', 'year' === $period ? 'Annually' : 'Monthly' );
+		}
+	}
+
+	if ( class_exists( 'WC_Product_Variable' ) ) {
+		WC_Product_Variable::sync( $product_id );
+	}
+	if ( function_exists( 'wc_delete_product_transients' ) ) {
+		wc_delete_product_transients( $product_id );
+	}
+
+	// Point the Featured setting at this product so the plan step + order hook use it.
+	update_option( 'lis_directory_featured_listing_product_id', $product_id );
+
+	return array( 'added' => $added, 'product_id' => $product_id );
+}
+
+function lis_directory_handle_generate_featured_listing() {
+	if ( ! current_user_can( 'manage_woocommerce' ) && ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'You do not have permission to do this.' );
+	}
+	if ( ! isset( $_POST['lis_feat_gen_nonce'] ) || ! wp_verify_nonce( $_POST['lis_feat_gen_nonce'], 'lis_directory_generate_featured_listing' ) ) {
+		wp_die( 'Security check failed.' );
+	}
+
+	$result   = lis_directory_generate_featured_listing_product();
+	$redirect = admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' );
+
+	if ( is_wp_error( $result ) ) {
+		$redirect = add_query_arg( 'lis_feat_gen', 'error', $redirect );
+	} else {
+		$redirect = add_query_arg( array( 'lis_feat_gen' => 'ok', 'lis_feat_added' => (int) $result['added'] ), $redirect );
 	}
 	wp_safe_redirect( $redirect );
 	exit;

@@ -181,6 +181,38 @@ function lis_directory_render_settings_page() {
 		</form>
 
 		<hr />
+		<h2>Featured Listing product</h2>
+		<?php if ( isset( $_GET['lis_feat_gen'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only, no state change. ?>
+			<?php if ( 'ok' === $_GET['lis_feat_gen'] ) : ?>
+				<div class="notice notice-success inline"><p>Featured Listing product updated &mdash; added <?php echo isset( $_GET['lis_feat_added'] ) ? (int) $_GET['lis_feat_added'] : 0; ?> new variation(s), and the Featured Listing Product above now points to it.</p></div>
+			<?php else : ?>
+				<div class="notice notice-error inline"><p>Could not build the Featured Listing product. Make sure WooCommerce is active.</p></div>
+			<?php endif; ?>
+		<?php endif; ?>
+		<p class="description" style="max-width:640px;">
+			Builds a <strong>Featured Listing</strong> WooCommerce Subscription product
+			with Monthly ($19) and Annually ($190) billing variations (so Featured has a
+			real annual price, not one flat fee), and repoints the <strong>Featured
+			Listing Product</strong> setting above at it. Created as a <strong>draft</strong>;
+			adjust prices if you like, then publish it. (Your old simple "Feature My
+			Listing" product is left untouched — you can trash it once this is live.)
+		</p>
+		<?php
+		$feat_gen_id = function_exists( 'lis_directory_get_generated_featured_product_id' ) ? lis_directory_get_generated_featured_product_id() : 0;
+		if ( $feat_gen_id ) :
+			?>
+			<p><strong>Current product:</strong>
+				<a href="<?php echo esc_url( get_edit_post_link( $feat_gen_id ) ); ?>">Featured Listing (#<?php echo (int) $feat_gen_id; ?>)</a>
+				&mdash; status: <?php echo esc_html( get_post_status( $feat_gen_id ) ); ?>
+			</p>
+		<?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="lis_directory_generate_featured_listing" />
+			<?php wp_nonce_field( 'lis_directory_generate_featured_listing', 'lis_feat_gen_nonce' ); ?>
+			<?php submit_button( $feat_gen_id ? 'Top up Featured Listing variations' : 'Generate Featured Listing product', 'secondary', 'submit', false ); ?>
+		</form>
+
+		<hr />
 		<h3>Testing tool</h3>
 		<p class="description" style="max-width:640px;">
 			Creates a throwaway <strong>$0, non-subscription</strong> product tagged to
