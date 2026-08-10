@@ -1528,6 +1528,18 @@
 	gap: 10px;
 }
 
+.lis-listing-no-hours-toggle {
+	margin: 0 0 16px;
+	font-weight: 600;
+}
+
+.lis-listing-no-hours-toggle label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+}
+
 .lis-listing-feature-suggest {
 	margin-top: 18px;
 }

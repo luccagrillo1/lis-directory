@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.35.2
+Stable tag: 0.35.3
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.35.3 =
+* Business hours now have a "No set hours" toggle on the add/edit forms — for by-appointment or hours-not-applicable businesses (insurance agents, consultants, etc.). Checking it hides the day grid and skips hours entirely (and clears any hours Google prefilled). Listings with no hours already show no hours box and no open/closed badge.
 
 = 0.35.2 =
 * Claim: the listing page now shows a compact "Is this your business? Claim it" button instead of the whole plan block. The block (plan picker) opens on a focused claim view (the button links to ?claim=1), so it isn't crowding the listing page.

@@ -30,6 +30,14 @@ add_action( 'add_meta_boxes', 'lis_directory_add_listing_hours_meta_box' );
 add_action( 'save_post_lis_listing', 'lis_directory_save_listing_hours_meta_box' );
 
 function lis_directory_register_listing_hours_meta() {
+	register_post_meta( 'lis_listing', '_lis_listing_no_hours', array(
+		'type'          => 'boolean',
+		'single'        => true,
+		'show_in_rest'  => true,
+		'auth_callback' => function () {
+			return current_user_can( 'edit_posts' );
+		},
+	) );
 	foreach ( array_keys( LIS_DIRECTORY_WEEKDAYS ) as $day ) {
 		register_post_meta( 'lis_listing', "_lis_listing_hours_{$day}_open", array(
 			'type'          => 'string',
@@ -63,7 +71,9 @@ function lis_directory_add_listing_hours_meta_box() {
 
 function lis_directory_render_listing_hours_meta_box( $post ) {
 	wp_nonce_field( 'lis_listing_save_hours', 'lis_listing_hours_nonce' );
+	$no_hours = (bool) get_post_meta( $post->ID, '_lis_listing_no_hours', true );
 	?>
+	<p><label><input type="checkbox" name="lis_listing_no_hours" value="1" <?php checked( $no_hours ); ?> /> This business has no set hours (by appointment / not applicable)</label></p>
 	<table class="form-table lis-listing-hours-table">
 		<thead>
 			<tr><th>Day</th><th>Open</th><th>Close</th></tr>
@@ -96,6 +106,16 @@ function lis_directory_save_listing_hours_meta_box( $post_id ) {
 	if ( ! current_user_can( 'edit_post', $post_id ) ) {
 		return;
 	}
+
+	if ( ! empty( $_POST['lis_listing_no_hours'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_no_hours', 1 );
+		foreach ( array_keys( LIS_DIRECTORY_WEEKDAYS ) as $day ) {
+			delete_post_meta( $post_id, "_lis_listing_hours_{$day}_open" );
+			delete_post_meta( $post_id, "_lis_listing_hours_{$day}_close" );
+		}
+		return;
+	}
+	delete_post_meta( $post_id, '_lis_listing_no_hours' );
 
 	foreach ( array_keys( LIS_DIRECTORY_WEEKDAYS ) as $day ) {
 		foreach ( array( 'open', 'close' ) as $edge ) {

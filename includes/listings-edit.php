@@ -226,18 +226,35 @@ function lis_directory_render_listing_edit_form_shortcode() {
 		</div>
 
 		<div class="lis-listing-panel" data-panel-section="Business Hours" data-panel-question="When are you open?" data-panel-hint="Leave a day blank if closed">
-			<table class="lis-listing-submit-hours-table">
-				<?php foreach ( LIS_DIRECTORY_WEEKDAYS as $day => $label ) : ?>
-					<tr>
-						<th><label for="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open"><?php echo esc_html( $label ); ?></label></th>
-						<td>
-							<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" value="<?php echo esc_attr( $week[ $day ]['open'] ?? '' ); ?>" />
-							<span>to</span>
-							<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" value="<?php echo esc_attr( $week[ $day ]['close'] ?? '' ); ?>" />
-						</td>
-					</tr>
-				<?php endforeach; ?>
-			</table>
+			<?php $no_hours = (bool) get_post_meta( $listing_id, '_lis_listing_no_hours', true ); ?>
+			<p class="lis-listing-no-hours-toggle">
+				<label><input type="checkbox" name="lis_listing_no_hours" value="1" <?php checked( $no_hours ); ?> /> No set hours (by appointment / not applicable)</label>
+			</p>
+			<div class="lis-listing-hours-wrap"<?php echo $no_hours ? ' style="display:none;"' : ''; ?>>
+				<table class="lis-listing-submit-hours-table">
+					<?php foreach ( LIS_DIRECTORY_WEEKDAYS as $day => $label ) : ?>
+						<tr>
+							<th><label for="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open"><?php echo esc_html( $label ); ?></label></th>
+							<td>
+								<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_open" value="<?php echo esc_attr( $week[ $day ]['open'] ?? '' ); ?>" />
+								<span>to</span>
+								<input type="time" id="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" name="lis_listing_hours_<?php echo esc_attr( $day ); ?>_close" value="<?php echo esc_attr( $week[ $day ]['close'] ?? '' ); ?>" />
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</table>
+			</div>
+			<script>
+			( function () {
+				var panel = document.currentScript.closest( '.lis-listing-panel' );
+				if ( ! panel ) { return; }
+				var cb = panel.querySelector( 'input[name="lis_listing_no_hours"]' );
+				var wrap = panel.querySelector( '.lis-listing-hours-wrap' );
+				function sync() { if ( wrap ) { wrap.style.display = cb.checked ? 'none' : ''; } }
+				cb.addEventListener( 'change', sync );
+				sync();
+			}() );
+			</script>
 		</div>
 
 		<div class="lis-listing-panel" data-panel-section="Services" data-panel-question="What services do you offer?" data-panel-hint="One per line">

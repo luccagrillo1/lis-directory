@@ -7,6 +7,22 @@ This file is the authoritative project history.
 
 ---
 
+## [0.35.3] — 2026-08-09 — "No set hours" toggle
+
+Business Hours step now leads with a "No set hours (by appointment / not
+applicable)" checkbox on both the add-listing wizard and the edit form (and the
+admin Business Hours metabox). Checking it hides the day grid (JS) and, on save,
+sets `_lis_listing_no_hours` and clears every hours meta — so a by-appointment
+business (insurance agent, consultant) isn't forced to invent hours, and any
+hours Google prefilled get wiped. The public display already omitted the hours
+box + open/closed badge when no hours are set, so no display change was needed.
+
+**Files:** includes/listings-hours.php (meta + metabox toggle + save), includes/listings-submission.php
+(wizard toggle + save), includes/listings-edit.php (edit toggle), assets/css/listings.css,
+lis-directory.php, readme.txt.
+
+---
+
 ## [0.35.2] — 2026-08-09 — Claim: button, not the whole block, on the listing
 
 Per feedback, the full claim plan-block was too much to sit on every claimable
