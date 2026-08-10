@@ -7,6 +7,23 @@ This file is the authoritative project history.
 
 ---
 
+## [0.33.3] — 2026-08-09 — Directorist migration groundwork (dry-run preview)
+
+First step of moving Directorist listings into `lis_listing`. Added
+`includes/directorist-migration.php` + a "Directorist → LIS migration" section on
+the Settings page: shows how many `at_biz_dir` listings exist and how many are
+already migrated, and a **read-only dry-run preview** that dumps a few real
+listings' author, status, taxonomies, and every meta key/value — so the field
+mapping (owner, expiration, category, photos, hours, contact, featured) is built
+against the actual data model, not assumed. The run handler is a guarded stub;
+no listing is written yet. Idempotent design: created listings will record
+`_lis_migrated_from` so re-runs skip them.
+
+**Files:** includes/directorist-migration.php (new), lis-directory.php (require +
+version), includes/woocommerce.php (settings section), readme.txt.
+
+---
+
 ## [0.33.2] — 2026-08-09 — Business-name step: one box, not two
 
 The merged Google flow (0.32.1) still rendered two fields: Google's

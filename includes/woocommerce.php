@@ -213,6 +213,29 @@ function lis_directory_render_settings_page() {
 		</form>
 
 		<hr />
+		<h2>Directorist → LIS migration</h2>
+		<?php
+		$dm_stats = function_exists( 'lis_directory_migration_stats' ) ? lis_directory_migration_stats() : array( 'exists' => false, 'total' => 0, 'migrated' => 0 );
+		?>
+		<p class="description" style="max-width:640px;">
+			Migrate existing Directorist (<code>at_biz_dir</code>) listings into this
+			plugin's <code>lis_listing</code> post type, preserving owner, expiration,
+			category, photos, hours, and contact fields. Preview the field mapping
+			against real data first — nothing is written until the mapping is confirmed.
+		</p>
+		<?php if ( $dm_stats['exists'] ) : ?>
+			<p><strong>Directorist listings:</strong> <?php echo (int) $dm_stats['total']; ?> &middot; <strong>already migrated:</strong> <?php echo (int) $dm_stats['migrated']; ?></p>
+			<p>
+				<a class="button" href="<?php echo esc_url( add_query_arg( 'lis_dm_preview', '1', admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' ) ) ); ?>">Preview data (dry run)</a>
+			</p>
+			<?php if ( isset( $_GET['lis_dm_preview'] ) && function_exists( 'lis_directory_migration_render_preview' ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only preview. ?>
+				<div style="max-width:900px;"><?php lis_directory_migration_render_preview(); ?></div>
+			<?php endif; ?>
+		<?php else : ?>
+			<p><em>Directorist (<code>at_biz_dir</code>) isn't active, so there's nothing to migrate.</em></p>
+		<?php endif; ?>
+
+		<hr />
 		<h3>Testing tool</h3>
 		<p class="description" style="max-width:640px;">
 			Creates a throwaway <strong>$0, non-subscription</strong> product tagged to

@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.33.2
+Stable tag: 0.33.3
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.33.3 =
+* Groundwork for migrating Directorist listings into this plugin: a read-only "Directorist → LIS migration" section on the Settings page with a dry-run preview of the real Directorist data, so the field mapping (owner, expiration, category, photos, hours, contact) can be confirmed before anything is written. No listings are migrated yet.
 
 = 0.33.2 =
 * The business-name step is now a single text box. Google autocomplete lives on the business-name field itself (with a custom suggestions dropdown) instead of a separate "Search for your business" box above it — start typing, pick a Google match to auto-fill, or just keep typing to enter it yourself.

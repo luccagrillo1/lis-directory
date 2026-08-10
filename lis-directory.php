@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.33.2
+ * Version:           0.33.3
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.33.2 (Business-name step is now ONE box: Google autocomplete (new programmatic Places API) hangs a custom suggestions dropdown off the business-name input itself, instead of a separate Google search box above it)
+ * LIS Directory — v0.33.3 (Groundwork for Directorist→LIS migration: read-only dry-run preview of at_biz_dir listings on the settings page, so the field mapping can be built against real data before anything is written)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.33.2' );
+define( 'LIS_DIRECTORY_VERSION', '0.33.3' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
@@ -31,6 +31,7 @@ require_once LIS_DIRECTORY_PATH . 'includes/submission.php';
 require_once LIS_DIRECTORY_PATH . 'includes/woocommerce.php';
 require_once LIS_DIRECTORY_PATH . 'includes/updater.php';
 require_once LIS_DIRECTORY_PATH . 'includes/directorist-integration.php';
+require_once LIS_DIRECTORY_PATH . 'includes/directorist-migration.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-cpt.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-meta.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-hours.php';
