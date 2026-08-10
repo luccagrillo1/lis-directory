@@ -7,6 +7,19 @@ This file is the authoritative project history.
 
 ---
 
+## [0.35.1] — 2026-08-09 — Hotfix: single-listing fatal
+
+The claim-box include added to templates/single-listing.php in 0.35.0 put the
+closing `}` after a `//` line comment, so PHP treated the brace as commented
+out — a `syntax error, unexpected token "endwhile"` fatal on every single
+listing page. Reformatted onto its own lines. (The linter only scanned
+`includes/`, not `templates/`, so it wasn't caught pre-ship; templates are
+linted now too.)
+
+**Files:** templates/single-listing.php, lis-directory.php, readme.txt.
+
+---
+
 ## [0.35.0] — 2026-08-09 — Claim-by-subscription (#16)
 
 New `includes/listings-claim.php`. A listing flagged `_lis_listing_claimable`

@@ -123,7 +123,11 @@ while ( have_posts() ) :
 		<div class="lis-listing-columns">
 			<div class="lis-listing-main">
 
-				<?php if ( function_exists( 'lis_directory_render_claim_box' ) ) { echo lis_directory_render_claim_box( $post_id ); // phpcs:ignore -- escaped inside helper. } ?>
+				<?php
+				if ( function_exists( 'lis_directory_render_claim_box' ) ) {
+					echo lis_directory_render_claim_box( $post_id ); // phpcs:ignore -- escaped inside helper.
+				}
+				?>
 
 				<?php if ( 'real-estate-sale' === $type || 'real-estate-rent' === $type ) : ?>
 					<?php if ( $bedrooms || $bathrooms || $sqft ) : ?>

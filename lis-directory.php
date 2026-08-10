@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.35.0
+ * Version:           0.35.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.35.0 (Claim-by-subscription: mark a listing claimable and its public page shows a Claim box; a logged-in visitor picks a plan, checks out, and on payment ownership transfers to them + the tier is granted)
+ * LIS Directory — v0.35.1 (HOTFIX: fatal on single-listing pages — the claim-box include had its closing brace after a line comment, commenting it out; fixed)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.35.0' );
+define( 'LIS_DIRECTORY_VERSION', '0.35.1' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
