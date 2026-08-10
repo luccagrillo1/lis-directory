@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.35.4
+ * Version:           0.36.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.35.4 (Fix: the Vendor Showcase logo/business-card file inputs were hidden by the CSS that hides the multi-photo input — now only the photo input is hidden, so the logo/card uploads show)
+ * LIS Directory — v0.36.0 (Vendor Showcase categories now mirror the directory's listing categories automatically — added/renamed/deleted listing categories sync to lis_vendor_category, and the Showcase product tops up its variations for new ones)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.35.4' );
+define( 'LIS_DIRECTORY_VERSION', '0.36.0' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
@@ -32,6 +32,7 @@ require_once LIS_DIRECTORY_PATH . 'includes/woocommerce.php';
 require_once LIS_DIRECTORY_PATH . 'includes/updater.php';
 require_once LIS_DIRECTORY_PATH . 'includes/directorist-integration.php';
 require_once LIS_DIRECTORY_PATH . 'includes/directorist-migration.php';
+require_once LIS_DIRECTORY_PATH . 'includes/vendor-category-sync.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-cpt.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-meta.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-hours.php';

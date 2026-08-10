@@ -7,6 +7,22 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.0] — 2026-08-09 — Showcase categories mirror the directory categories
+
+New `includes/vendor-category-sync.php`. The Vendor Showcase taxonomy
+(`lis_vendor_category`) is now kept mirrored to `lis_listing_category` by slug:
+`created/edited_lis_listing_category` create/rename the matching vendor category;
+`delete_lis_listing_category` removes it (only if no vendor holds that slot). A
+one-time `admin_init` reconcile mirrors existing categories, and
+`created_lis_vendor_category` tops up the Showcase product so a new category is
+immediately buyable. Helpers `lis_directory_is_listing_category_showcase_taken()`
+and `_vendor_category_for_listing_category()` support the next step (Showcase
+using the listing's already-selected category with an occupied warning).
+
+**Files:** includes/vendor-category-sync.php (new), lis-directory.php.
+
+---
+
 ## [0.35.4] — 2026-08-09 — Fix hidden logo/business-card uploads
 
 The photo dropzone visually hides its file input via `.lis-listing-panel input[type="file"]`,
