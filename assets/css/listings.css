@@ -1771,6 +1771,27 @@
 	font-size: 0.9em;
 }
 
+/* Compact "Claim it" button on the listing (opens the focused ?claim=1 view). */
+.lis-listing-claim-cta {
+	margin: 0 0 24px;
+}
+
+.lis-listing-claim-btn {
+	display: inline-block;
+	padding: 11px 22px;
+	border: 1px solid #576846;
+	border-radius: 8px;
+	background: #f5f7f1;
+	color: #46552f;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.lis-listing-claim-btn:hover {
+	background: #576846;
+	color: #fff;
+}
+
 /* "Claim this listing" box on the single-listing page. */
 .lis-listing-claim-box {
 	margin: 0 0 28px;

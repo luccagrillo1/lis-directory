@@ -7,6 +7,19 @@ This file is the authoritative project history.
 
 ---
 
+## [0.35.2] — 2026-08-09 — Claim: button, not the whole block, on the listing
+
+Per feedback, the full claim plan-block was too much to sit on every claimable
+listing. `lis_directory_render_claim_box()` now returns a compact "Is this your
+business? Claim it →" button by default; the button links to `?claim=1`, and
+only that focused view renders the plan block (heading + Standard/Featured cards
++ billing toggle + Claim & subscribe / log-in prompt), anchored `#lis-claim`.
+
+**Files:** includes/listings-claim.php, assets/css/listings.css, lis-directory.php,
+readme.txt.
+
+---
+
 ## [0.35.1] — 2026-08-09 — Hotfix: single-listing fatal
 
 The claim-box include added to templates/single-listing.php in 0.35.0 put the

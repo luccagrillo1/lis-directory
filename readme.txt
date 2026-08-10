@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.35.1
+Stable tag: 0.35.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.35.2 =
+* Claim: the listing page now shows a compact "Is this your business? Claim it" button instead of the whole plan block. The block (plan picker) opens on a focused claim view (the button links to ?claim=1), so it isn't crowding the listing page.
 
 = 0.35.1 =
 * Hotfix: fixed a fatal error on single listing pages introduced in 0.35.0 (a stray `}` after a line comment in the claim-box include).

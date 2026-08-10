@@ -90,13 +90,22 @@ function lis_directory_render_claim_box( $listing_id ) {
 
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 
+	// Default: just a compact button on the listing. It opens the full plan
+	// block only on the focused claim view (`?claim=1`), so the listing page
+	// itself stays clean.
+	$is_claim_view = ! empty( $_GET['claim'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only view switch.
+	if ( ! $is_claim_view ) {
+		$claim_url = add_query_arg( 'claim', '1', get_permalink( $listing_id ) ) . '#lis-claim';
+		return '<div class="lis-listing-claim-cta"><a class="lis-listing-claim-btn" href="' . esc_url( $claim_url ) . '">Is this your business? Claim it &rarr;</a></div>';
+	}
+
 	ob_start();
 
 	if ( ! is_user_logged_in() ) {
 		?>
-		<div class="lis-listing-claim-box">
+		<div class="lis-listing-claim-box" id="lis-claim">
 			<h3>Is this your business?</h3>
-			<p><a href="<?php echo esc_url( wp_login_url( get_permalink( $listing_id ) ) ); ?>">Log in</a> to claim this listing.</p>
+			<p><a href="<?php echo esc_url( wp_login_url( add_query_arg( 'claim', '1', get_permalink( $listing_id ) ) ) ); ?>">Log in</a> to claim this listing.</p>
 		</div>
 		<?php
 		return ob_get_clean();
@@ -122,7 +131,7 @@ function lis_directory_render_claim_box( $listing_id ) {
 		return ''; // No purchasable plans configured yet — nothing to claim with.
 	}
 	?>
-	<div class="lis-listing-claim-box">
+	<div class="lis-listing-claim-box" id="lis-claim">
 		<h3>Is this your business? Claim it.</h3>
 		<p>Claim this listing and it becomes yours to manage — a subscription keeps it live.</p>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="lis-listing-claim-form">
