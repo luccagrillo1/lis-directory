@@ -127,7 +127,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		<div class="lis-listing-panel" data-panel-section="Get Started" data-panel-question="What's your business called?" data-panel-hint="Start typing to find it on Google — or just type your name and fill the rest in yourself.">
 			<p>
 				<label for="lis_listing_business_name" class="screen-reader-text">Business Name</label>
-				<input type="text" id="lis_listing_business_name" name="lis_listing_business_name" required />
+				<input type="text" id="lis_listing_business_name" name="lis_listing_business_name" placeholder="Start typing your business name…" autocomplete="off" required />
 			</p>
 		</div>
 

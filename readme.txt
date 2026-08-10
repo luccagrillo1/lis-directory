@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.33.1
+Stable tag: 0.33.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.33.2 =
+* The business-name step is now a single text box. Google autocomplete lives on the business-name field itself (with a custom suggestions dropdown) instead of a separate "Search for your business" box above it — start typing, pick a Google match to auto-fill, or just keep typing to enter it yourself.
 
 = 0.33.1 =
 * Added a "Featured Listing product" generator (LIS Directory Settings) that builds a monthly/annual subscription ($19/mo, $190/yr) and repoints the Featured Listing Product setting at it — so Featured has a real annual price instead of the same flat fee for both. Adjust prices and publish it when ready.

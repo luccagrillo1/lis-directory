@@ -1,25 +1,17 @@
 /**
- * Google Places autocomplete on the Business Name step, [lis_listing_submit]
- * and [lis_listing_edit]. Picking a real business auto-fills Address,
- * Phone, Website, and per-day Business Hours from Google's Place Details.
- * Purely additive — anyone who ignores the search box and just types
- * their own values everywhere gets exactly the old behavior.
+ * Google Places autocomplete on the Business Name step of [lis_listing_submit]
+ * and [lis_listing_edit] — ONE text box, not two.
  *
- * Uses the new `PlaceAutocompleteElement` (google.maps.importLibrary),
- * NOT the older `google.maps.places.Autocomplete` class — Google retired
- * that class for any Cloud project created after March 2025 ("not
- * available to new customers"), confirmed live via a real console error
- * on this exact project. `PlaceAutocompleteElement` is a self-contained
- * web component with its own input UI, so it's inserted as a separate
- * "Search for your business" field above Business Name rather than
- * bound onto the existing plain <input> — the new element renders its
- * own shadow-DOM input, it can't attach to one that already exists.
- *
- * One merged flow (no "Google vs manual" fork): the search box is always
- * inserted on the business-name step of both [lis_listing_submit] and
- * [lis_listing_edit]. Picking a Google result fills the details (and shows
- * an inline confirmation of what was pulled); ignoring it and just typing
- * keeps everything manual — the visitor never has to choose a path up front.
+ * Uses the new programmatic Places API (`AutocompleteSuggestion.fetch-
+ * AutocompleteSuggestions` + `AutocompleteSessionToken`), NOT the self-
+ * contained `PlaceAutocompleteElement` web component. The element renders its
+ * own shadow-DOM input, which forced a second search box above the real
+ * business-name field; the data API lets us hang a custom suggestions dropdown
+ * directly off the existing `#lis_listing_business_name` input instead, so
+ * there's a single box: type your name, pick a Google match to auto-fill
+ * address/phone/website/hours, or just keep typing to enter everything
+ * yourself. (The old class is also "not available to new customers" for Cloud
+ * projects created after March 2025 — confirmed live on this project.)
  */
 window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocomplete || function () {
 	var GOOGLE_DAY_TO_NAME = [ 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday' ];
@@ -52,9 +44,6 @@ window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocom
 			if ( openEl && period.open.hour !== undefined ) {
 				openEl.value = pad2( period.open.hour ) + ':' + pad2( period.open.minute || 0 );
 			}
-			// Overnight hours (close.day !== open.day) aren't handled specially -
-			// the close time still lands on the open day's row, which is what
-			// this form's one-shift-per-day model can represent anyway.
 			if ( closeEl && period.close && period.close.hour !== undefined ) {
 				closeEl.value = pad2( period.close.hour ) + ':' + pad2( period.close.minute || 0 );
 			}
@@ -72,92 +61,187 @@ window.lisDirectoryInitPlacesAutocomplete = window.lisDirectoryInitPlacesAutocom
 			return;
 		}
 
-		function insertSearch() {
-			if ( nameInput.dataset.placesInserted ) {
+		google.maps.importLibrary( 'places' ).then( function ( places ) {
+			// Graceful no-op if the programmatic API isn't available: the input
+			// still works as a plain business-name field.
+			if ( ! places || ! places.AutocompleteSuggestion || ! places.AutocompleteSessionToken ) {
 				return;
 			}
-			nameInput.dataset.placesInserted = '1';
 
-			var wrap = document.createElement( 'p' );
-			wrap.className = 'lis-listing-places-search';
+			nameInput.setAttribute( 'autocomplete', 'off' );
 
-			var label = document.createElement( 'label' );
-			label.textContent = 'Search for your business (optional)';
-
-			var searchHolder = document.createElement( 'div' );
-			searchHolder.className = 'lis-listing-places-search-holder';
-
-			var hint = document.createElement( 'small' );
-			hint.textContent = 'Find it on Google and we’ll fill in the address, phone, website, and hours for you.';
+			// Wrap the input so the dropdown can be absolutely positioned under it.
+			var wrap = document.createElement( 'div' );
+			wrap.className = 'lis-listing-place-ac';
+			nameInput.parentNode.insertBefore( wrap, nameInput );
+			wrap.appendChild( nameInput );
 
 			var confirm = document.createElement( 'small' );
-			confirm.className = 'lis-listing-places-confirm';
+			confirm.className = 'lis-listing-place-confirm';
 			confirm.hidden = true;
-
-			wrap.appendChild( label );
-			wrap.appendChild( searchHolder );
-			wrap.appendChild( hint );
 			wrap.appendChild( confirm );
-			nameInput.closest( 'p' ).insertAdjacentElement( 'beforebegin', wrap );
 
-			google.maps.importLibrary( 'places' ).then( function ( places ) {
-				var autocompleteEl = new places.PlaceAutocompleteElement();
-				searchHolder.appendChild( autocompleteEl );
+			var menu = document.createElement( 'ul' );
+			menu.className = 'lis-listing-place-ac-menu';
+			menu.setAttribute( 'role', 'listbox' );
+			menu.hidden = true;
+			wrap.appendChild( menu );
 
-				autocompleteEl.addEventListener( 'gmp-select', function ( event ) {
-					var prediction = event.placePrediction;
-					if ( ! prediction ) {
-						return;
-					}
-					var place = prediction.toPlace();
-					place.fetchFields( {
-						fields: [ 'displayName', 'formattedAddress', 'internationalPhoneNumber', 'nationalPhoneNumber', 'websiteURI', 'regularOpeningHours' ],
-					} ).then( function () {
-						var filled = [];
+			var token = new places.AutocompleteSessionToken();
+			var items = [];
+			var activeIndex = -1;
+			var debounceTimer;
 
-						if ( place.displayName ) {
-							nameInput.value = place.displayName;
-						}
+			function closeMenu() {
+				menu.hidden = true;
+				menu.innerHTML = '';
+				items = [];
+				activeIndex = -1;
+			}
 
-						var addressEl = form.querySelector( '#lis_listing_address' );
-						if ( addressEl && place.formattedAddress ) {
-							addressEl.value = place.formattedAddress;
-							filled.push( 'address' );
-						}
-
-						var phoneEl = form.querySelector( '#lis_listing_phone' );
-						if ( phoneEl && ( place.nationalPhoneNumber || place.internationalPhoneNumber ) ) {
-							phoneEl.value = place.nationalPhoneNumber || place.internationalPhoneNumber;
-							filled.push( 'phone' );
-						}
-
-						var websiteEl = form.querySelector( '#lis_listing_website' );
-						if ( websiteEl && place.websiteURI ) {
-							websiteEl.value = place.websiteURI;
-							filled.push( 'website' );
-						}
-
-						if ( place.regularOpeningHours && place.regularOpeningHours.periods ) {
-							fillHours( form, place.regularOpeningHours.periods );
-							filled.push( 'hours' );
-						}
-
-						// Intuitive confirmation of what we pulled from Google, so
-						// it's obvious the fields are prefilled (and editable) — vs
-						// staying quiet if they'd rather enter everything themselves.
-						hint.hidden = true;
-						confirm.hidden = false;
-						confirm.textContent = filled.length
-							? '✓ Pulled from Google: ' + filled.join( ', ' ) + '. Everything’s editable as you go — change anything that isn’t right.'
-							: '✓ Found on Google. Fill in the rest below — everything’s editable.';
-					} );
+			function highlight( i ) {
+				activeIndex = i;
+				Array.prototype.forEach.call( menu.children, function ( li, idx ) {
+					li.classList.toggle( 'is-active', idx === i );
 				} );
-			} );
-		}
+			}
 
-		// One merged flow, no fork: the Google search always shows on the
-		// business-name step. Pick a result and we fill the details for you;
-		// ignore it and just type, and everything stays yours to enter by hand.
-		insertSearch();
+			function select( i ) {
+				var prediction = items[ i ] && items[ i ].placePrediction;
+				if ( ! prediction ) {
+					return;
+				}
+				closeMenu();
+				var place = prediction.toPlace();
+				place.fetchFields( {
+					fields: [ 'displayName', 'formattedAddress', 'internationalPhoneNumber', 'nationalPhoneNumber', 'websiteURI', 'regularOpeningHours' ],
+				} ).then( function () {
+					var filled = [];
+
+					if ( place.displayName ) {
+						nameInput.value = place.displayName;
+					}
+
+					var addressEl = form.querySelector( '#lis_listing_address' );
+					if ( addressEl && place.formattedAddress ) {
+						addressEl.value = place.formattedAddress;
+						filled.push( 'address' );
+					}
+
+					var phoneEl = form.querySelector( '#lis_listing_phone' );
+					if ( phoneEl && ( place.nationalPhoneNumber || place.internationalPhoneNumber ) ) {
+						phoneEl.value = place.nationalPhoneNumber || place.internationalPhoneNumber;
+						filled.push( 'phone' );
+					}
+
+					var websiteEl = form.querySelector( '#lis_listing_website' );
+					if ( websiteEl && place.websiteURI ) {
+						websiteEl.value = place.websiteURI;
+						filled.push( 'website' );
+					}
+
+					if ( place.regularOpeningHours && place.regularOpeningHours.periods ) {
+						fillHours( form, place.regularOpeningHours.periods );
+						filled.push( 'hours' );
+					}
+
+					confirm.hidden = false;
+					confirm.textContent = filled.length
+						? '✓ Pulled from Google: ' + filled.join( ', ' ) + '. Everything’s editable as you go.'
+						: '✓ Found on Google. Fill in the rest below — everything’s editable.';
+
+					// A selection ends the billing session; start a fresh token.
+					token = new places.AutocompleteSessionToken();
+				} );
+			}
+
+			function render() {
+				menu.innerHTML = '';
+				if ( ! items.length ) {
+					closeMenu();
+					return;
+				}
+				items.forEach( function ( suggestion, i ) {
+					var prediction = suggestion.placePrediction;
+					var li = document.createElement( 'li' );
+					li.className = 'lis-listing-place-ac-item';
+					li.setAttribute( 'role', 'option' );
+
+					var mainText = prediction.mainText ? prediction.mainText.text : ( prediction.text ? prediction.text.text : '' );
+					var subText = prediction.secondaryText ? prediction.secondaryText.text : '';
+
+					var main = document.createElement( 'span' );
+					main.className = 'lis-listing-place-ac-main';
+					main.textContent = mainText;
+					li.appendChild( main );
+
+					if ( subText ) {
+						var sub = document.createElement( 'span' );
+						sub.className = 'lis-listing-place-ac-sub';
+						sub.textContent = subText;
+						li.appendChild( sub );
+					}
+
+					li.addEventListener( 'mousedown', function ( e ) {
+						e.preventDefault(); // keep focus so the selection sticks
+						select( i );
+					} );
+					menu.appendChild( li );
+				} );
+				activeIndex = -1;
+				menu.hidden = false;
+			}
+
+			function fetchSuggestions( input ) {
+				places.AutocompleteSuggestion.fetchAutocompleteSuggestions( {
+					input: input,
+					sessionToken: token,
+				} ).then( function ( response ) {
+					items = ( response && response.suggestions ? response.suggestions : [] ).filter( function ( s ) {
+						return s.placePrediction;
+					} );
+					render();
+				} ).catch( function () {
+					closeMenu();
+				} );
+			}
+
+			nameInput.addEventListener( 'input', function () {
+				confirm.hidden = true;
+				var value = nameInput.value.trim();
+				window.clearTimeout( debounceTimer );
+				if ( value.length < 3 ) {
+					closeMenu();
+					return;
+				}
+				debounceTimer = window.setTimeout( function () {
+					fetchSuggestions( value );
+				}, 220 );
+			} );
+
+			nameInput.addEventListener( 'keydown', function ( e ) {
+				if ( menu.hidden || ! items.length ) {
+					return;
+				}
+				if ( 'ArrowDown' === e.key ) {
+					e.preventDefault();
+					highlight( ( activeIndex + 1 ) % items.length );
+				} else if ( 'ArrowUp' === e.key ) {
+					e.preventDefault();
+					highlight( ( activeIndex - 1 + items.length ) % items.length );
+				} else if ( 'Enter' === e.key && activeIndex >= 0 ) {
+					e.preventDefault();
+					select( activeIndex );
+				} else if ( 'Escape' === e.key ) {
+					closeMenu();
+				}
+			} );
+
+			document.addEventListener( 'click', function ( e ) {
+				if ( ! wrap.contains( e.target ) ) {
+					closeMenu();
+				}
+			} );
+		} );
 	} );
 };

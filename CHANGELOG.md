@@ -7,6 +7,26 @@ This file is the authoritative project history.
 
 ---
 
+## [0.33.2] — 2026-08-09 — Business-name step: one box, not two
+
+The merged Google flow (0.32.1) still rendered two fields: Google's
+`PlaceAutocompleteElement` is a self-contained web component with its own input,
+so it sat as a separate "Search for your business" box above the real
+business-name field. Rewrote the autocomplete to the new **programmatic** Places
+API (`AutocompleteSuggestion.fetchAutocompleteSuggestions` +
+`AutocompleteSessionToken`), which lets us hang a **custom suggestions dropdown**
+directly off `#lis_listing_business_name` — one box: type, pick a Google match
+to auto-fill address/phone/website/hours (with the "✓ Pulled from Google…"
+confirmation), or just keep typing to enter it manually. Debounced (220ms, 3+
+chars), keyboard nav (↑/↓/Enter/Esc), session-token billing, and a graceful
+no-op if the programmatic API isn't available.
+
+**Files:** assets/js/listing-places-autocomplete.js (rewrite), includes/listings-submission.php
+(placeholder on the input), assets/css/listings.css (dropdown + confirmation),
+lis-directory.php, readme.txt.
+
+---
+
 ## [0.33.1] — 2026-08-09 — Featured as a monthly/annual subscription (real annual price)
 
 The Featured tier was a simple one-price product, so the plan step showed the
