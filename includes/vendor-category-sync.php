@@ -16,9 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'created_lis_listing_category', 'lis_directory_mirror_listing_category', 10, 1 );
-add_action( 'edited_lis_listing_category', 'lis_directory_mirror_listing_category', 10, 1 );
-add_action( 'delete_lis_listing_category', 'lis_directory_mirror_delete_listing_category', 10, 4 );
+// The category-mirroring approach (a lis_vendor_category per listing category)
+// was retired: it created hundreds of exclusive slots + product variations and
+// bogged wp-admin down. The Showcase now uses the listing's own category
+// directly (single product; see the model rework). The live mirror hooks are
+// intentionally NOT registered anymore; this file keeps the cleanup tool that
+// removes the stray auto-created categories + the bloated product.
+add_action( 'admin_post_lis_directory_showcase_cleanup', 'lis_directory_handle_showcase_cleanup' );
 
 /**
  * One-time (per install) reconcile so existing listing categories get mirrored
@@ -143,4 +147,57 @@ function lis_directory_is_listing_category_showcase_taken( $listing_term_id ) {
  */
 function lis_directory_vendor_category_for_listing_category( $listing_term_id ) {
 	return lis_directory_mirror_listing_category( $listing_term_id );
+}
+
+/* ------------------------------------------------------------------ *
+ * Cleanup: undo the retired category-mirror — delete the stray empty  *
+ * vendor categories and trash the bloated per-category Showcase        *
+ * product, so the model can move to a single Showcase product.         *
+ * ------------------------------------------------------------------ */
+
+/**
+ * @return array { deleted_categories:int, kept_categories:int, trashed_product:int }
+ */
+function lis_directory_showcase_cleanup() {
+	$deleted = 0;
+	$kept    = 0;
+	$terms   = get_terms( array( 'taxonomy' => 'lis_vendor_category', 'hide_empty' => false ) );
+	if ( ! is_wp_error( $terms ) ) {
+		foreach ( $terms as $term ) {
+			// Only remove empty ones (no vendor assigned), so an active showcase
+			// vendor never loses its category.
+			if ( 0 === (int) $term->count ) {
+				wp_delete_term( $term->term_id, 'lis_vendor_category' );
+				$deleted++;
+			} else {
+				$kept++;
+			}
+		}
+	}
+
+	// Trash the bloated per-category Showcase product; the single-product model
+	// creates a fresh one. Also clear the sync flag.
+	$trashed = 0;
+	if ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ) {
+		$pid = lis_directory_get_vendor_showcase_product_id();
+		if ( $pid ) {
+			wp_trash_post( $pid );
+			$trashed = (int) $pid;
+		}
+	}
+	delete_option( 'lis_directory_vendor_cat_synced' );
+
+	return array( 'deleted_categories' => $deleted, 'kept_categories' => $kept, 'trashed_product' => $trashed );
+}
+
+function lis_directory_handle_showcase_cleanup() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'Not allowed.' );
+	}
+	check_admin_referer( 'lis_directory_showcase_cleanup', 'lis_sc_nonce' );
+	$r        = lis_directory_showcase_cleanup();
+	$redirect = admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' );
+	$redirect = add_query_arg( array( 'lis_sc' => 'done', 'lis_sc_d' => (int) $r['deleted_categories'], 'lis_sc_k' => (int) $r['kept_categories'] ), $redirect );
+	wp_safe_redirect( $redirect );
+	exit;
 }

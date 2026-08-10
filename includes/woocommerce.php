@@ -213,6 +213,24 @@ function lis_directory_render_settings_page() {
 		</form>
 
 		<hr />
+		<h2>Showcase category cleanup</h2>
+		<?php if ( isset( $_GET['lis_sc'] ) && 'done' === $_GET['lis_sc'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only. ?>
+			<div class="notice notice-success inline"><p>Cleanup done &mdash; removed <?php echo isset( $_GET['lis_sc_d'] ) ? (int) $_GET['lis_sc_d'] : 0; ?> empty vendor categories (kept <?php echo isset( $_GET['lis_sc_k'] ) ? (int) $_GET['lis_sc_k'] : 0; ?> in use) and trashed the old per-category Showcase product.</p></div>
+		<?php endif; ?>
+		<p class="description" style="max-width:640px;">
+			Undo the retired "mirror every listing category as a Showcase slot" experiment:
+			deletes the stray empty <code>lis_vendor_category</code> terms and trashes the
+			bloated per-category Showcase product (any category still held by an active
+			vendor is kept). The Showcase then moves to a single product that uses the
+			listing's own category. Safe to run once.
+		</p>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('Delete empty vendor categories and trash the old per-category Showcase product? Active showcase vendors are kept.');">
+			<input type="hidden" name="action" value="lis_directory_showcase_cleanup" />
+			<?php wp_nonce_field( 'lis_directory_showcase_cleanup', 'lis_sc_nonce' ); ?>
+			<?php submit_button( 'Run Showcase category cleanup', 'secondary', 'submit', false ); ?>
+		</form>
+
+		<hr />
 		<h2>Directorist → LIS migration</h2>
 		<?php
 		$dm_stats = function_exists( 'lis_directory_migration_stats' ) ? lis_directory_migration_stats() : array( 'exists' => false, 'total' => 0, 'migrated' => 0 );

@@ -7,6 +7,20 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.2] — 2026-08-09 — Retire category-mirror + cleanup tool
+
+User chose the single-product Showcase model. Removed the live category-mirror
+hooks entirely and added `lis_directory_showcase_cleanup()` + a "Showcase category
+cleanup" settings button: deletes empty `lis_vendor_category` terms (keeps any
+held by an active vendor) and trashes the bloated per-category Showcase product,
+clearing the ground for a single Showcase product that uses the listing's own
+category. The mirror helper functions remain but are unhooked/dead.
+
+**Files:** includes/vendor-category-sync.php, includes/woocommerce.php (settings
+button), lis-directory.php, readme.txt.
+
+---
+
 ## [0.36.1] — 2026-08-09 — Hotfix: category reconcile was too heavy
 
 0.36.0's `admin_init` reconcile mirrored all 233 listing categories and re-ran
