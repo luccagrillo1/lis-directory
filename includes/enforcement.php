@@ -124,7 +124,11 @@ function lis_directory_is_valid_directorist_url( $url ) {
 		return false;
 	}
 
-	return 'at_biz_dir' === get_post_type( $post_id ) && 'publish' === get_post_status( $post_id );
+	// Accept either a Directorist listing (`at_biz_dir`) or one of the plugin's
+	// own self-hosted listings (`lis_listing`) — the unified wizard's Vendor
+	// Showcase path links the vendor to the `lis_listing` it just created.
+	$type = get_post_type( $post_id );
+	return 'publish' === get_post_status( $post_id ) && ( 'at_biz_dir' === $type || 'lis_listing' === $type );
 }
 
 /**

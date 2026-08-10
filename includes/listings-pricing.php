@@ -97,7 +97,45 @@ function lis_directory_listing_tier_for_product( $product_id ) {
 	if ( $product_id === (int) get_option( 'lis_directory_featured_listing_product_id' ) ) {
 		return 'featured';
 	}
+	if ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) && $product_id === lis_directory_get_vendor_showcase_product_id() ) {
+		return 'showcase';
+	}
 	return '';
+}
+
+/**
+ * The Vendor Showcase variation for a given category + billing (its variations
+ * are tagged with `_lis_pv_category_term_id` + `_lis_pv_billing_period`). 0 if
+ * none exists.
+ */
+function lis_directory_get_showcase_variation( $term_id, $billing ) {
+	if ( ! function_exists( 'lis_directory_get_variations_for_category' ) ) {
+		return 0;
+	}
+	$want = ( 'year' === $billing ) ? 'year' : 'month';
+	foreach ( lis_directory_get_variations_for_category( $term_id ) as $vid ) {
+		if ( get_post_meta( $vid, '_lis_pv_billing_period', true ) === $want ) {
+			return (int) $vid;
+		}
+	}
+	return 0;
+}
+
+/**
+ * The pending/active lis_preferred_vendor entry created for a given listing by
+ * the unified wizard's Vendor Showcase path (linked via `_lis_pv_listing_id`).
+ */
+function lis_directory_get_vendor_for_listing( $listing_id ) {
+	$ids = get_posts( array(
+		'post_type'      => 'lis_preferred_vendor',
+		'post_status'    => 'any',
+		'posts_per_page' => 1,
+		'fields'         => 'ids',
+		'meta_query'     => array(
+			array( 'key' => '_lis_pv_listing_id', 'value' => (int) $listing_id ),
+		),
+	) );
+	return $ids ? (int) $ids[0] : 0;
 }
 
 function lis_directory_add_listing_id_to_cart_item( $cart_item_data, $product_id ) {
@@ -165,10 +203,41 @@ function lis_directory_resolve_plan_variation( $product_id, $billing ) {
  * free pending flow in that case, so the form keeps working while the products
  * are still draft/unpriced.
  */
-function lis_directory_build_listing_checkout_url( $tier, $billing, $listing_id ) {
+function lis_directory_build_listing_checkout_url( $tier, $billing, $listing_id, $category_term_id = 0 ) {
 	if ( ! function_exists( 'wc_get_checkout_url' ) ) {
 		return '';
 	}
+
+	// Vendor Showcase: a category-scoped subscription. The variation for a
+	// taken category is out of stock, so this returns '' (can't buy) and the
+	// caller falls back — exclusivity is enforced at the product level.
+	if ( 'showcase' === $tier ) {
+		$product_id = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
+		if ( ! $product_id || ! $category_term_id ) {
+			return '';
+		}
+		$product = wc_get_product( $product_id );
+		if ( ! $product || 'publish' !== $product->get_status() ) {
+			return '';
+		}
+		$variation_id = lis_directory_get_showcase_variation( $category_term_id, $billing );
+		if ( ! $variation_id ) {
+			return '';
+		}
+		$variation = wc_get_product( $variation_id );
+		if ( ! $variation || ! $variation->is_purchasable() || ! $variation->is_in_stock() ) {
+			return '';
+		}
+		$term = get_term( $category_term_id, 'lis_vendor_category' );
+		return add_query_arg( array(
+			'add-to-cart'               => $product_id,
+			'variation_id'              => $variation_id,
+			'attribute_vendor-category' => $term && ! is_wp_error( $term ) ? html_entity_decode( $term->name, ENT_QUOTES ) : '',
+			'attribute_billing'         => ( 'year' === $billing ) ? 'Annually' : 'Monthly',
+			'lis_listing_id'            => (int) $listing_id,
+		), wc_get_checkout_url() );
+	}
+
 	$product_id = ( 'featured' === $tier )
 		? (int) get_option( 'lis_directory_featured_listing_product_id' )
 		: ( function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0 );
@@ -288,6 +357,32 @@ function lis_directory_handle_featured_listing_order( $order_id ) {
 			}
 			update_post_meta( $listing_id, '_lis_listing_featured', true );
 			update_post_meta( $listing_id, '_lis_listing_featured_order_id', $linked_id );
+		}
+
+		if ( 'showcase' === $tier ) {
+			// The wizard already created the pending vendor entry; payment
+			// activates it (auto-publish parity), which shows its card and marks
+			// the category taken via the stock-sync hook.
+			$vendor_id = lis_directory_get_vendor_for_listing( $listing_id );
+			if ( $vendor_id ) {
+				$linked_id = $order_id;
+				if ( function_exists( 'wcs_get_subscriptions_for_order' ) ) {
+					$subs = wcs_get_subscriptions_for_order( $order_id );
+					if ( ! empty( $subs ) ) {
+						$linked_id = (int) reset( $subs )->get_id();
+					}
+				}
+				// Store the SUBSCRIPTION id (not the order id) so the existing
+				// cancelled/expired handler in woocommerce.php can find and expire
+				// this vendor when the subscription ends.
+				update_post_meta( $vendor_id, '_lis_pv_wc_order_id', $linked_id );
+
+				// Activate unless the category was somehow taken in the meantime
+				// (the out-of-stock guard on the variation should prevent that).
+				if ( ! function_exists( 'lis_directory_get_active_conflict' ) || ! lis_directory_get_active_conflict( $vendor_id ) ) {
+					lis_directory_set_vendor_status( $vendor_id, 'active' );
+				}
+			}
 		}
 	}
 }

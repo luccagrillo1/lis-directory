@@ -7,6 +7,48 @@ This file is the authoritative project history.
 
 ---
 
+## [0.33.0] — 2026-08-09 — Vendor Showcase folded into the one wizard (#13)
+
+Vendor Showcase is now the third selectable plan on the add-listing wizard's
+"Choose your plan" step — the whole application lives in the one wizard, no
+separate `[lis_preferred_vendor_submit]` page needed.
+
+- **Plan step:** "Vendor Showcase" appears only when its product exists and at
+  least one category slot is open. Selecting it reveals inline fields — the open
+  **category slot** (taken categories aren't listed), **tagline**, **logo**
+  (transparent PNG, required for this tier), and an optional **business card**.
+  A small JS toggles these fields + their `required` state with the plan choice.
+- **Submit:** creates the `lis_listing` as a draft (as the other tiers do) *and*
+  a **pending** `lis_preferred_vendor` entry linked to it (`_lis_pv_listing_id`,
+  `_lis_pv_link_url` = the new listing's permalink, tagline/logo/card/category/
+  contact-email reusing the existing `lis_directory_handle_logo_upload` /
+  `_business_card_upload`), then hands off to the **category-scoped subscription
+  variation** at checkout. Logo/category are validated server-side.
+- **Payment:** the order-complete hook publishes the listing and **activates**
+  the vendor (`set_vendor_status('active')`, guarded by the category-conflict
+  check), storing the subscription id in `_lis_pv_wc_order_id` so the existing
+  cancelled/expired handler can expire it later. Exclusivity holds because a
+  taken category's variation is out of stock → `build_listing_checkout_url()`
+  returns '' for it and it isn't offered.
+- **Enforcement:** `lis_directory_is_valid_directorist_url()` now also accepts a
+  published `lis_listing` (not just Directorist `at_biz_dir`), so admin
+  re-approval of a merged-flow vendor isn't blocked.
+
+The standalone `[lis_preferred_vendor_submit]` form and its post-checkout
+thank-you link still exist as a fallback for any direct product purchase, but
+the wizard is now the path.
+
+**Files:** includes/listings-submission.php (showcase card + fields + JS + vendor
+creation on submit), includes/listings-pricing.php (showcase tier recognition,
+category-variation resolver, showcase checkout URL, order-complete activation),
+includes/enforcement.php (accept lis_listing), assets/css/listings.css,
+lis-directory.php, readme.txt.
+
+**Not payment-tested** — verified the plan card, field reveal, and validation
+paths; real card checkout + auto-activation must be confirmed live.
+
+---
+
 ## [0.32.1] — 2026-08-09 — One merged business-lookup flow (no Google/manual fork)
 
 Removed the intro fork panel ("How do you want to add your listing? Find it on

@@ -1709,6 +1709,51 @@
 	font-size: 0.9em;
 }
 
+/* Extra fields revealed when "Vendor Showcase" is the chosen plan. */
+.lis-listing-showcase-fields {
+	margin-top: 22px;
+	padding: 20px;
+	border: 1px solid #e2e2e2;
+	border-radius: 12px;
+	background: #fafbf8;
+}
+
+.lis-listing-showcase-fields[hidden] {
+	display: none;
+}
+
+.lis-listing-showcase-fields p {
+	margin: 0 0 16px;
+}
+
+.lis-listing-showcase-fields p:last-child {
+	margin-bottom: 0;
+}
+
+.lis-listing-showcase-fields label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.lis-listing-showcase-fields small {
+	display: block;
+	margin-top: 5px;
+	color: #787c82;
+	font-size: 0.85em;
+}
+
+.lis-listing-showcase-fields input[type="text"],
+.lis-listing-showcase-fields select {
+	width: 100%;
+	max-width: 380px;
+	padding: 12px 14px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	font-size: 1em;
+	background: #fff;
+}
+
 .lis-listing-submit-errors {
 	background: #fbe9e9;
 	color: #a12a2a;
