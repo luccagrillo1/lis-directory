@@ -7,6 +7,38 @@ This file is the authoritative project history.
 
 ---
 
+## [0.35.0] — 2026-08-09 — Claim-by-subscription (#16)
+
+New `includes/listings-claim.php`. A listing flagged `_lis_listing_claimable`
+(a "Claim" checkbox metabox on the listing editor) shows a **Claim box** on its
+public single-listing page (`lis_directory_render_claim_box()`, injected at the
+top of `.lis-listing-main`):
+
+- Not logged in → a log-in prompt (returns to the listing).
+- Logged in → a plan picker (Standard / Featured, monthly/annual, reusing the
+  `.lis-listing-plan-*` cards + billing-toggle) → posts to `admin-post`
+  `lis_directory_claim_listing` → builds the tier checkout URL (reusing
+  `lis_directory_build_listing_checkout_url()`), tags it `lis_listing_claim=1`,
+  and redirects to checkout.
+- On payment, `lis_directory_handle_claim_order()` (order processing/completed)
+  transfers **ownership** to the buyer (`post_author`), clears the claimable
+  flag, and records `_lis_listing_claimed_by`/`_at`. The existing pricing hook
+  publishes + grants the tier in parallel — so claiming is always tied to an
+  active subscription, never free.
+
+The claim flag rides cart→order via its own `woocommerce_add_cart_item_data` /
+`woocommerce_checkout_create_order_line_item` filters, decoupled from the
+pricing plumbing.
+
+**Files:** includes/listings-claim.php (new), lis-directory.php (require +
+version), templates/single-listing.php (claim box), assets/css/listings.css,
+readme.txt.
+
+**Not payment-tested** — verified the claimable flag, box render, and login
+gate; real card claim → ownership transfer must be confirmed live.
+
+---
+
 ## [0.34.0] — 2026-08-09 — Directorist migration writer + listing expiration
 
 **Migration (#14).** `includes/directorist-migration.php` gained the real writer:

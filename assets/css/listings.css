@@ -1771,6 +1771,43 @@
 	font-size: 0.9em;
 }
 
+/* "Claim this listing" box on the single-listing page. */
+.lis-listing-claim-box {
+	margin: 0 0 28px;
+	padding: 22px 24px;
+	border: 2px solid #576846;
+	border-radius: 12px;
+	background: #f5f7f1;
+}
+
+.lis-listing-claim-box h3 {
+	margin: 0 0 6px;
+	font-size: 1.25em;
+}
+
+.lis-listing-claim-box > p {
+	margin: 0 0 16px;
+	color: #555;
+}
+
+.lis-listing-claim-box .lis-listing-plans {
+	margin-bottom: 16px;
+}
+
+.lis-listing-claim-submit {
+	padding: 12px 26px;
+	border: none;
+	border-radius: 8px;
+	background: #576846;
+	color: #fff;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.lis-listing-claim-submit:hover {
+	background: #46552f;
+}
+
 /* Extra fields revealed when "Vendor Showcase" is the chosen plan. */
 .lis-listing-showcase-fields {
 	margin-top: 22px;

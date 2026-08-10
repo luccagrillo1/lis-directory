@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.34.0
+Stable tag: 0.35.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.35.0 =
+* Claim-by-subscription: check "Allow this listing to be claimed" on a listing (admin), and its public page shows a "Is this your business? Claim it." box. A logged-in visitor picks a plan and checks out; when the order is paid, the listing's ownership transfers to them and the plan tier is granted — so a claim always comes with an active subscription. Not-logged-in visitors get a log-in prompt.
 
 = 0.34.0 =
 * Directorist migration is now buildable end-to-end: a "Run migration" tool maps each at_biz_dir listing to a lis_listing, preserving the owner, expiration date, category, photos, phone/email/website/address, and featured status (idempotent — safe to re-run). A dry-run "Preview mapping" shows exactly what would be created first. Nothing runs automatically.
