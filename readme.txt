@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.31.13
+Stable tag: 0.32.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.32.0 =
+* The add-listing wizard now ends with a "Choose your plan" step (Standard / Featured, monthly or annually) and hands off to WooCommerce checkout; the listing auto-publishes when the order completes, and a post-payment thank-you shows on the order-received page.
+* Safety net: until the Standard/Featured products are published + priced, submitting still works exactly as before (free, lands Pending) — so nothing breaks mid-setup.
+* Set Standard placeholder pricing to $9/mo, $90/yr (edit in WooCommerce). Vendor Showcase stays its own exclusive per-category flow (linked from the plan step).
 
 = 0.31.13 =
 * Added a "Standard Listing product" generator in LIS Directory Settings — a monthly/annual subscription base tier (placeholder prices you edit in WooCommerce). First piece of moving every listing through checkout.

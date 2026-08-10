@@ -7,6 +7,44 @@ This file is the authoritative project history.
 
 ---
 
+## [0.32.0] — 2026-08-09 — Unified paid submission: plan step → checkout → auto-publish
+
+Implements the all-paid model (#4b–#4d) for the Standard and Featured tiers:
+
+- **#4b — plan step.** `[lis_listing_submit]` gains a final "Choose your plan"
+  panel: a Monthly/Annually toggle and one card per tier whose product exists
+  (Standard, Featured), each showing the live price for the selected billing
+  (JS swaps month/year). Plan choice is required. Vendor Showcase is linked from
+  here (its exclusive per-category flow stays separate — full merge is later).
+- **#4c — submit → checkout.** When the chosen tier's product is published and
+  purchasable, the listing is created as a **draft** ("awaiting payment"),
+  tagged `_lis_listing_pending_tier`/`_billing`, and the buyer is redirected to
+  WooCommerce checkout with that product/variation in the cart (tagged with the
+  listing id, reusing the existing Featured add-to-cart→order-item pattern,
+  generalised to all tier products).
+- **#4d — order complete.** `woocommerce_order_status_processing|completed` now
+  **auto-publishes** the draft listing for any tier product and grants Featured
+  when that's the tier; `woocommerce_thankyou` shows a post-payment confirmation
+  ("…is now live in the directory", View my listing / Browse).
+
+**Safety fallback:** if the tier's product isn't published/purchasable yet
+(they're generated as drafts), `lis_directory_build_listing_checkout_url()`
+returns '' and submission falls back to the **original free pending** flow — so
+the live form keeps working while prices/publishing are still being set up.
+
+Standard placeholder price set to $9/mo · $90/yr.
+
+**Files:** includes/listings-pricing.php (tier resolver, checkout URL, generalised
+cart tag + order-publish + thank-you), includes/listings-submission.php (plan step +
+submit branch), assets/css/listings.css (plan cards), lis-directory.php, readme.txt.
+
+**Not payment-tested** — no real transaction was run. Verified: plan step renders,
+required-plan gating, and the free fallback. Real card checkout + auto-publish
+must be confirmed live once the products are published. Vendor Showcase full
+in-wizard merge (its logo/tagline/business-card + category slot) is still to do.
+
+---
+
 ## [0.31.13] — 2026-08-09 — Standard Listing product (base paid tier) — groundwork for the all-paid unified checkout
 
 Decision (with Lucca): every listing becomes paid, all three tiers hand off to

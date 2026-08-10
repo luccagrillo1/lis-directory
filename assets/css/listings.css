@@ -1617,6 +1617,89 @@
 	color: #46552f;
 }
 
+/* "Choose your plan" final wizard step. */
+.lis-listing-plan-billing {
+	display: flex;
+	gap: 20px;
+	margin-bottom: 20px;
+	font-weight: 600;
+}
+
+.lis-listing-plan-billing label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+}
+
+.lis-listing-plan-save {
+	font-weight: 500;
+	font-size: 0.82em;
+	color: #576846;
+	background: #eef1e8;
+	padding: 2px 8px;
+	border-radius: 999px;
+}
+
+.lis-listing-plans {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 14px;
+}
+
+.lis-listing-plan-card {
+	display: block;
+	position: relative;
+	border: 2px solid #e2e2e2;
+	border-radius: 12px;
+	padding: 20px 18px;
+	cursor: pointer;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lis-listing-plan-card:hover {
+	border-color: #b9c4a8;
+}
+
+.lis-listing-plan-card:has(input:checked) {
+	border-color: #576846;
+	box-shadow: 0 0 0 3px rgba(87, 104, 70, 0.15);
+}
+
+.lis-listing-plan-card input[type="radio"] {
+	position: absolute;
+	top: 16px;
+	right: 16px;
+}
+
+.lis-listing-plan-name {
+	display: block;
+	font-weight: 700;
+	font-size: 1.15em;
+	margin-bottom: 4px;
+}
+
+.lis-listing-plan-price {
+	display: block;
+	font-size: 1.35em;
+	font-weight: 700;
+	color: #576846;
+	margin-bottom: 8px;
+}
+
+.lis-listing-plan-blurb {
+	display: block;
+	color: #666;
+	font-size: 0.9em;
+	line-height: 1.5;
+}
+
+.lis-listing-plan-showcase-note {
+	margin-top: 18px;
+	color: #666;
+	font-size: 0.9em;
+}
+
 .lis-listing-submit-errors {
 	background: #fbe9e9;
 	color: #a12a2a;

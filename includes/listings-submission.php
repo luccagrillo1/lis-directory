@@ -284,7 +284,69 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			</p>
 		</div>
 
-		<p class="lis-listing-real-submit"><button type="submit" class="lis-listing-submit-button">Submit for Review</button></p>
+		<?php
+		$std_pid  = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
+		$feat_pid = (int) get_option( 'lis_directory_featured_listing_product_id' );
+		$plan_tiers = array();
+		if ( $std_pid ) {
+			$plan_tiers['standard'] = array( 'label' => 'Standard', 'blurb' => 'Your business listed in the directory.', 'pid' => $std_pid );
+		}
+		if ( $feat_pid ) {
+			$plan_tiers['featured'] = array( 'label' => 'Featured', 'blurb' => 'A Featured badge and priority placement.', 'pid' => $feat_pid );
+		}
+		$fmt_price = function ( $price ) {
+			if ( null === $price || '' === $price ) {
+				return '—';
+			}
+			return function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $price ) ) : ( '$' . $price );
+		};
+		if ( ! empty( $plan_tiers ) ) :
+			?>
+			<div class="lis-listing-panel" data-panel-section="Your plan" data-panel-question="Choose your plan">
+				<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Billing">
+					<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
+					<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
+				</div>
+				<div class="lis-listing-plans">
+					<?php foreach ( $plan_tiers as $key => $t ) :
+						$m = lis_directory_resolve_plan_variation( $t['pid'], 'month' );
+						$y = lis_directory_resolve_plan_variation( $t['pid'], 'year' );
+						?>
+						<label class="lis-listing-plan-card">
+							<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" required />
+							<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
+							<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt_price( $m['price'] ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt_price( $y['price'] ) . '/yr' ); ?>"><?php echo esc_html( $fmt_price( $m['price'] ) ); ?>/mo</span>
+							<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
+						</label>
+					<?php endforeach; ?>
+				</div>
+				<?php
+				$vs_pid = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
+				$vs_url = $vs_pid ? get_permalink( $vs_pid ) : '';
+				if ( $vs_url ) :
+					?>
+					<p class="lis-listing-plan-showcase-note">Want the exclusive one-per-category slot? Check out the <a href="<?php echo esc_url( $vs_url ); ?>">Vendor Showcase</a>.</p>
+				<?php endif; ?>
+			</div>
+			<script>
+			( function () {
+				var form = document.currentScript.closest( 'form' );
+				if ( ! form ) { return; }
+				function sync() {
+					var billing = ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month';
+					form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
+						el.textContent = 'year' === billing ? el.dataset.priceYear : el.dataset.priceMonth;
+					} );
+				}
+				form.querySelectorAll( 'input[name="lis_listing_billing"]' ).forEach( function ( r ) {
+					r.addEventListener( 'change', sync );
+				} );
+				sync();
+			}() );
+			</script>
+		<?php endif; ?>
+
+		<p class="lis-listing-real-submit"><button type="submit" class="lis-listing-submit-button">Submit</button></p>
 	</form>
 	<?php
 	return ob_get_clean();
@@ -358,11 +420,20 @@ function lis_directory_handle_listing_submission() {
 		exit;
 	}
 
+	// Chosen plan (final wizard step). If the tier's product is live/purchasable
+	// we route through WooCommerce checkout and the listing starts as a draft
+	// "awaiting payment" (auto-published by the order-complete hook). If no
+	// purchasable product is configured yet, fall back to the original free
+	// pending flow so the form keeps working while products are still draft.
+	$plan         = isset( $_POST['lis_listing_plan'] ) ? sanitize_key( wp_unslash( $_POST['lis_listing_plan'] ) ) : '';
+	$billing      = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
+	$can_checkout = ( $plan && function_exists( 'lis_directory_build_listing_checkout_url' ) && '' !== lis_directory_build_listing_checkout_url( $plan, $billing, 0 ) );
+
 	$post_id = wp_insert_post( array(
 		'post_type'      => 'lis_listing',
 		'post_title'     => $business_name,
 		'post_content'   => $description,
-		'post_status'    => 'pending', // Native WP pending — reviewed/published from the normal admin editor.
+		'post_status'    => $can_checkout ? 'draft' : 'pending', // draft = awaiting payment; pending = free fallback reviewed in admin.
 		'post_author'    => get_current_user_id(),
 		'comment_status' => 'open', // Explicit, not left to the site-wide Discussion default — a listing with reviews turned off has a permanently empty, unusable Reviews section (see Talus Rock Retreat, which predated this and needed a one-time fix).
 	), true );
@@ -400,6 +471,18 @@ function lis_directory_handle_listing_submission() {
 	lis_directory_save_submitted_hours( $post_id );
 	lis_directory_save_submitted_features( $post_id );
 
+	if ( $can_checkout ) {
+		update_post_meta( $post_id, '_lis_listing_pending_tier', $plan );
+		update_post_meta( $post_id, '_lis_listing_pending_billing', $billing );
+		$checkout_url = lis_directory_build_listing_checkout_url( $plan, $billing, $post_id );
+		if ( $checkout_url ) {
+			wp_safe_redirect( $checkout_url );
+			exit;
+		}
+	}
+
+	// Free fallback (no purchasable product configured yet): the original
+	// pending-listing + immediate thank-you behaviour.
 	wp_safe_redirect( add_query_arg( 'lis_listing_submitted', '1', $redirect_base ) );
 	exit;
 }

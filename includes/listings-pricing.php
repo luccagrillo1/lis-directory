@@ -56,6 +56,7 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	add_action( 'woocommerce_checkout_create_order_line_item', 'lis_directory_persist_listing_id_to_order_item', 10, 4 );
 	add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );
+	add_action( 'woocommerce_thankyou', 'lis_directory_listing_order_thankyou' );
 	add_action( 'admin_post_lis_directory_generate_standard_listing', 'lis_directory_handle_generate_standard_listing' );
 
 	if ( class_exists( 'WC_Subscriptions' ) ) {
@@ -81,9 +82,26 @@ function lis_directory_get_feature_listing_url( $listing_id ) {
 	), wc_get_cart_url() );
 }
 
+/**
+ * Which listing tier (if any) a WooCommerce product represents. '' for a
+ * product that isn't one of the listing tiers.
+ */
+function lis_directory_listing_tier_for_product( $product_id ) {
+	$product_id = (int) $product_id;
+	if ( ! $product_id ) {
+		return '';
+	}
+	if ( function_exists( 'lis_directory_get_standard_listing_product_id' ) && $product_id === lis_directory_get_standard_listing_product_id() ) {
+		return 'standard';
+	}
+	if ( $product_id === (int) get_option( 'lis_directory_featured_listing_product_id' ) ) {
+		return 'featured';
+	}
+	return '';
+}
+
 function lis_directory_add_listing_id_to_cart_item( $cart_item_data, $product_id ) {
-	$configured_id = (int) get_option( 'lis_directory_featured_listing_product_id' );
-	if ( $configured_id !== (int) $product_id ) {
+	if ( ! lis_directory_listing_tier_for_product( (int) $product_id ) ) {
 		return $cart_item_data;
 	}
 	$listing_id = isset( $_REQUEST['lis_listing_id'] ) ? absint( $_REQUEST['lis_listing_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only cart-item tag, ownership is re-checked at order-completion time before anything is granted.
@@ -91,6 +109,87 @@ function lis_directory_add_listing_id_to_cart_item( $cart_item_data, $product_id
 		$cart_item_data['lis_listing_id'] = $listing_id;
 	}
 	return $cart_item_data;
+}
+
+/**
+ * Resolve a tier product's monthly/annual variation for a given billing. For a
+ * simple (non-variable) product it returns just the price. Recognises the
+ * Standard product's `_lis_standard_billing_period` marker, the Showcase's
+ * `_lis_pv_billing_period`, and a plain `attribute_billing` (Monthly/Annually).
+ *
+ * @return array { variation_id:int, price:string|null, attr:string }
+ */
+function lis_directory_resolve_plan_variation( $product_id, $billing ) {
+	$out     = array( 'variation_id' => 0, 'price' => null, 'attr' => '' );
+	$product = function_exists( 'wc_get_product' ) ? wc_get_product( $product_id ) : null;
+	if ( ! $product ) {
+		return $out;
+	}
+	if ( ! $product->is_type( array( 'variable', 'variable-subscription' ) ) ) {
+		$out['price'] = $product->get_price();
+		return $out;
+	}
+
+	$want = ( 'year' === $billing ) ? 'year' : 'month';
+	$first = 0;
+	foreach ( $product->get_children() as $child_id ) {
+		if ( ! $first ) {
+			$first = $child_id;
+		}
+		$std  = get_post_meta( $child_id, '_lis_standard_billing_period', true );
+		$vs   = get_post_meta( $child_id, '_lis_pv_billing_period', true );
+		$attr = get_post_meta( $child_id, 'attribute_billing', true );
+		$period = $std ? $std : ( $vs ? $vs : ( 'Annually' === $attr ? 'year' : ( 'Monthly' === $attr ? 'month' : '' ) ) );
+		if ( $period === $want ) {
+			$v = wc_get_product( $child_id );
+			return array(
+				'variation_id' => (int) $child_id,
+				'price'        => $v ? $v->get_price() : null,
+				'attr'         => ( 'year' === $want ) ? 'Annually' : 'Monthly',
+			);
+		}
+	}
+	if ( $first ) {
+		$v = wc_get_product( $first );
+		$out['variation_id'] = (int) $first;
+		$out['price']        = $v ? $v->get_price() : null;
+		$out['attr']         = get_post_meta( $first, 'attribute_billing', true );
+	}
+	return $out;
+}
+
+/**
+ * Build the URL that adds a tier's product to the cart (tagged with the listing
+ * it's for) and lands the buyer on checkout. Returns '' when the tier's product
+ * isn't configured, published, or purchasable yet — callers fall back to the
+ * free pending flow in that case, so the form keeps working while the products
+ * are still draft/unpriced.
+ */
+function lis_directory_build_listing_checkout_url( $tier, $billing, $listing_id ) {
+	if ( ! function_exists( 'wc_get_checkout_url' ) ) {
+		return '';
+	}
+	$product_id = ( 'featured' === $tier )
+		? (int) get_option( 'lis_directory_featured_listing_product_id' )
+		: ( function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0 );
+	if ( ! $product_id ) {
+		return '';
+	}
+	$product = wc_get_product( $product_id );
+	if ( ! $product || 'publish' !== $product->get_status() || ! $product->is_purchasable() ) {
+		return '';
+	}
+
+	$args = array(
+		'add-to-cart'    => $product_id,
+		'lis_listing_id' => (int) $listing_id,
+	);
+	$var = lis_directory_resolve_plan_variation( $product_id, $billing );
+	if ( $var['variation_id'] ) {
+		$args['variation_id']      = $var['variation_id'];
+		$args['attribute_billing'] = $var['attr'];
+	}
+	return add_query_arg( $args, wc_get_checkout_url() );
 }
 
 /**
@@ -149,8 +248,7 @@ function lis_directory_persist_listing_id_to_order_item( $item, $cart_item_key, 
  * firing twice for the same order (once per status transition) is harmless.
  */
 function lis_directory_handle_featured_listing_order( $order_id ) {
-	$configured_id = (int) get_option( 'lis_directory_featured_listing_product_id' );
-	if ( ! $configured_id || ! $order_id ) {
+	if ( ! $order_id ) {
 		return;
 	}
 	$order = wc_get_order( $order_id );
@@ -159,31 +257,83 @@ function lis_directory_handle_featured_listing_order( $order_id ) {
 	}
 
 	foreach ( $order->get_items() as $item ) {
-		if ( (int) $item->get_product_id() !== $configured_id ) {
-			continue;
-		}
 		$listing_id = (int) $item->get_meta( '_lis_listing_id' );
 		if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) ) {
 			continue;
 		}
-
-		// Same subscription-vs-order linking as Vendor Showcase: store the
-		// subscription ID when this order started one, so the cancelled/
-		// expired hook (which only knows the subscription) can find its way
-		// back here. A one-time purchase just stores the order ID and stays
-		// featured indefinitely — no automatic expiry for those (see
-		// CHANGELOG known limitation).
-		$linked_id = $order_id;
-		if ( function_exists( 'wcs_get_subscriptions_for_order' ) ) {
-			$subscriptions = wcs_get_subscriptions_for_order( $order_id );
-			if ( ! empty( $subscriptions ) ) {
-				$linked_id = (int) reset( $subscriptions )->get_id();
-			}
+		$tier = lis_directory_listing_tier_for_product( (int) $item->get_product_id() );
+		if ( ! $tier ) {
+			continue;
 		}
 
-		update_post_meta( $listing_id, '_lis_listing_featured', true );
-		update_post_meta( $listing_id, '_lis_listing_featured_order_id', $linked_id );
+		// Auto-publish the listing on payment — it was created as a draft
+		// "awaiting payment" by the submission wizard. (A listing that was
+		// already published, e.g. an existing one being upgraded to Featured
+		// from the dashboard, is left as-is.)
+		if ( in_array( get_post_status( $listing_id ), array( 'draft', 'pending', 'auto-draft' ), true ) ) {
+			wp_update_post( array( 'ID' => $listing_id, 'post_status' => 'publish' ) );
+		}
+		update_post_meta( $listing_id, '_lis_listing_paid_order_id', $order_id );
+
+		if ( 'featured' === $tier ) {
+			// Store the subscription ID when this order started one, so the
+			// cancelled/expired hook (which only knows the subscription) can
+			// find its way back. A one-time purchase stores the order ID.
+			$linked_id = $order_id;
+			if ( function_exists( 'wcs_get_subscriptions_for_order' ) ) {
+				$subscriptions = wcs_get_subscriptions_for_order( $order_id );
+				if ( ! empty( $subscriptions ) ) {
+					$linked_id = (int) reset( $subscriptions )->get_id();
+				}
+			}
+			update_post_meta( $listing_id, '_lis_listing_featured', true );
+			update_post_meta( $listing_id, '_lis_listing_featured_order_id', $linked_id );
+		}
 	}
+}
+
+/**
+ * Post-payment confirmation on the WooCommerce order-received (thank-you) page,
+ * when the order paid for a listing. Complements the immediate thank-you that
+ * [lis_listing_submit] shows for the free fallback path.
+ */
+function lis_directory_listing_order_thankyou( $order_id ) {
+	$order = $order_id ? wc_get_order( $order_id ) : null;
+	if ( ! $order ) {
+		return;
+	}
+	$listing_id = 0;
+	foreach ( $order->get_items() as $item ) {
+		$candidate = (int) $item->get_meta( '_lis_listing_id' );
+		if ( $candidate && 'lis_listing' === get_post_type( $candidate ) && lis_directory_listing_tier_for_product( (int) $item->get_product_id() ) ) {
+			$listing_id = $candidate;
+			break;
+		}
+	}
+	if ( ! $listing_id ) {
+		return;
+	}
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	$is_live = ( 'publish' === get_post_status( $listing_id ) );
+	?>
+	<div class="lis-listing-thankyou">
+		<div class="lis-listing-thankyou-icon" aria-hidden="true">
+			<svg viewBox="0 0 52 52" width="56" height="56" role="img"><circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5" opacity="0.35"/><path fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="M16 27.5l7 7 14-16"/></svg>
+		</div>
+		<h2 class="lis-listing-thankyou-title">You're all set &mdash; thank you!</h2>
+		<p class="lis-listing-thankyou-text">
+			<?php if ( $is_live ) : ?>
+				Your payment went through and <strong><?php echo esc_html( get_the_title( $listing_id ) ); ?></strong> is now live in the directory.
+			<?php else : ?>
+				Your payment went through. <strong><?php echo esc_html( get_the_title( $listing_id ) ); ?></strong> will go live in a moment once the order finishes processing.
+			<?php endif; ?>
+		</p>
+		<div class="lis-listing-thankyou-actions">
+			<a class="lis-listing-thankyou-btn" href="<?php echo esc_url( get_permalink( $listing_id ) ); ?>">View my listing</a>
+			<a class="lis-listing-thankyou-btn lis-listing-thankyou-btn--ghost" href="<?php echo esc_url( get_post_type_archive_link( 'lis_listing' ) ); ?>">Browse the directory</a>
+		</div>
+	</div>
+	<?php
 }
 
 function lis_directory_handle_featured_listing_subscription_ended( $subscription ) {
@@ -283,8 +433,8 @@ function lis_directory_generate_standard_listing_product() {
 	}
 
 	$plans = array(
-		array( 'label' => 'Monthly',  'price' => 15,  'period' => 'month' ),
-		array( 'label' => 'Annually', 'price' => 150, 'period' => 'year' ),
+		array( 'label' => 'Monthly',  'price' => 9,  'period' => 'month' ),
+		array( 'label' => 'Annually', 'price' => 90, 'period' => 'year' ),
 	);
 
 	$added = 0;
