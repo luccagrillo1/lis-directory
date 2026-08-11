@@ -351,7 +351,14 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			if ( null === $price || '' === $price ) {
 				return '—';
 			}
-			return function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $price ) ) : ( '$' . $price );
+			// Drop the ".00" on whole-number prices (all tiers are whole dollars),
+			// but keep decimals if a price ever isn't round.
+			$is_whole = ( (float) $price == (int) round( (float) $price ) );
+			if ( ! function_exists( 'wc_price' ) ) {
+				return '$' . ( $is_whole ? (string) (int) $price : number_format( (float) $price, 2 ) );
+			}
+			$decimals = $is_whole ? 0 : wc_get_price_decimals();
+			return wp_strip_all_tags( wc_price( $price, array( 'decimals' => $decimals ) ) );
 		};
 
 		// Standard / Featured tier cards (product + monthly/annual price).

@@ -7,6 +7,14 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.6] â 2026-08-11 â Whole-dollar plan prices
+
+Plan-step prices dropped the trailing `.00` on whole-number amounts ($9/mo, not
+$9.00/mo) via the `decimals` arg to `wc_price()`; non-round prices still show
+decimals. **Files:** includes/listings-submission.php.
+
+---
+
 ## [0.36.5] â 2026-08-11 â Branding step, save-as-draft, optional assets
 
 - **Early Branding step.** Tagline + logo + business card moved out of the plan
