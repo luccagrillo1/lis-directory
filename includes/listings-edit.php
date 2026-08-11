@@ -225,6 +225,36 @@ function lis_directory_render_listing_edit_form_shortcode() {
 			</p>
 		</div>
 
+		<div class="lis-listing-panel" data-panel-section="Branding" data-panel-question="Your branding" data-panel-hint="All optional — but they unlock where your business can appear">
+			<?php
+			$edit_tagline  = get_post_meta( $listing_id, '_lis_listing_tagline', true );
+			$edit_logo_id  = (int) get_post_meta( $listing_id, '_lis_listing_logo_id', true );
+			$edit_card_id  = (int) get_post_meta( $listing_id, '_lis_listing_business_card_id', true );
+			$edit_logo_url = $edit_logo_id ? wp_get_attachment_image_url( $edit_logo_id, 'thumbnail' ) : '';
+			$edit_card_url = $edit_card_id ? wp_get_attachment_image_url( $edit_card_id, 'thumbnail' ) : '';
+			?>
+			<p>
+				<label for="lis_pv_tagline">Tagline <span class="lis-listing-optional">(optional)</span></label>
+				<input type="text" id="lis_pv_tagline" name="lis_pv_tagline" value="<?php echo esc_attr( $edit_tagline ); ?>" placeholder="e.g. For all your insurance needs" />
+			</p>
+			<p>
+				<label for="lis_pv_logo_color">Logo (transparent PNG) <span class="lis-listing-optional">(optional)</span></label>
+				<?php if ( $edit_logo_url ) : ?>
+					<span class="lis-listing-edit-asset-current"><img src="<?php echo esc_url( $edit_logo_url ); ?>" alt="Current logo" /> <label><input type="checkbox" name="lis_listing_remove_logo" value="1" /> Remove</label></span>
+				<?php endif; ?>
+				<input type="file" id="lis_pv_logo_color" name="lis_pv_logo_color" accept="image/png" />
+				<small>A transparent PNG looks cleanest. Without a logo, your business won't appear in the logo showcase.</small>
+			</p>
+			<p>
+				<label for="lis_pv_business_card">Business card <span class="lis-listing-optional">(optional)</span></label>
+				<?php if ( $edit_card_url ) : ?>
+					<span class="lis-listing-edit-asset-current"><img src="<?php echo esc_url( $edit_card_url ); ?>" alt="Current business card" /> <label><input type="checkbox" name="lis_listing_remove_business_card" value="1" /> Remove</label></span>
+				<?php endif; ?>
+				<input type="file" id="lis_pv_business_card" name="lis_pv_business_card" accept="image/png,image/jpeg" />
+				<small>Without one, your business won't appear in the business-card ticker.</small>
+			</p>
+		</div>
+
 		<div class="lis-listing-panel" data-panel-section="Business Hours" data-panel-question="When are you open?" data-panel-hint="Leave a day blank if closed">
 			<?php $no_hours = (bool) get_post_meta( $listing_id, '_lis_listing_no_hours', true ); ?>
 			<p class="lis-listing-no-hours-toggle">
@@ -340,6 +370,11 @@ function lis_directory_handle_listing_update() {
 	// New photos are optional on edit — pass required=false, unlike submission.
 	$new_photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', false, $errors );
 
+	// Branding assets — optional; a new upload replaces the stored one, a Remove
+	// checkbox clears it.
+	$new_logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', false, $errors );
+	$new_card_id = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
+
 	if ( ! empty( $errors ) ) {
 		wp_safe_redirect( add_query_arg( 'lis_listing_error', implode( ',', array_unique( $errors ) ), $redirect_base ) );
 		exit;
@@ -363,6 +398,41 @@ function lis_directory_handle_listing_update() {
 	foreach ( array( 'facebook', 'instagram', 'twitter', 'linkedin' ) as $network ) {
 		$field = "lis_listing_{$network}";
 		update_post_meta( $listing_id, "_{$field}", ! empty( $_POST[ $field ] ) ? esc_url_raw( wp_unslash( $_POST[ $field ] ) ) : '' );
+	}
+
+	// Branding: tagline + logo + business card.
+	$edit_tagline = isset( $_POST['lis_pv_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_pv_tagline'] ) ) : '';
+	update_post_meta( $listing_id, '_lis_listing_tagline', $edit_tagline );
+	if ( ! empty( $_POST['lis_listing_remove_logo'] ) ) {
+		delete_post_meta( $listing_id, '_lis_listing_logo_id' );
+	} elseif ( $new_logo_id ) {
+		update_post_meta( $listing_id, '_lis_listing_logo_id', $new_logo_id );
+	}
+	if ( ! empty( $_POST['lis_listing_remove_business_card'] ) ) {
+		delete_post_meta( $listing_id, '_lis_listing_business_card_id' );
+	} elseif ( $new_card_id ) {
+		update_post_meta( $listing_id, '_lis_listing_business_card_id', $new_card_id );
+	}
+
+	// Keep a linked Vendor Showcase entry's assets in sync, so the tickers/cards
+	// reflect edits made here (its meta uses the _lis_pv_* keys).
+	if ( function_exists( 'lis_directory_get_vendor_for_listing' ) ) {
+		$linked_vendor = lis_directory_get_vendor_for_listing( $listing_id );
+		if ( $linked_vendor ) {
+			update_post_meta( $linked_vendor, '_lis_pv_tagline', $edit_tagline );
+			$final_logo_id = (int) get_post_meta( $listing_id, '_lis_listing_logo_id', true );
+			$final_card_id = (int) get_post_meta( $listing_id, '_lis_listing_business_card_id', true );
+			if ( $final_logo_id ) {
+				update_post_meta( $linked_vendor, '_lis_pv_logo_color_id', $final_logo_id );
+			} else {
+				delete_post_meta( $linked_vendor, '_lis_pv_logo_color_id' );
+			}
+			if ( $final_card_id ) {
+				update_post_meta( $linked_vendor, '_lis_pv_business_card_id', $final_card_id );
+			} else {
+				delete_post_meta( $linked_vendor, '_lis_pv_business_card_id' );
+			}
+		}
 	}
 
 	// Gallery: remove any checked attachment IDs, then append newly uploaded ones.

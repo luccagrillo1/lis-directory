@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.4
+Stable tag: 0.36.5
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,12 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.5 =
+* Added an early, optional "Branding" step (tagline, logo, business card) to the add-listing wizard for every listing; the Vendor Showcase reuses these instead of asking again.
+* Added "Save & finish later" â saves a draft you own and lets you resume from your dashboard or the edit form (handy if you donât have a logo yet).
+* Branding is editable on the edit form (with Remove options) and stays in sync with a linked Vendor Showcase entry, so the tickers reflect edits.
+* Tagline now shows under the business name on the listing page.
 
 = 0.36.4 =
 * Vendor Showcase is now a single Monthly/Annually subscription product (no more per-category variations). The category a buyer occupies is their listingâs own category; one-active-vendor-per-category exclusivity is enforced in PHP at checkout.

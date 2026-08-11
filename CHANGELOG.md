@@ -7,6 +7,29 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.5] â 2026-08-11 â Branding step, save-as-draft, optional assets
+
+- **Early Branding step.** Tagline + logo + business card moved out of the plan
+  step into an optional "Branding" step for ALL listings (stored as
+  `_lis_listing_tagline` / `_lis_listing_logo_id` / `_lis_listing_business_card_id`).
+  Uploaded once and reused by the Vendor Showcase vendor. The plan step now just
+  points back to Branding.
+- **Save & finish later.** A draft-save button submits without validation, stores
+  whatever is present as a draft the user owns, and lands on a "Draft saved" screen
+  with a Continue-editing link. Resume via the dashboard (already lists drafts) or
+  the edit form.
+- **Branding on the edit form.** Editable with Remove options; kept in sync with a
+  linked Vendor Showcase entry so tickers/cards reflect edits.
+- **Optional assets + warnings.** Tagline/logo/business card are no longer required;
+  the form warns that without them the business wonât appear where those assets are
+  needed. The tickers already skip vendors missing the asset.
+- **Tagline display.** Shown under the business name on the single-listing page.
+
+**Files:** includes/listings-submission.php, includes/listings-edit.php,
+templates/single-listing.php, assets/css/listings.css.
+
+---
+
 ## [0.36.4] â 2026-08-11 â Single-product Vendor Showcase
 
 Replaced the per-category Showcase model (one WooCommerce variation per vendor

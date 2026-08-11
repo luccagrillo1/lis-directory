@@ -68,7 +68,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		return ob_get_clean();
 	}
 
-	$current_url  = remove_query_arg( array( 'lis_listing_submitted', 'lis_listing_error' ) );
+	$current_url  = remove_query_arg( array( 'lis_listing_submitted', 'lis_listing_error', 'lis_listing_draft_saved' ) );
 	$current_user = wp_get_current_user();
 	$cat_terms    = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false ) );
 	$feature_terms = lis_directory_get_public_feature_terms();
@@ -89,6 +89,30 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			<div class="lis-listing-thankyou-actions">
 				<a class="lis-listing-thankyou-btn" href="<?php echo esc_url( $current_url ); ?>">Submit another listing</a>
 				<a class="lis-listing-thankyou-btn lis-listing-thankyou-btn--ghost" href="<?php echo esc_url( get_post_type_archive_link( 'lis_listing' ) ); ?>">Browse the directory</a>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	// Landed here after "Save & finish later" (?lis_listing_draft_saved=<draft id>).
+	if ( ! empty( $_GET['lis_listing_draft_saved'] ) ) {
+		$draft_id  = absint( wp_unslash( $_GET['lis_listing_draft_saved'] ) );
+		$draft     = $draft_id ? get_post( $draft_id ) : null;
+		$is_mine   = $draft && 'lis_listing' === $draft->post_type && (int) $draft->post_author === get_current_user_id();
+		$resume_url = ( $is_mine && function_exists( 'lis_directory_get_listing_edit_url' ) ) ? lis_directory_get_listing_edit_url( $draft_id ) : '';
+		?>
+		<div class="lis-listing-thankyou">
+			<div class="lis-listing-thankyou-icon" aria-hidden="true">
+				<svg viewBox="0 0 52 52" width="56" height="56" role="img"><circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2.5" opacity="0.35"/><path fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="M16 27.5l7 7 14-16"/></svg>
+			</div>
+			<h2 class="lis-listing-thankyou-title">Draft saved</h2>
+			<p class="lis-listing-thankyou-text">We've saved your progress. Come back any time to finish and submit it — nothing goes live until you do. You'll also find it in your dashboard.</p>
+			<div class="lis-listing-thankyou-actions">
+				<?php if ( $resume_url ) : ?>
+					<a class="lis-listing-thankyou-btn" href="<?php echo esc_url( $resume_url ); ?>">Continue editing</a>
+				<?php endif; ?>
+				<a class="lis-listing-thankyou-btn lis-listing-thankyou-btn--ghost" href="<?php echo esc_url( $current_url ); ?>">Start another listing</a>
 			</div>
 		</div>
 		<?php
@@ -123,6 +147,29 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			<label for="lis_listing_hp">Leave this field blank</label>
 			<input type="text" id="lis_listing_hp" name="lis_listing_hp" tabindex="-1" autocomplete="off" />
 		</div>
+
+		<div class="lis-listing-draft-bar">
+			<button type="submit" name="lis_listing_save_draft" value="1" class="lis-listing-draft-save" formnovalidate>Save &amp; finish later</button>
+			<span class="lis-listing-draft-hint">Saves what you've got so far — pick it back up any time from your dashboard.</span>
+		</div>
+		<script>
+		( function () {
+			var s = document.currentScript;
+			var btn = s.previousElementSibling ? s.previousElementSibling.querySelector( '.lis-listing-draft-save' ) : null;
+			if ( ! btn ) { return; }
+			var form = btn.closest( 'form' );
+			btn.addEventListener( 'click', function ( e ) {
+				e.preventDefault();
+				if ( window.tinymce ) { window.tinymce.triggerSave(); }
+				if ( ! form.querySelector( 'input[name="lis_listing_save_draft"][type="hidden"]' ) ) {
+					var i = document.createElement( 'input' );
+					i.type = 'hidden'; i.name = 'lis_listing_save_draft'; i.value = '1';
+					form.appendChild( i );
+				}
+				HTMLFormElement.prototype.submit.call( form ); // native submit: skips HTML5 validation + the wizard's submit backstop.
+			} );
+		}() );
+		</script>
 
 		<div class="lis-listing-panel" data-panel-section="Get Started" data-panel-question="What's your business called?" data-panel-hint="Start typing to find it on Google — or just type your name and fill the rest in yourself.">
 			<p>
@@ -201,6 +248,23 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			<p>
 				<label for="lis_listing_video_url" class="screen-reader-text">Video</label>
 				<input type="url" id="lis_listing_video_url" name="lis_listing_video_url" placeholder="YouTube or Vimeo link" />
+			</p>
+		</div>
+
+		<div class="lis-listing-panel" data-panel-section="Branding" data-panel-question="Add your branding" data-panel-hint="All optional — but they unlock where your business can appear">
+			<p>
+				<label for="lis_pv_tagline">Tagline <span class="lis-listing-optional">(optional)</span></label>
+				<input type="text" id="lis_pv_tagline" name="lis_pv_tagline" placeholder="e.g. For all your insurance needs" />
+			</p>
+			<p>
+				<label for="lis_pv_logo_color">Logo (transparent PNG) <span class="lis-listing-optional">(optional)</span></label>
+				<input type="file" id="lis_pv_logo_color" name="lis_pv_logo_color" accept="image/png" />
+				<small>A transparent PNG looks cleanest — it's recolored to black or white where needed. Without a logo, your business won't appear in the logo showcase.</small>
+			</p>
+			<p>
+				<label for="lis_pv_business_card">Business card <span class="lis-listing-optional">(optional)</span></label>
+				<input type="file" id="lis_pv_business_card" name="lis_pv_business_card" accept="image/png,image/jpeg" />
+				<small>A photo/scan of your card (3.5&quot;&times;2&quot;). Without one, your business won't appear in the business-card ticker.</small>
 			</p>
 		</div>
 
@@ -365,20 +429,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 							<p>This category is currently occupied. If you'd like to recommend a new category, or ask about filling this spot, <a href="<?php echo esc_url( $vs_contact_url ); ?>">contact us</a>.</p>
 						</div>
 						<div class="lis-listing-showcase-inputs">
-							<p>
-								<label for="lis_pv_tagline">Tagline <span class="lis-listing-optional">(optional)</span></label>
-								<input type="text" id="lis_pv_tagline" name="lis_pv_tagline" placeholder="e.g. For all your insurance needs" />
-							</p>
-							<p>
-								<label for="lis_pv_logo_color">Logo (transparent PNG) <span class="lis-listing-optional">(optional)</span></label>
-								<input type="file" id="lis_pv_logo_color" name="lis_pv_logo_color" accept="image/png" />
-								<small>Shown on your showcase card; recolored to black or white where needed, so a transparent PNG looks cleanest. Without it, your business won't appear in the logo showcase.</small>
-							</p>
-							<p>
-								<label for="lis_pv_business_card">Business card <span class="lis-listing-optional">(optional)</span></label>
-								<input type="file" id="lis_pv_business_card" name="lis_pv_business_card" accept="image/png,image/jpeg" />
-								<small>A photo/scan of your card (3.5&quot;&times;2&quot;). Shown as-is in the business-card ticker. Without it, your business won't appear in the business-card ticker.</small>
-							</p>
+							<p class="lis-listing-showcase-note">Your Vendor Showcase card uses the tagline, logo, and business card from the <strong>Branding</strong> step. Go back and add them if you haven't — a card without a logo won't appear in the logo showcase.</p>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -469,21 +520,26 @@ function lis_directory_handle_listing_submission() {
 		exit;
 	}
 
+	// "Save & finish later": a relaxed save that never blocks on missing required
+	// fields (no business name/category/email/photo requirement, no plan/checkout).
+	// Bad uploads (wrong type/too large) are still surfaced.
+	$is_draft = ! empty( $_POST['lis_listing_save_draft'] );
+
 	$errors = array();
 
 	$business_name = isset( $_POST['lis_listing_business_name'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_listing_business_name'] ) ) : '';
-	if ( '' === $business_name ) {
+	if ( '' === $business_name && ! $is_draft ) {
 		$errors[] = 'business_name';
 	}
 
 	$term_id = isset( $_POST['lis_listing_category'] ) ? (int) $_POST['lis_listing_category'] : 0;
 	$term    = $term_id ? get_term( $term_id, 'lis_listing_category' ) : null;
-	if ( ! $term || is_wp_error( $term ) ) {
+	if ( ( ! $term || is_wp_error( $term ) ) && ! $is_draft ) {
 		$errors[] = 'category';
 	}
 
 	$email = isset( $_POST['lis_listing_email'] ) ? sanitize_email( wp_unslash( $_POST['lis_listing_email'] ) ) : '';
-	if ( '' === $email || ! is_email( $email ) ) {
+	if ( ( '' === $email || ! is_email( $email ) ) && ! $is_draft ) {
 		$errors[] = 'email';
 	}
 
@@ -498,21 +554,28 @@ function lis_directory_handle_listing_submission() {
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
-	$photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', true, $errors );
+	$photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', ! $is_draft, $errors );
 
-	// Chosen plan (final wizard step).
-	$plan    = isset( $_POST['lis_listing_plan'] ) ? sanitize_key( wp_unslash( $_POST['lis_listing_plan'] ) ) : '';
+	// Branding assets — collected in the early "Branding" step, optional for
+	// every listing (a listing without them just won't appear where those assets
+	// are required). Processed ONCE here and reused by the Vendor Showcase vendor
+	// below, so a file is never uploaded twice.
+	$tagline = isset( $_POST['lis_pv_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_pv_tagline'] ) ) : '';
+	$logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', false, $errors );
+	$card_id = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
+
+	// Chosen plan (final wizard step). Skipped entirely for a "save as draft".
+	$plan    = $is_draft ? '' : ( isset( $_POST['lis_listing_plan'] ) ? sanitize_key( wp_unslash( $_POST['lis_listing_plan'] ) ) : '' );
 	$billing = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
 
 	// Vendor Showcase tier: single-product model. The category the vendor
 	// occupies is the listing's OWN category ($term, chosen earlier) — there's
 	// no separate slot picker. Mirror that one listing category to a
 	// lis_vendor_category term just-in-time so the exclusivity engine works.
-	// Tagline/logo/business card are all optional (a listing without them just
-	// won't appear where those assets are required).
+	// Logo/card/tagline are reused from the Branding step ($logo_id/$card_id/$tagline).
 	$vendor_term       = null;
-	$vendor_logo_id    = 0;
-	$vendor_card_id    = 0;
+	$vendor_logo_id    = $logo_id;
+	$vendor_card_id    = $card_id;
 	$checkout_category = 0; // A lis_listing_category term id (for the taken-check in the checkout URL builder).
 	if ( 'showcase' === $plan ) {
 		if ( ! $term || is_wp_error( $term ) ) {
@@ -529,8 +592,6 @@ function lis_directory_handle_listing_submission() {
 				$errors[] = 'pv_category';
 			}
 		}
-		$vendor_logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', false, $errors );
-		$vendor_card_id = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
 	}
 
 	if ( ! empty( $errors ) ) {
@@ -545,11 +606,14 @@ function lis_directory_handle_listing_submission() {
 	// keeps working while products are still draft.
 	$can_checkout = ( $plan && function_exists( 'lis_directory_build_listing_checkout_url' ) && '' !== lis_directory_build_listing_checkout_url( $plan, $billing, 0, $checkout_category ) );
 
+	// draft = "save & finish later" OR awaiting payment; pending = free fallback reviewed in admin.
+	$post_status = ( $is_draft || $can_checkout ) ? 'draft' : 'pending';
+
 	$post_id = wp_insert_post( array(
 		'post_type'      => 'lis_listing',
-		'post_title'     => $business_name,
+		'post_title'     => '' !== $business_name ? $business_name : 'Untitled listing',
 		'post_content'   => $description,
-		'post_status'    => $can_checkout ? 'draft' : 'pending', // draft = awaiting payment; pending = free fallback reviewed in admin.
+		'post_status'    => $post_status,
 		'post_author'    => get_current_user_id(),
 		'comment_status' => 'open', // Explicit, not left to the site-wide Discussion default — a listing with reviews turned off has a permanently empty, unusable Reviews section (see Talus Rock Retreat, which predated this and needed a one-time fix).
 	), true );
@@ -559,12 +623,25 @@ function lis_directory_handle_listing_submission() {
 		exit;
 	}
 
-	wp_set_post_terms( $post_id, array( $term->term_id ), 'lis_listing_category' );
+	if ( $term && ! is_wp_error( $term ) ) {
+		wp_set_post_terms( $post_id, array( $term->term_id ), 'lis_listing_category' );
+	}
 
 	update_post_meta( $post_id, '_lis_listing_address', $address );
 	update_post_meta( $post_id, '_lis_listing_phone', $phone );
 	update_post_meta( $post_id, '_lis_listing_website', $website );
 	update_post_meta( $post_id, '_lis_listing_email', $email );
+
+	// Branding assets on the listing itself (used everywhere, not just Showcase).
+	if ( '' !== $tagline ) {
+		update_post_meta( $post_id, '_lis_listing_tagline', $tagline );
+	}
+	if ( $logo_id ) {
+		update_post_meta( $post_id, '_lis_listing_logo_id', $logo_id );
+	}
+	if ( $card_id ) {
+		update_post_meta( $post_id, '_lis_listing_business_card_id', $card_id );
+	}
 
 	if ( ! empty( $photo_ids ) ) {
 		set_post_thumbnail( $post_id, $photo_ids[0] );
@@ -587,6 +664,14 @@ function lis_directory_handle_listing_submission() {
 	lis_directory_save_submitted_hours( $post_id );
 	lis_directory_save_submitted_features( $post_id );
 
+	// "Save & finish later": everything present is now stored on a draft the
+	// submitter owns. Send them to the confirmation screen with a link to resume
+	// editing — no plan, no checkout, no vendor entry.
+	if ( $is_draft ) {
+		wp_safe_redirect( add_query_arg( 'lis_listing_draft_saved', $post_id, $redirect_base ) );
+		exit;
+	}
+
 	// Vendor Showcase: create the pending vendor entry now (linked to this
 	// listing), so the whole application lives in the one wizard. Payment
 	// activates it (see lis_directory_handle_featured_listing_order).
@@ -600,7 +685,7 @@ function lis_directory_handle_listing_submission() {
 		if ( ! is_wp_error( $vendor_id ) ) {
 			wp_set_post_terms( $vendor_id, array( $vendor_term->term_id ), 'lis_vendor_category' );
 			lis_directory_set_vendor_status( $vendor_id, 'pending' );
-			update_post_meta( $vendor_id, '_lis_pv_tagline', isset( $_POST['lis_pv_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_pv_tagline'] ) ) : '' );
+			update_post_meta( $vendor_id, '_lis_pv_tagline', $tagline );
 			update_post_meta( $vendor_id, '_lis_pv_contact_email', $email );
 			update_post_meta( $vendor_id, '_lis_pv_link_url', get_permalink( $post_id ) );
 			update_post_meta( $vendor_id, '_lis_pv_listing_id', $post_id );

@@ -1923,6 +1923,81 @@
 	text-decoration: underline;
 }
 
+.lis-listing-showcase-note {
+	margin: 0;
+	color: #50575e;
+	font-size: 0.9em;
+	line-height: 1.5;
+}
+
+.lis-listing-tagline {
+	margin: 4px 0 8px;
+	color: #50575e;
+	font-size: 1.08em;
+	font-style: italic;
+}
+
+/* "Save & finish later" bar at the top of the add-listing form. */
+.lis-listing-draft-bar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	margin-bottom: 18px;
+}
+
+.lis-listing-draft-save {
+	background: transparent;
+	border: 1px solid #c9ccd1;
+	border-radius: 8px;
+	padding: 8px 16px;
+	font-size: 0.9em;
+	font-weight: 600;
+	color: #3c434a;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.lis-listing-draft-save:hover {
+	border-color: #7a8288;
+	background: #f6f7f7;
+}
+
+.lis-listing-draft-hint {
+	color: #787c82;
+	font-size: 0.82em;
+	flex: 1 1 auto;
+	min-width: 180px;
+}
+
+/* Current logo / business card preview + Remove control on the edit form. */
+.lis-listing-edit-asset-current {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin: 6px 0;
+	padding: 6px 10px;
+	border: 1px solid #e2e2e2;
+	border-radius: 8px;
+	background: #fafbf8;
+}
+
+.lis-listing-edit-asset-current img {
+	max-height: 44px;
+	width: auto;
+	border-radius: 4px;
+}
+
+.lis-listing-edit-asset-current label {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-weight: 400;
+	font-size: 0.85em;
+	margin: 0;
+}
+
 .lis-listing-submit-errors {
 	background: #fbe9e9;
 	color: #a12a2a;

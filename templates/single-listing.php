@@ -98,6 +98,10 @@ while ( have_posts() ) :
 		<div class="lis-listing-header">
 			<div>
 				<h1 class="lis-listing-title"><?php the_title(); ?></h1>
+				<?php $lis_tagline = get_post_meta( get_the_ID(), '_lis_listing_tagline', true ); ?>
+				<?php if ( $lis_tagline ) : ?>
+					<p class="lis-listing-tagline"><?php echo esc_html( $lis_tagline ); ?></p>
+				<?php endif; ?>
 				<div class="lis-listing-header-meta">
 					<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo 'real-estate-rent' === $type ? 'Rented' : 'Sold'; ?></span><?php endif; ?>
 					<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
