@@ -1894,6 +1894,35 @@
 	background: #fff;
 }
 
+.lis-listing-optional {
+	font-weight: 400;
+	color: #787c82;
+	font-size: 0.85em;
+}
+
+.lis-listing-showcase-occupied {
+	padding: 14px 16px;
+	border: 1px solid #f0d58a;
+	border-radius: 10px;
+	background: #fdf6e3;
+	color: #6b5410;
+}
+
+.lis-listing-showcase-occupied[hidden],
+.lis-listing-showcase-inputs[hidden] {
+	display: none;
+}
+
+.lis-listing-showcase-occupied p {
+	margin: 0;
+}
+
+.lis-listing-showcase-occupied a {
+	color: inherit;
+	font-weight: 600;
+	text-decoration: underline;
+}
+
 .lis-listing-submit-errors {
 	background: #fbe9e9;
 	color: #a12a2a;

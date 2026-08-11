@@ -105,16 +105,24 @@ function lis_directory_listing_tier_for_product( $product_id ) {
 }
 
 /**
- * The Vendor Showcase variation for a given category + billing (its variations
- * are tagged with `_lis_pv_category_term_id` + `_lis_pv_billing_period`). 0 if
- * none exists.
+ * The Vendor Showcase billing variation (Monthly/Annually) of the single
+ * Showcase product. 0 if none exists. Single-product model: the Showcase no
+ * longer has per-category variations — which category a buyer occupies comes
+ * from their listing's own category (see the generator note in
+ * includes/woocommerce.php), so this only resolves the billing period. The
+ * `$term_id` argument is kept for call-site compatibility but ignored.
  */
 function lis_directory_get_showcase_variation( $term_id, $billing ) {
-	if ( ! function_exists( 'lis_directory_get_variations_for_category' ) ) {
+	$product_id = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
+	if ( ! $product_id ) {
 		return 0;
 	}
-	$want = ( 'year' === $billing ) ? 'year' : 'month';
-	foreach ( lis_directory_get_variations_for_category( $term_id ) as $vid ) {
+	$want    = ( 'year' === $billing ) ? 'year' : 'month';
+	$product = function_exists( 'wc_get_product' ) ? wc_get_product( $product_id ) : null;
+	if ( ! $product ) {
+		return 0;
+	}
+	foreach ( $product->get_children() as $vid ) {
 		if ( get_post_meta( $vid, '_lis_pv_billing_period', true ) === $want ) {
 			return (int) $vid;
 		}
@@ -209,34 +217,34 @@ function lis_directory_build_listing_checkout_url( $tier, $billing, $listing_id,
 		return '';
 	}
 
-	// Vendor Showcase: a category-scoped subscription. The variation for a
-	// taken category is out of stock, so this returns '' (can't buy) and the
-	// caller falls back — exclusivity is enforced at the product level.
+	// Vendor Showcase: the single Monthly/Annually subscription product. Which
+	// category the buyer occupies is the listing's OWN category ($category_term_id
+	// is a lis_listing_category term id here) — exclusivity is enforced in PHP
+	// (this returns '' when that category already has an active showcase vendor,
+	// so the caller falls back / blocks), not via per-variation stock.
 	if ( 'showcase' === $tier ) {
 		$product_id = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
-		if ( ! $product_id || ! $category_term_id ) {
+		if ( ! $product_id ) {
 			return '';
 		}
 		$product = wc_get_product( $product_id );
-		if ( ! $product || 'publish' !== $product->get_status() ) {
+		if ( ! $product || 'publish' !== $product->get_status() || ! $product->is_purchasable() ) {
 			return '';
 		}
-		$variation_id = lis_directory_get_showcase_variation( $category_term_id, $billing );
-		if ( ! $variation_id ) {
+		if ( $category_term_id && function_exists( 'lis_directory_is_listing_category_showcase_taken' )
+			&& lis_directory_is_listing_category_showcase_taken( $category_term_id ) ) {
 			return '';
 		}
-		$variation = wc_get_product( $variation_id );
-		if ( ! $variation || ! $variation->is_purchasable() || ! $variation->is_in_stock() ) {
-			return '';
+		$args = array(
+			'add-to-cart'    => $product_id,
+			'lis_listing_id' => (int) $listing_id,
+		);
+		$var = lis_directory_resolve_plan_variation( $product_id, $billing );
+		if ( $var['variation_id'] ) {
+			$args['variation_id']      = $var['variation_id'];
+			$args['attribute_billing'] = $var['attr'];
 		}
-		$term = get_term( $category_term_id, 'lis_vendor_category' );
-		return add_query_arg( array(
-			'add-to-cart'               => $product_id,
-			'variation_id'              => $variation_id,
-			'attribute_vendor-category' => $term && ! is_wp_error( $term ) ? html_entity_decode( $term->name, ENT_QUOTES ) : '',
-			'attribute_billing'         => ( 'year' === $billing ) ? 'Annually' : 'Monthly',
-			'lis_listing_id'            => (int) $listing_id,
-		), wc_get_checkout_url() );
+		return add_query_arg( $args, wc_get_checkout_url() );
 	}
 
 	$product_id = ( 'featured' === $tier )

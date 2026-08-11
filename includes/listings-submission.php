@@ -309,21 +309,16 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			);
 		}
 
-		// Vendor Showcase — the exclusive one-per-category tier. Only offered
-		// when its product exists and at least one category slot is still open.
+		// Vendor Showcase — the exclusive one-per-category tier. Single-product
+		// model: offered whenever the product exists. The category a buyer
+		// occupies is their listing's OWN category (chosen earlier), so there's
+		// no category picker here; if that category is already taken we warn at
+		// this step (and the submit handler re-checks server-side).
 		$vs_pid = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
-		$vs_open_terms = array();
-		if ( $vs_pid ) {
-			foreach ( get_terms( array( 'taxonomy' => 'lis_vendor_category', 'hide_empty' => false ) ) as $vt ) {
-				if ( ! is_wp_error( $vt ) && ! lis_directory_get_active_vendor_for_category( $vt->term_id ) ) {
-					$vs_open_terms[] = $vt;
-				}
-			}
-		}
-		if ( ! empty( $vs_open_terms ) ) {
-			$sample     = $vs_open_terms[0]->term_id;
-			$vs_month_v = lis_directory_get_showcase_variation( $sample, 'month' );
-			$vs_year_v  = lis_directory_get_showcase_variation( $sample, 'year' );
+		$vs_product = ( $vs_pid && function_exists( 'wc_get_product' ) ) ? wc_get_product( $vs_pid ) : null;
+		if ( $vs_product && 'publish' === $vs_product->get_status() ) {
+			$vs_month_v = lis_directory_get_showcase_variation( 0, 'month' );
+			$vs_year_v  = lis_directory_get_showcase_variation( 0, 'year' );
 			$vs_month_p = $vs_month_v && wc_get_product( $vs_month_v ) ? wc_get_product( $vs_month_v )->get_price() : null;
 			$vs_year_p  = $vs_year_v && wc_get_product( $vs_year_v ) ? wc_get_product( $vs_year_v )->get_price() : null;
 			$plan_tiers['showcase'] = array(
@@ -333,6 +328,18 @@ function lis_directory_render_listing_submission_form_shortcode() {
 				'y'     => $fmt_price( $vs_year_p ),
 			);
 		}
+
+		// Which listing categories already have an active showcase vendor — used
+		// to warn (client-side) if the user's chosen category is occupied.
+		$vs_taken_cats = array();
+		if ( isset( $plan_tiers['showcase'] ) && function_exists( 'lis_directory_is_listing_category_showcase_taken' ) ) {
+			foreach ( $cat_terms as $ct ) {
+				if ( ! is_wp_error( $ct ) && lis_directory_is_listing_category_showcase_taken( $ct->term_id ) ) {
+					$vs_taken_cats[] = (int) $ct->term_id;
+				}
+			}
+		}
+		$vs_contact_url = apply_filters( 'lis_directory_showcase_contact_url', home_url( '/contact/' ) );
 
 		if ( ! empty( $plan_tiers ) ) :
 			?>
@@ -352,32 +359,27 @@ function lis_directory_render_listing_submission_form_shortcode() {
 					<?php endforeach; ?>
 				</div>
 
-				<?php if ( ! empty( $vs_open_terms ) ) : ?>
-					<div class="lis-listing-showcase-fields" hidden>
-						<p>
-							<label for="lis_pv_category">Which category slot?</label>
-							<select id="lis_pv_category" name="lis_pv_category">
-								<option value="">— Select a category —</option>
-								<?php foreach ( $vs_open_terms as $vt ) : ?>
-									<option value="<?php echo esc_attr( $vt->term_id ); ?>"><?php echo esc_html( $vt->name ); ?></option>
-								<?php endforeach; ?>
-							</select>
-							<small>One business per category — only open categories are shown.</small>
-						</p>
-						<p>
-							<label for="lis_pv_tagline">Tagline</label>
-							<input type="text" id="lis_pv_tagline" name="lis_pv_tagline" placeholder="e.g. For all your insurance needs" />
-						</p>
-						<p>
-							<label for="lis_pv_logo_color">Logo (transparent PNG)</label>
-							<input type="file" id="lis_pv_logo_color" name="lis_pv_logo_color" accept="image/png" />
-							<small>Shown on your showcase card; recolored to black or white where needed, so a transparent PNG looks cleanest.</small>
-						</p>
-						<p>
-							<label for="lis_pv_business_card">Business card (optional)</label>
-							<input type="file" id="lis_pv_business_card" name="lis_pv_business_card" accept="image/png,image/jpeg" />
-							<small>A photo/scan of your card (3.5&quot;&times;2&quot;). Shown as-is in the business-card ticker style.</small>
-						</p>
+				<?php if ( isset( $plan_tiers['showcase'] ) ) : ?>
+					<div class="lis-listing-showcase-fields" hidden data-taken-cats="<?php echo esc_attr( wp_json_encode( $vs_taken_cats ) ); ?>">
+						<div class="lis-listing-showcase-occupied" hidden>
+							<p>This category is currently occupied. If you'd like to recommend a new category, or ask about filling this spot, <a href="<?php echo esc_url( $vs_contact_url ); ?>">contact us</a>.</p>
+						</div>
+						<div class="lis-listing-showcase-inputs">
+							<p>
+								<label for="lis_pv_tagline">Tagline <span class="lis-listing-optional">(optional)</span></label>
+								<input type="text" id="lis_pv_tagline" name="lis_pv_tagline" placeholder="e.g. For all your insurance needs" />
+							</p>
+							<p>
+								<label for="lis_pv_logo_color">Logo (transparent PNG) <span class="lis-listing-optional">(optional)</span></label>
+								<input type="file" id="lis_pv_logo_color" name="lis_pv_logo_color" accept="image/png" />
+								<small>Shown on your showcase card; recolored to black or white where needed, so a transparent PNG looks cleanest. Without it, your business won't appear in the logo showcase.</small>
+							</p>
+							<p>
+								<label for="lis_pv_business_card">Business card <span class="lis-listing-optional">(optional)</span></label>
+								<input type="file" id="lis_pv_business_card" name="lis_pv_business_card" accept="image/png,image/jpeg" />
+								<small>A photo/scan of your card (3.5&quot;&times;2&quot;). Shown as-is in the business-card ticker. Without it, your business won't appear in the business-card ticker.</small>
+							</p>
+						</div>
 					</div>
 				<?php endif; ?>
 			</div>
@@ -386,6 +388,10 @@ function lis_directory_render_listing_submission_form_shortcode() {
 				var form = document.currentScript.closest( 'form' );
 				if ( ! form ) { return; }
 				var showcase = form.querySelector( '.lis-listing-showcase-fields' );
+				var taken = [];
+				if ( showcase ) {
+					try { taken = JSON.parse( showcase.getAttribute( 'data-taken-cats' ) || '[]' ); } catch ( e ) { taken = []; }
+				}
 				function sync() {
 					var billing = ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month';
 					form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
@@ -395,15 +401,22 @@ function lis_directory_render_listing_submission_form_shortcode() {
 					if ( showcase ) {
 						var on = 'showcase' === plan;
 						showcase.hidden = ! on;
-						var cat = showcase.querySelector( '#lis_pv_category' );
-						var logo = showcase.querySelector( '#lis_pv_logo_color' );
-						if ( cat ) { cat.required = on; }
-						if ( logo ) { logo.required = on; }
+						var catSel = form.querySelector( '#lis_listing_category' );
+						var chosen = catSel ? parseInt( catSel.value, 10 ) : 0;
+						var occupied = on && chosen && taken.indexOf( chosen ) !== -1;
+						var warn = showcase.querySelector( '.lis-listing-showcase-occupied' );
+						var inputs = showcase.querySelector( '.lis-listing-showcase-inputs' );
+						if ( warn ) { warn.hidden = ! occupied; }
+						if ( inputs ) { inputs.hidden = !! occupied; }
+						var submitBtn = form.querySelector( '.lis-listing-submit-button' );
+						if ( submitBtn ) { submitBtn.disabled = !! occupied; }
 					}
 				}
 				form.querySelectorAll( 'input[name="lis_listing_billing"], input[name="lis_listing_plan"]' ).forEach( function ( r ) {
 					r.addEventListener( 'change', sync );
 				} );
+				var catSel = form.querySelector( '#lis_listing_category' );
+				if ( catSel ) { catSel.addEventListener( 'change', sync ); }
 				sync();
 			}() );
 			</script>
@@ -491,24 +504,32 @@ function lis_directory_handle_listing_submission() {
 	$plan    = isset( $_POST['lis_listing_plan'] ) ? sanitize_key( wp_unslash( $_POST['lis_listing_plan'] ) ) : '';
 	$billing = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
 
-	// Vendor Showcase tier: its own fields (category slot, tagline, logo,
-	// business card) are collected inside this same wizard now. Validate + stage
-	// the uploads here so a bad one is caught before anything is created.
+	// Vendor Showcase tier: single-product model. The category the vendor
+	// occupies is the listing's OWN category ($term, chosen earlier) — there's
+	// no separate slot picker. Mirror that one listing category to a
+	// lis_vendor_category term just-in-time so the exclusivity engine works.
+	// Tagline/logo/business card are all optional (a listing without them just
+	// won't appear where those assets are required).
 	$vendor_term       = null;
 	$vendor_logo_id    = 0;
 	$vendor_card_id    = 0;
-	$checkout_category = 0;
+	$checkout_category = 0; // A lis_listing_category term id (for the taken-check in the checkout URL builder).
 	if ( 'showcase' === $plan ) {
-		$vendor_term_id = isset( $_POST['lis_pv_category'] ) ? (int) $_POST['lis_pv_category'] : 0;
-		$vendor_term    = $vendor_term_id ? get_term( $vendor_term_id, 'lis_vendor_category' ) : null;
-		if ( ! $vendor_term || is_wp_error( $vendor_term ) ) {
-			$errors[] = 'pv_category';
-		} elseif ( lis_directory_get_active_vendor_for_category( $vendor_term_id ) ) {
+		if ( ! $term || is_wp_error( $term ) ) {
+			$errors[] = 'category';
+		} elseif ( function_exists( 'lis_directory_is_listing_category_showcase_taken' ) && lis_directory_is_listing_category_showcase_taken( $term_id ) ) {
 			$errors[] = 'pv_category_taken';
 		} else {
-			$checkout_category = $vendor_term_id;
+			$checkout_category = $term_id;
+			// Mirror the listing category → vendor category (creates it if this
+			// is the first showcase vendor in that category).
+			$vendor_term_id = function_exists( 'lis_directory_vendor_category_for_listing_category' ) ? lis_directory_vendor_category_for_listing_category( $term_id ) : 0;
+			$vendor_term    = $vendor_term_id ? get_term( $vendor_term_id, 'lis_vendor_category' ) : null;
+			if ( ! $vendor_term || is_wp_error( $vendor_term ) ) {
+				$errors[] = 'pv_category';
+			}
 		}
-		$vendor_logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', true, $errors );
+		$vendor_logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', false, $errors );
 		$vendor_card_id = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
 	}
 

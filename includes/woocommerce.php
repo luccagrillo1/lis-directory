@@ -122,17 +122,18 @@ function lis_directory_render_settings_page() {
 			<?php if ( 'ok' === $_GET['lis_vs_gen'] ) : ?>
 				<div class="notice notice-success inline"><p>Vendor Showcase updated &mdash; added <?php echo isset( $_GET['lis_vs_added'] ) ? (int) $_GET['lis_vs_added'] : 0; ?> new variation(s).</p></div>
 			<?php else : ?>
-				<div class="notice notice-error inline"><p>Could not build the Vendor Showcase product. Make sure WooCommerce is active and at least one LIS Vendor Category exists.</p></div>
+				<div class="notice notice-error inline"><p>Could not build the Vendor Showcase product. Make sure WooCommerce is active.</p></div>
 			<?php endif; ?>
 		<?php endif; ?>
 		<p class="description" style="max-width:640px;">
-			Builds (or tops up) the single <strong>Vendor Showcase</strong> WooCommerce
-			Subscription product: one Monthly and one Annually variation per LIS Vendor
-			Category ($100/mo &middot; $1,000/yr), each stock-capped at 1 so only one
-			vendor can hold a category. Safe to re-run &mdash; it only adds variations for
-			categories that don't have one yet, and never touches prices you've since
-			edited. The product is created as a <strong>draft</strong>; publish it when
-			you're ready to sell.
+			Builds the single <strong>Vendor Showcase</strong> WooCommerce Subscription
+			product: one Monthly ($100/mo) and one Annually ($1,000/yr) billing variation
+			(placeholder prices &mdash; <strong>edit them in WooCommerce</strong>). One
+			product, no per-category variations &mdash; the category a buyer occupies is
+			their listing's own category, and exclusivity (one active vendor per category)
+			is enforced automatically at checkout. Safe to re-run &mdash; it only fills a
+			missing Monthly/Annually variation and never touches prices you've edited.
+			Created as a <strong>draft</strong>; publish it when you're ready to sell.
 		</p>
 		<?php
 		$vs_product_id = lis_directory_get_vendor_showcase_product_id();
@@ -146,7 +147,7 @@ function lis_directory_render_settings_page() {
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="lis_directory_generate_vendor_showcase" />
 			<?php wp_nonce_field( 'lis_directory_generate_vendor_showcase', 'lis_vs_gen_nonce' ); ?>
-			<?php submit_button( $vs_product_id ? 'Top up Vendor Showcase variations' : 'Generate Vendor Showcase product', 'secondary', 'submit', false ); ?>
+			<?php submit_button( $vs_product_id ? 'Top up Vendor Showcase product' : 'Generate Vendor Showcase product', 'secondary', 'submit', false ); ?>
 		</form>
 
 		<hr />
@@ -390,14 +391,24 @@ function lis_directory_handle_generate_vendor_showcase() {
 }
 
 /**
- * Builds the one Vendor Showcase variable-subscription product, then ensures
- * every lis_vendor_category has a Monthly ($100/mo) and Annually ($1,000/yr)
- * variation, each stock-capped at 1 and tagged with its category term so the
- * existing stock-sync + thank-you-submission logic recognises it.
+ * Builds the single Vendor Showcase variable-subscription product with just a
+ * Monthly ($100/mo) and Annually ($1,000/yr) variation — the same shape as the
+ * Standard and Featured products.
  *
- * Idempotent: keyed on a marker meta (`_lis_pv_billing_period`) that this
- * function controls, so re-running only fills gaps (e.g. after a new category
- * is added) and never disturbs prices an admin has since edited by hand.
+ * SINGLE-PRODUCT MODEL (replaces the old per-category-variation approach that
+ * created hundreds of variations + a mirrored `lis_vendor_category` per listing
+ * category and bogged wp-admin down): there is now ONE product and no category
+ * attribute. Which category a Showcase buyer occupies comes from the listing's
+ * OWN `lis_listing_category`, chosen earlier in the add-listing wizard. That
+ * one category is mirrored to a `lis_vendor_category` term just-in-time at
+ * submit time (see lis_directory_vendor_category_for_listing_category), so the
+ * proven one-active-vendor-per-category exclusivity engine
+ * (lis_directory_get_active_vendor_for_category) keeps working with zero
+ * pre-created bloat. Exclusivity is enforced in PHP at plan-step + submit time,
+ * not via per-variation stock.
+ *
+ * Idempotent: keyed on the `_lis_pv_billing_period` marker, so a re-run only
+ * fills gaps and never disturbs prices an admin has edited by hand.
  *
  * @return array|WP_Error { added:int, product_id:int } on success.
  */
@@ -405,20 +416,6 @@ function lis_directory_generate_vendor_showcase_product() {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return new WP_Error( 'no_wc', 'WooCommerce is not active.' );
 	}
-	$terms = get_terms( array( 'taxonomy' => 'lis_vendor_category', 'hide_empty' => false ) );
-	if ( is_wp_error( $terms ) || empty( $terms ) ) {
-		return new WP_Error( 'no_terms', 'No LIS Vendor Categories exist yet.' );
-	}
-
-	// Decode entities up front: term names like "Arts & Entertainment" come back
-	// HTML-encoded, and a variation's attribute value must equal the parent
-	// option's decoded form or WooCommerce reads the category as "Any". Keyed by
-	// term_id so the repair pass below can look each one up.
-	$cat_names = array();
-	foreach ( $terms as $term ) {
-		$cat_names[ $term->term_id ] = html_entity_decode( $term->name, ENT_QUOTES );
-	}
-
 	$use_sub = class_exists( 'WC_Subscriptions' ) && class_exists( 'WC_Product_Variable_Subscription' );
 
 	$product_id = lis_directory_get_vendor_showcase_product_id();
@@ -430,43 +427,27 @@ function lis_directory_generate_vendor_showcase_product() {
 		$product->set_virtual( true );
 		$product->set_sold_individually( true );
 
-		$attr_cat = new WC_Product_Attribute();
-		$attr_cat->set_name( 'Vendor Category' );
-		$attr_cat->set_options( array_values( $cat_names ) );
-		$attr_cat->set_visible( true );
-		$attr_cat->set_variation( true );
-
 		$attr_bill = new WC_Product_Attribute();
 		$attr_bill->set_name( 'Billing' );
 		$attr_bill->set_options( array( 'Monthly', 'Annually' ) );
 		$attr_bill->set_visible( true );
 		$attr_bill->set_variation( true );
 
-		$product->set_attributes( array( $attr_cat, $attr_bill ) );
+		$product->set_attributes( array( $attr_bill ) );
 		$product->update_meta_data( '_lis_vendor_showcase_product', '1' );
 		$product_id = $product->save();
 		if ( ! $product_id ) {
 			return new WP_Error( 'save_failed', 'Could not create the Vendor Showcase product.' );
 		}
 	} else {
-		// Keep the parent's category attribute option list current (new
-		// categories added since the last run).
 		$product = wc_get_product( $product_id );
-		$attrs   = $product->get_attributes();
-		if ( isset( $attrs['vendor-category'] ) ) {
-			$attrs['vendor-category']->set_options( array_values( $cat_names ) );
-			$product->set_attributes( $attrs );
-			$product->save();
-		}
 	}
 
-	// Existing (category term, billing period) pairs, so a re-run only fills gaps.
 	$existing = array();
 	foreach ( $product->get_children() as $child_id ) {
-		$v_term   = (int) get_post_meta( $child_id, '_lis_pv_category_term_id', true );
-		$v_period = get_post_meta( $child_id, '_lis_pv_billing_period', true );
-		if ( $v_term && $v_period ) {
-			$existing[ $v_term . '|' . $v_period ] = true;
+		$period = get_post_meta( $child_id, '_lis_pv_billing_period', true );
+		if ( $period ) {
+			$existing[ $period ] = true;
 		}
 	}
 
@@ -476,66 +457,41 @@ function lis_directory_generate_vendor_showcase_product() {
 	);
 
 	$added = 0;
-	foreach ( $terms as $term ) {
-		foreach ( $plans as $plan ) {
-			if ( isset( $existing[ $term->term_id . '|' . $plan['period'] ] ) ) {
-				continue;
-			}
-			$var = ( $use_sub && class_exists( 'WC_Product_Subscription_Variation' ) )
-				? new WC_Product_Subscription_Variation()
-				: new WC_Product_Variation();
-			$var->set_parent_id( $product_id );
-			$var->set_attributes( array(
-				'vendor-category' => $cat_names[ $term->term_id ],
-				'billing'         => $plan['label'],
-			) );
-			$var->set_regular_price( $plan['price'] );
-			$var->set_price( $plan['price'] );
-			$var->set_virtual( true );
-			$var->set_manage_stock( true );
-			$var->set_stock_quantity( 1 );
-			$var->set_stock_status( 'instock' );
-			$var->update_meta_data( '_lis_pv_category_term_id', $term->term_id );
-			$var->update_meta_data( '_lis_pv_billing_period', $plan['period'] );
-			if ( $use_sub ) {
-				$var->update_meta_data( '_subscription_price', $plan['price'] );
-				$var->update_meta_data( '_subscription_period', $plan['period'] );
-				$var->update_meta_data( '_subscription_period_interval', '1' );
-				$var->update_meta_data( '_subscription_length', '0' );
-				$var->update_meta_data( '_subscription_sign_up_fee', '0' );
-				$var->update_meta_data( '_subscription_trial_length', '0' );
-				$var->update_meta_data( '_subscription_trial_period', 'day' );
-			}
-			$var->save();
-			$added++;
+	foreach ( $plans as $plan ) {
+		if ( isset( $existing[ $plan['period'] ] ) ) {
+			continue;
 		}
+		$var = ( $use_sub && class_exists( 'WC_Product_Subscription_Variation' ) )
+			? new WC_Product_Subscription_Variation()
+			: new WC_Product_Variation();
+		$var->set_parent_id( $product_id );
+		$var->set_attributes( array( 'billing' => $plan['label'] ) );
+		$var->set_regular_price( $plan['price'] );
+		$var->set_price( $plan['price'] );
+		$var->set_virtual( true );
+		$var->update_meta_data( '_lis_pv_billing_period', $plan['period'] );
+		if ( $use_sub ) {
+			$var->update_meta_data( '_subscription_price', $plan['price'] );
+			$var->update_meta_data( '_subscription_period', $plan['period'] );
+			$var->update_meta_data( '_subscription_period_interval', '1' );
+			$var->update_meta_data( '_subscription_length', '0' );
+			$var->update_meta_data( '_subscription_sign_up_fee', '0' );
+			$var->update_meta_data( '_subscription_trial_length', '0' );
+			$var->update_meta_data( '_subscription_trial_period', 'day' );
+		}
+		$var->save();
+		$added++;
 	}
 
-	// Repair pass: write each child's WooCommerce variation-attribute meta
-	// directly from its own category tag + billing marker. Setting the meta
-	// straight (instead of trusting set_attributes' fuzzy option matching)
-	// guarantees it equals the parent option, so the product page's Vendor
-	// Category / Billing dropdowns resolve to the right variation even for
-	// names with "&", em dashes or accents — and it fixes variations an
-	// earlier build left reading as "Any".
+	// Write each child's billing-attribute meta directly so the product page's
+	// Billing dropdown resolves to the right variation (same guard the Standard
+	// and Featured generators use).
 	$fresh = wc_get_product( $product_id );
 	foreach ( $fresh->get_children() as $child_id ) {
-		$tid    = (int) get_post_meta( $child_id, '_lis_pv_category_term_id', true );
 		$period = get_post_meta( $child_id, '_lis_pv_billing_period', true );
-		if ( $tid && isset( $cat_names[ $tid ] ) ) {
-			update_post_meta( $child_id, 'attribute_vendor-category', $cat_names[ $tid ] );
-		}
 		if ( $period ) {
 			update_post_meta( $child_id, 'attribute_billing', 'year' === $period ? 'Annually' : 'Monthly' );
 		}
-	}
-
-	// Initial stock sync: a category that already has an active vendor must
-	// start out-of-stock so its spot isn't buyable. Without this, categories
-	// taken *before* this product existed (their activation never fired the
-	// stock-sync hook against these variations) would stay in stock.
-	foreach ( $terms as $term ) {
-		lis_directory_sync_stock_for_category( $term->term_id );
 	}
 
 	if ( class_exists( 'WC_Product_Variable' ) ) {

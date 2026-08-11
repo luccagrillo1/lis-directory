@@ -7,6 +7,32 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.4] â 2026-08-11 â Single-product Vendor Showcase
+
+Replaced the per-category Showcase model (one WooCommerce variation per vendor
+category + a mirrored `lis_vendor_category` per listing category â hundreds of
+variations that bogged wp-admin down) with a single Monthly/Annually
+subscription product, the same shape as Standard/Featured.
+
+- **Category comes from the listing.** A Showcase buyer occupies the category
+  they already picked for their listing (`lis_listing_category`). That one
+  category is mirrored to a `lis_vendor_category` term just-in-time at submit
+  time, so the proven one-active-vendor-per-category exclusivity engine keeps
+  working with zero pre-created bloat.
+- **Exclusivity in PHP, not stock.** The checkout-URL builder returns '' (and
+  the plan step warns) when the chosen category already has an active showcase
+  vendor; the submit handler re-checks server-side.
+- **Occupied warning.** âThis category is currently occupied â recommend a new
+  one or ask about this spot, contact us.â
+- **Optional assets.** Tagline, logo, and business card are no longer required.
+
+**Files:** includes/woocommerce.php (generator + settings copy),
+includes/listings-pricing.php (checkout URL + variation resolver),
+includes/listings-submission.php (plan step + submit handler),
+assets/css/listings.css.
+
+---
+
 ## [0.36.3] — 2026-08-09 — Batched Showcase cleanup
 
 Deleting ~228 vendor-category terms in one request timed out (504). Reworked
