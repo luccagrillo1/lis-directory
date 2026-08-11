@@ -50,9 +50,11 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	}
 
 	add_filter( 'woocommerce_add_cart_item_data', 'lis_directory_add_listing_id_to_cart_item', 10, 2 );
+	// Show the listing once, as a clean "Listing: <name>" row under the product
+	// (woocommerce_get_item_data). The old woocommerce_cart_item_name /
+	// woocommerce_order_item_name appends ("— Featuring: <name>") duplicated it
+	// and made the line item read as a run-on, so they're intentionally not hooked.
 	add_filter( 'woocommerce_get_item_data', 'lis_directory_show_listing_in_cart_item_data', 10, 2 );
-	add_filter( 'woocommerce_cart_item_name', 'lis_directory_add_listing_to_cart_item_name', 10, 3 );
-	add_filter( 'woocommerce_order_item_name', 'lis_directory_add_listing_to_order_item_name', 10, 2 );
 	add_action( 'woocommerce_checkout_create_order_line_item', 'lis_directory_persist_listing_id_to_order_item', 10, 4 );
 	add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );

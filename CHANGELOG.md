@@ -7,6 +7,16 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.7] â 2026-08-11 â Cleaner checkout line item
+
+The listing name was showing twice on the Vendor Showcase checkout line â once
+appended to the product name ("â Featuring: X") and once as a "Listing: X" row.
+Dropped the name-append filters (woocommerce_cart_item_name /
+woocommerce_order_item_name) so it shows once, cleanly. **Files:**
+includes/listings-pricing.php.
+
+---
+
 ## [0.36.6] â 2026-08-11 â Whole-dollar plan prices
 
 Plan-step prices dropped the trailing `.00` on whole-number amounts ($9/mo, not

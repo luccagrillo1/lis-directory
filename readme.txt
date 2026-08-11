@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.6
+Stable tag: 0.36.7
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.7 =
+* Simplified the checkout line item: the listing shows once as a clean "Listing: <name>" row instead of also being appended to the product name ("â Featuring: <name>"), which read as a cluttered run-on.
 
 = 0.36.6 =
 * Plan step now shows whole-dollar prices without the trailing .00 ($9/mo, not $9.00/mo); decimals still show if a price isnât round.
