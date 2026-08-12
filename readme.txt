@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.8
+Stable tag: 0.36.9
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.9 =
+* Admin "Listing Details" meta box is now fully editable: tagline, logo, business card, Google Business link, owner (reassign to any user), plan/tier + billing, Featured, payment reference, and expiry (date + never-expire).
+* A listingâs logo auto-fills the "Set listing image" (featured image) when none is set â in the admin box and the front-end forms.
+* Business-card ticker cards now fill their frame edge-to-edge (no dead white margins).
 
 = 0.36.8 =
 * New [lis_preferred_vendor_top_category_card] shortcode: on a search/archive results page it finds the most common listing category among the results and shows that categoryâs Vendor Showcase card in the single-vendor spot. Optional fallback="category-slug".

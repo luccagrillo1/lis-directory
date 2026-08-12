@@ -655,6 +655,11 @@ function lis_directory_handle_listing_submission() {
 		update_post_meta( $post_id, '_lis_listing_gallery_ids', implode( ',', $photo_ids ) );
 	}
 
+	// Use the uploaded logo as the listing image when no photo set one.
+	if ( $logo_id && ! has_post_thumbnail( $post_id ) ) {
+		set_post_thumbnail( $post_id, $logo_id );
+	}
+
 	if ( ! empty( $_POST['lis_listing_video_url'] ) ) {
 		update_post_meta( $post_id, '_lis_listing_video_url', esc_url_raw( wp_unslash( $_POST['lis_listing_video_url'] ) ) );
 	}

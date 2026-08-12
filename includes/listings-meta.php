@@ -109,6 +109,17 @@ function lis_directory_register_listing_meta() {
 		'_lis_listing_video_url'    => 'string',
 		'_lis_listing_gallery_ids'  => 'string', // Comma-separated attachment IDs.
 		'_lis_listing_services'     => 'string', // One service per line.
+		// Branding (also collected in the front-end "Branding" wizard step).
+		'_lis_listing_tagline'          => 'string',
+		'_lis_listing_logo_id'          => 'integer', // Logo attachment ID.
+		'_lis_listing_business_card_id' => 'integer', // Business-card attachment ID.
+		'_lis_listing_google_url'       => 'string',  // Google Maps / Business Profile link.
+		// Plan / payment (normally set by the WooCommerce order flow; also
+		// editable by hand here so an admin can grant/adjust without a purchase).
+		'_lis_listing_pending_tier'     => 'string',  // '' | standard | featured | showcase.
+		'_lis_listing_pending_billing'  => 'string',  // '' | month | year.
+		'_lis_listing_featured'         => 'boolean',
+		'_lis_listing_paid_order_id'    => 'integer', // WooCommerce order/subscription ID.
 		'_lis_listing_facebook'     => 'string',
 		'_lis_listing_instagram'    => 'string',
 		'_lis_listing_twitter'      => 'string',
@@ -177,6 +188,25 @@ function lis_directory_render_listing_meta_box( $post ) {
 	$employment_type = get_post_meta( $post->ID, '_lis_listing_employment_type', true );
 	$faqs       = lis_directory_get_listing_faqs( $post->ID );
 	$sold       = (bool) get_post_meta( $post->ID, '_lis_listing_sold', true );
+
+	// Branding.
+	$tagline    = get_post_meta( $post->ID, '_lis_listing_tagline', true );
+	$google_url = get_post_meta( $post->ID, '_lis_listing_google_url', true );
+	$logo_id    = (int) get_post_meta( $post->ID, '_lis_listing_logo_id', true );
+	$card_id    = (int) get_post_meta( $post->ID, '_lis_listing_business_card_id', true );
+	$logo_url   = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+	$card_url   = $card_id ? wp_get_attachment_image_url( $card_id, 'medium' ) : '';
+
+	// Plan / payment.
+	$tier       = get_post_meta( $post->ID, '_lis_listing_pending_tier', true );
+	$billing    = get_post_meta( $post->ID, '_lis_listing_pending_billing', true );
+	$featured   = (bool) get_post_meta( $post->ID, '_lis_listing_featured', true );
+	$order_id   = (int) get_post_meta( $post->ID, '_lis_listing_paid_order_id', true );
+
+	// Expiry (meta registered in includes/listings-expiry.php).
+	$expiry_raw   = get_post_meta( $post->ID, '_lis_listing_expiry', true );
+	$expiry_date  = $expiry_raw ? substr( (string) $expiry_raw, 0, 10 ) : '';
+	$never_expire = (bool) get_post_meta( $post->ID, '_lis_listing_never_expire', true );
 	?>
 	<table class="form-table">
 		<tr>
@@ -280,6 +310,97 @@ function lis_directory_render_listing_meta_box( $post ) {
 				<input type="url" id="lis_listing_twitter" name="lis_listing_twitter" class="large-text" value="<?php echo esc_attr( $twitter ); ?>" placeholder="https://x.com/..." /></p>
 				<p><label for="lis_listing_linkedin">LinkedIn</label><br />
 				<input type="url" id="lis_listing_linkedin" name="lis_listing_linkedin" class="large-text" value="<?php echo esc_attr( $linkedin ); ?>" placeholder="https://linkedin.com/..." /></p>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="lis_listing_tagline">Tagline</label></th>
+			<td><input type="text" id="lis_listing_tagline" name="lis_listing_tagline" class="large-text" value="<?php echo esc_attr( $tagline ); ?>" placeholder="e.g. For all your insurance needs" /></td>
+		</tr>
+		<tr>
+			<th><label for="lis_listing_google_url">Google Business link</label></th>
+			<td>
+				<input type="url" id="lis_listing_google_url" name="lis_listing_google_url" class="large-text" value="<?php echo esc_attr( $google_url ); ?>" placeholder="https://maps.google.com/... or Google Business Profile URL" />
+				<p class="description">The business's Google Maps / Business Profile page — the link Google gives when you find the business. Optional; used as a "View on Google" link where shown.</p>
+			</td>
+		</tr>
+		<tr>
+			<th>Logo</th>
+			<td>
+				<input type="hidden" id="lis_listing_logo_id" name="lis_listing_logo_id" value="<?php echo (int) $logo_id; ?>" />
+				<img id="lis_listing_logo_id_preview" src="<?php echo esc_url( $logo_url ); ?>" style="max-height:64px;width:auto;vertical-align:middle;margin-right:8px;<?php echo $logo_url ? '' : 'display:none;'; ?>" />
+				<button type="button" class="button lis-pv-upload-logo" data-target="lis_listing_logo_id">Select Logo</button>
+				<button type="button" class="button lis-pv-remove-logo" data-target="lis_listing_logo_id" style="<?php echo $logo_url ? '' : 'display:none;'; ?>">Remove</button>
+				<p class="description">Transparent PNG works best. Also used as the listing image automatically when no listing image is set.</p>
+			</td>
+		</tr>
+		<tr>
+			<th>Business Card</th>
+			<td>
+				<input type="hidden" id="lis_listing_business_card_id" name="lis_listing_business_card_id" value="<?php echo (int) $card_id; ?>" />
+				<img id="lis_listing_business_card_id_preview" src="<?php echo esc_url( $card_url ); ?>" style="max-height:80px;width:auto;vertical-align:middle;margin-right:8px;<?php echo $card_url ? '' : 'display:none;'; ?>" />
+				<button type="button" class="button lis-pv-upload-logo" data-target="lis_listing_business_card_id">Select Business Card</button>
+				<button type="button" class="button lis-pv-remove-logo" data-target="lis_listing_business_card_id" style="<?php echo $card_url ? '' : 'display:none;'; ?>">Remove</button>
+				<p class="description">Shown in the business-card ticker (best at 3.5&times;2 proportions).</p>
+			</td>
+		</tr>
+		<?php if ( current_user_can( 'edit_others_posts' ) ) : ?>
+		<tr>
+			<th><label for="lis_listing_owner">Owner</label></th>
+			<td>
+				<?php
+				wp_dropdown_users( array(
+					'name'             => 'lis_listing_owner',
+					'selected'         => $post->post_author,
+					'include_selected' => true,
+					'show'             => 'display_name_with_login',
+				) );
+				?>
+				<p class="description">The account that owns this listing (can edit it on the front end). Reassign to any user.</p>
+			</td>
+		</tr>
+		<?php endif; ?>
+		<tr>
+			<th><label for="lis_listing_pending_tier">Plan / Tier</label></th>
+			<td>
+				<select id="lis_listing_pending_tier" name="lis_listing_pending_tier">
+					<?php
+					$tier_opts = array( '' => '— None (free) —', 'standard' => 'Standard', 'featured' => 'Featured', 'showcase' => 'Vendor Showcase' );
+					foreach ( $tier_opts as $val => $label ) :
+						?>
+						<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $tier, $val ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<select name="lis_listing_pending_billing" aria-label="Billing">
+					<?php
+					$bill_opts = array( '' => '— Billing —', 'month' => 'Monthly', 'year' => 'Annually' );
+					foreach ( $bill_opts as $val => $label ) :
+						?>
+						<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $billing, $val ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<p class="description">The subscription plan this listing is on. Normally set by the WooCommerce order; editable here to grant/adjust by hand.</p>
+			</td>
+		</tr>
+		<tr>
+			<th>Featured</th>
+			<td><label><input type="checkbox" name="lis_listing_featured" value="1" <?php checked( $featured ); ?> /> Show the Featured badge &amp; priority placement</label></td>
+		</tr>
+		<tr>
+			<th><label for="lis_listing_paid_order_id">Payment reference</label></th>
+			<td>
+				<input type="text" id="lis_listing_paid_order_id" name="lis_listing_paid_order_id" class="regular-text" value="<?php echo $order_id ? (int) $order_id : ''; ?>" placeholder="WooCommerce order / subscription ID" />
+				<?php if ( $order_id ) : ?>
+					<a class="button" href="<?php echo esc_url( admin_url( 'post.php?post=' . $order_id . '&action=edit' ) ); ?>" target="_blank">Open order</a>
+				<?php endif; ?>
+				<p class="description">The WooCommerce order/subscription this listing was paid through, if any.</p>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="lis_listing_expiry">Expires</label></th>
+			<td>
+				<input type="date" id="lis_listing_expiry" name="lis_listing_expiry" value="<?php echo esc_attr( $expiry_date ); ?>" />
+				<label style="margin-left:12px;"><input type="checkbox" name="lis_listing_never_expire" value="1" <?php checked( $never_expire ); ?> /> Never expires</label>
+				<p class="description">Auto-unpublished after this date (checked once a day). Leave blank or tick "Never expires" to keep it live indefinitely.</p>
 			</td>
 		</tr>
 		<tr>
@@ -413,6 +534,75 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 		$valid           = lis_directory_get_employment_types();
 		update_post_meta( $post_id, '_lis_listing_employment_type', isset( $valid[ $employment_type ] ) ? $employment_type : '' );
 	}
+	// Branding.
+	if ( isset( $_POST['lis_listing_tagline'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_tagline', sanitize_text_field( wp_unslash( $_POST['lis_listing_tagline'] ) ) );
+	}
+	if ( isset( $_POST['lis_listing_google_url'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_google_url', esc_url_raw( wp_unslash( $_POST['lis_listing_google_url'] ) ) );
+	}
+	if ( isset( $_POST['lis_listing_logo_id'] ) ) {
+		$logo_id = absint( $_POST['lis_listing_logo_id'] );
+		if ( $logo_id ) {
+			update_post_meta( $post_id, '_lis_listing_logo_id', $logo_id );
+			// Use the logo as the listing image automatically when none is set yet.
+			if ( ! has_post_thumbnail( $post_id ) ) {
+				set_post_thumbnail( $post_id, $logo_id );
+			}
+		} else {
+			delete_post_meta( $post_id, '_lis_listing_logo_id' );
+		}
+	}
+	if ( isset( $_POST['lis_listing_business_card_id'] ) ) {
+		$card_id = absint( $_POST['lis_listing_business_card_id'] );
+		if ( $card_id ) {
+			update_post_meta( $post_id, '_lis_listing_business_card_id', $card_id );
+		} else {
+			delete_post_meta( $post_id, '_lis_listing_business_card_id' );
+		}
+	}
+
+	// Plan / payment.
+	if ( isset( $_POST['lis_listing_pending_tier'] ) ) {
+		$t = sanitize_key( wp_unslash( $_POST['lis_listing_pending_tier'] ) );
+		update_post_meta( $post_id, '_lis_listing_pending_tier', in_array( $t, array( 'standard', 'featured', 'showcase' ), true ) ? $t : '' );
+	}
+	if ( isset( $_POST['lis_listing_pending_billing'] ) ) {
+		$b = sanitize_key( wp_unslash( $_POST['lis_listing_pending_billing'] ) );
+		update_post_meta( $post_id, '_lis_listing_pending_billing', in_array( $b, array( 'month', 'year' ), true ) ? $b : '' );
+	}
+	update_post_meta( $post_id, '_lis_listing_featured', ! empty( $_POST['lis_listing_featured'] ) );
+	if ( isset( $_POST['lis_listing_paid_order_id'] ) ) {
+		$oid = absint( $_POST['lis_listing_paid_order_id'] );
+		if ( $oid ) {
+			update_post_meta( $post_id, '_lis_listing_paid_order_id', $oid );
+		} else {
+			delete_post_meta( $post_id, '_lis_listing_paid_order_id' );
+		}
+	}
+
+	// Expiry.
+	update_post_meta( $post_id, '_lis_listing_never_expire', ! empty( $_POST['lis_listing_never_expire'] ) );
+	if ( isset( $_POST['lis_listing_expiry'] ) ) {
+		$d = sanitize_text_field( wp_unslash( $_POST['lis_listing_expiry'] ) );
+		if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $d ) ) {
+			update_post_meta( $post_id, '_lis_listing_expiry', $d . ' 23:59:59' );
+		} else {
+			delete_post_meta( $post_id, '_lis_listing_expiry' );
+		}
+	}
+
+	// Owner reassignment (admins only). wp_update_post() re-fires save_post, so
+	// unhook this handler around it to avoid re-entrancy.
+	if ( current_user_can( 'edit_others_posts' ) && isset( $_POST['lis_listing_owner'] ) ) {
+		$new_author = absint( $_POST['lis_listing_owner'] );
+		if ( $new_author && get_userdata( $new_author ) && $new_author !== (int) get_post_field( 'post_author', $post_id ) ) {
+			remove_action( 'save_post_lis_listing', 'lis_directory_save_listing_meta_box' );
+			wp_update_post( array( 'ID' => $post_id, 'post_author' => $new_author ) );
+			add_action( 'save_post_lis_listing', 'lis_directory_save_listing_meta_box' );
+		}
+	}
+
 	if ( isset( $_POST['lis_listing_faq_question'] ) ) {
 		$questions = (array) wp_unslash( $_POST['lis_listing_faq_question'] );
 		$answers   = isset( $_POST['lis_listing_faq_answer'] ) ? (array) wp_unslash( $_POST['lis_listing_faq_answer'] ) : array();

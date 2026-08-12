@@ -7,6 +7,24 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.9] â 2026-08-12 â Full admin editing + card fills
+
+- **Everything editable in the admin meta box.** Added to Listing Details:
+  Tagline, Logo, Business Card (media pickers, reusing admin.js), Google Business
+  link, Owner (reassign to any user â admins only, guarded against save re-entry),
+  Plan/Tier + Billing, Featured, Payment reference (order/subscription ID, with an
+  "Open order" link), and Expiry (date + "Never expires").
+- **Logo -> listing image.** When a listing has no featured image, its logo is used
+  automatically â in the admin box AND the front-end submit/edit flows.
+- **Business-card ticker fills the frame.** Dropped the 8px padding and switched
+  the image to `object-fit: cover`, so cards fill 350x200 edge-to-edge with no dead
+  white margins (exact-ratio cards donât crop at all).
+
+**Files:** includes/listings-meta.php, includes/listings-submission.php,
+includes/listings-edit.php, assets/css/vendor-ticker-bizcards.css.
+
+---
+
 ## [0.36.8] â 2026-08-11 â Top-category vendor card shortcode
 
 Added `[lis_preferred_vendor_top_category_card]`. Placed on the listings

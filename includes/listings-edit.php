@@ -447,7 +447,13 @@ function lis_directory_handle_listing_update() {
 	if ( ! empty( $gallery_ids ) ) {
 		set_post_thumbnail( $listing_id, $gallery_ids[0] );
 	} else {
-		delete_post_thumbnail( $listing_id );
+		// No gallery photos — fall back to the logo as the listing image if there is one.
+		$final_logo = (int) get_post_meta( $listing_id, '_lis_listing_logo_id', true );
+		if ( $final_logo ) {
+			set_post_thumbnail( $listing_id, $final_logo );
+		} else {
+			delete_post_thumbnail( $listing_id );
+		}
 	}
 
 	lis_directory_save_submitted_hours( $listing_id );
