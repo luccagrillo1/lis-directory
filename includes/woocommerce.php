@@ -272,6 +272,33 @@ function lis_directory_render_settings_page() {
 		<?php endif; ?>
 
 		<hr />
+		<h2>De-duplicate listings</h2>
+		<p class="description" style="max-width:640px;">
+			An earlier import left a stray admin-owned copy of most listings; the real
+			migration then created the correct copy owned by the actual business. This
+			keeps the correct (migrated, real-owner) copy and moves the stray one to the
+			<strong>Trash</strong> (reversible). It only touches a listing when a migrated
+			twin exists &mdash; never a unique listing, a migrated copy, or one a Vendor
+			Showcase links to.
+		</p>
+		<?php if ( isset( $_GET['lis_dd'] ) && 'ran' === $_GET['lis_dd'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only.
+			$dd_remaining = isset( $_GET['lis_dd_r'] ) ? (int) $_GET['lis_dd_r'] : 0; ?>
+			<div class="notice notice-success inline"><p>Trashed <?php echo isset( $_GET['lis_dd_t'] ) ? (int) $_GET['lis_dd_t'] : 0; ?> duplicate(s) this pass<?php echo $dd_remaining ? ' &mdash; ' . (int) $dd_remaining . ' still to go, running again…' : ' &mdash; all clear.'; ?></p></div>
+			<?php if ( $dd_remaining > 0 ) : ?>
+				<script>window.addEventListener('load',function(){var f=[].slice.call(document.querySelectorAll('form')).filter(function(x){return x.querySelector('input[value="lis_directory_dedupe"]');})[0];if(f){setTimeout(function(){HTMLFormElement.prototype.submit.call(f);},600);}});</script>
+			<?php endif; ?>
+		<?php endif; ?>
+		<?php $dd_count = function_exists( 'lis_directory_dedupe_count' ) ? lis_directory_dedupe_count() : 0; ?>
+		<p><strong>Duplicate copies found:</strong> <?php echo (int) $dd_count; ?> (these would be trashed; their correct twin is kept).</p>
+		<?php if ( $dd_count > 0 ) : ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('Move <?php echo (int) $dd_count; ?> stray duplicate listing(s) to Trash? The correct real-owner copy of each is kept. This is reversible from Trash.');">
+				<input type="hidden" name="action" value="lis_directory_dedupe" />
+				<?php wp_nonce_field( 'lis_directory_dedupe', 'lis_dd_nonce' ); ?>
+				<?php submit_button( 'Remove duplicate listings (trash ' . (int) $dd_count . ')', 'delete', 'submit', false ); ?>
+			</form>
+		<?php endif; ?>
+
+		<hr />
 		<h3>Testing tool</h3>
 		<p class="description" style="max-width:640px;">
 			Creates a throwaway <strong>$0, non-subscription</strong> product tagged to

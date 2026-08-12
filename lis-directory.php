@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.36.11
+ * Version:           0.36.12
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.36.11 (Vendor Showcase ticker items now link to the new self-hosted listings, not the old Directorist ones — via linked listing id or matching slug)
+ * LIS Directory — v0.36.12 (De-duplicate-listings tool (keeps the correct real-owner copy, trashes the stray) + a manual "Vendor Showcase" checkbox on the listing editor)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.36.11' );
+define( 'LIS_DIRECTORY_VERSION', '0.36.12' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );

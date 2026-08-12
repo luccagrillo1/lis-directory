@@ -7,6 +7,21 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.12] â 2026-08-12 â Dedupe tool + manual showcase checkbox
+
+- **De-duplicate listings.** An earlier import left an admin-owned copy of most
+  listings; the real migration added the correct real-owner copy (tagged
+  `_lis_migrated_from`). New Settings tool groups by title and, only where a
+  migrated twin exists, moves the un-migrated stray to Trash â batched, reversible,
+  never touching a unique listing, a migrated copy, or one a vendor links to.
+  (`includes/directorist-migration.php`, `includes/woocommerce.php`.)
+- **Manual Vendor Showcase checkbox** on the listing editor. Ticking it creates/
+  activates the linked `lis_preferred_vendor` from the listingâs own category,
+  tagline, logo, and business card (held Pending if the category is already taken);
+  unticking deactivates it. (`includes/listings-meta.php`.)
+
+---
+
 ## [0.36.11] â 2026-08-12 â Ticker links point at the new listings
 
 Showcase ticker items (card / logo / business card) linked to the vendorâs stored

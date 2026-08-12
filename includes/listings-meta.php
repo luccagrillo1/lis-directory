@@ -207,6 +207,10 @@ function lis_directory_render_listing_meta_box( $post ) {
 	$expiry_raw   = get_post_meta( $post->ID, '_lis_listing_expiry', true );
 	$expiry_date  = $expiry_raw ? substr( (string) $expiry_raw, 0, 10 ) : '';
 	$never_expire = (bool) get_post_meta( $post->ID, '_lis_listing_never_expire', true );
+
+	// Vendor Showcase: on when this listing has a linked, active vendor entry.
+	$showcase_vendor = function_exists( 'lis_directory_get_vendor_for_listing' ) ? lis_directory_get_vendor_for_listing( $post->ID ) : 0;
+	$showcase_on     = $showcase_vendor && 'active' === get_post_meta( $showcase_vendor, '_lis_pv_status', true );
 	?>
 	<table class="form-table">
 		<tr>
@@ -384,6 +388,13 @@ function lis_directory_render_listing_meta_box( $post ) {
 		<tr>
 			<th>Featured</th>
 			<td><label><input type="checkbox" name="lis_listing_featured" value="1" <?php checked( $featured ); ?> /> Show the Featured badge &amp; priority placement</label></td>
+		</tr>
+		<tr>
+			<th>Vendor Showcase</th>
+			<td>
+				<label><input type="checkbox" name="lis_listing_showcase" value="1" <?php checked( $showcase_on ); ?> /> Feature this listing in the Vendor Showcase</label>
+				<p class="description">Creates &amp; activates a Vendor Showcase entry for this listing using its category, tagline, logo, and business card. One business per category &mdash; if the category is already taken by another vendor it's held as pending instead of active. Unchecking deactivates it.</p>
+			</td>
 		</tr>
 		<tr>
 			<th><label for="lis_listing_paid_order_id">Payment reference</label></th>
@@ -592,6 +603,11 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 		}
 	}
 
+	// Vendor Showcase toggle — create/activate or deactivate the linked vendor.
+	if ( function_exists( 'lis_directory_sync_listing_showcase' ) ) {
+		lis_directory_sync_listing_showcase( $post_id, ! empty( $_POST['lis_listing_showcase'] ) );
+	}
+
 	// Owner reassignment (admins only). wp_update_post() re-fires save_post, so
 	// unhook this handler around it to avoid re-entrancy.
 	if ( current_user_can( 'edit_others_posts' ) && isset( $_POST['lis_listing_owner'] ) ) {
@@ -616,6 +632,81 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 		}
 		update_post_meta( $post_id, '_lis_listing_faqs', wp_json_encode( $faqs ) );
 	}
+}
+
+/**
+ * Manual "Vendor Showcase" toggle on a listing. When enabled, ensure a linked
+ * `lis_preferred_vendor` exists (created if needed), synced from the listing's
+ * own category / tagline / logo / business card, and set Active — unless the
+ * listing's category is already held by another active vendor, in which case
+ * it's held Pending (one business per category). When disabled, a linked active
+ * vendor is set back to Pending (deactivated, not deleted).
+ *
+ * Reuses the same pieces as the wizard's showcase path: the linked-vendor
+ * lookup, the just-in-time listing-category → vendor-category mirror, the
+ * status choke point, and the category-conflict check.
+ *
+ * @param int  $listing_id
+ * @param bool $enable
+ */
+function lis_directory_sync_listing_showcase( $listing_id, $enable ) {
+	if ( ! function_exists( 'lis_directory_get_vendor_for_listing' ) || ! function_exists( 'lis_directory_set_vendor_status' ) ) {
+		return;
+	}
+	$vendor_id = lis_directory_get_vendor_for_listing( $listing_id );
+
+	if ( ! $enable ) {
+		if ( $vendor_id && 'active' === get_post_meta( $vendor_id, '_lis_pv_status', true ) ) {
+			lis_directory_set_vendor_status( $vendor_id, 'pending' );
+		}
+		return;
+	}
+
+	$listing = get_post( $listing_id );
+	if ( ! $listing ) {
+		return;
+	}
+
+	// The listing's own category → its mirrored vendor category (created on demand).
+	$term_ids       = wp_get_post_terms( $listing_id, 'lis_listing_category', array( 'fields' => 'ids' ) );
+	$listing_term   = ( ! is_wp_error( $term_ids ) && ! empty( $term_ids ) ) ? (int) $term_ids[0] : 0;
+	$vendor_term_id = ( $listing_term && function_exists( 'lis_directory_vendor_category_for_listing_category' ) )
+		? lis_directory_vendor_category_for_listing_category( $listing_term )
+		: 0;
+
+	if ( ! $vendor_id ) {
+		$vendor_id = wp_insert_post( array(
+			'post_type'   => 'lis_preferred_vendor',
+			'post_title'  => $listing->post_title,
+			'post_status' => 'publish', // Not public; uses its own _lis_pv_status workflow.
+			'post_author' => $listing->post_author,
+		), true );
+		if ( is_wp_error( $vendor_id ) || ! $vendor_id ) {
+			return;
+		}
+		update_post_meta( $vendor_id, '_lis_pv_listing_id', $listing_id );
+	}
+
+	if ( $vendor_term_id ) {
+		wp_set_post_terms( $vendor_id, array( (int) $vendor_term_id ), 'lis_vendor_category' );
+	}
+
+	// Sync branding + link from the listing.
+	update_post_meta( $vendor_id, '_lis_pv_tagline', (string) get_post_meta( $listing_id, '_lis_listing_tagline', true ) );
+	update_post_meta( $vendor_id, '_lis_pv_link_url', get_permalink( $listing_id ) );
+	update_post_meta( $vendor_id, '_lis_pv_contact_email', (string) get_post_meta( $listing_id, '_lis_listing_email', true ) );
+	$logo = (int) get_post_meta( $listing_id, '_lis_listing_logo_id', true );
+	$card = (int) get_post_meta( $listing_id, '_lis_listing_business_card_id', true );
+	if ( $logo ) {
+		update_post_meta( $vendor_id, '_lis_pv_logo_color_id', $logo );
+	}
+	if ( $card ) {
+		update_post_meta( $vendor_id, '_lis_pv_business_card_id', $card );
+	}
+
+	// Activate unless the category is already taken by another active vendor.
+	$conflict = function_exists( 'lis_directory_get_active_conflict' ) ? lis_directory_get_active_conflict( $vendor_id ) : null;
+	lis_directory_set_vendor_status( $vendor_id, $conflict ? 'pending' : 'active' );
 }
 
 /**

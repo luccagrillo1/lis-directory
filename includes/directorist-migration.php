@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 add_action( 'admin_post_lis_directory_migration_run', 'lis_directory_migration_run_handler' );
+add_action( 'admin_post_lis_directory_dedupe', 'lis_directory_dedupe_run_handler' );
 
 /**
  * How many Directorist listings exist, and how many we've already migrated.
@@ -287,6 +288,152 @@ function lis_directory_migration_run_handler() {
 
 	$redirect = admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' );
 	$redirect = add_query_arg( array( 'lis_dm' => 'ran', 'lis_dm_c' => $created, 'lis_dm_s' => $skipped, 'lis_dm_e' => $errors ), $redirect );
+	wp_safe_redirect( $redirect );
+	exit;
+}
+
+/* ------------------------------------------------------------------ *
+ * De-duplicate listings.                                              *
+ *                                                                     *
+ * An earlier import created a copy of each Directorist listing owned  *
+ * by the admin account (no `_lis_migrated_from` marker); the real      *
+ * migration then created the correct copy owned by the actual         *
+ * business, tagged with `_lis_migrated_from`. Result: two of most      *
+ * listings. This keeps the correct (migrated, real-owner) copy and     *
+ * trashes the stray one — but ONLY when a migrated twin exists, so a    *
+ * unique listing is never touched, and never a migrated copy or one    *
+ * a Vendor Showcase entry links to.                                    *
+ * ------------------------------------------------------------------ */
+
+/**
+ * Listing IDs that a Vendor Showcase entry links to via `_lis_pv_listing_id` —
+ * never trashed, so a showcase never loses its listing.
+ */
+function lis_directory_vendor_linked_listing_ids() {
+	$linked = array();
+	$vendors = get_posts( array( 'post_type' => 'lis_preferred_vendor', 'post_status' => 'any', 'posts_per_page' => -1, 'fields' => 'ids' ) );
+	foreach ( $vendors as $vid ) {
+		$lid = (int) get_post_meta( $vid, '_lis_pv_listing_id', true );
+		if ( $lid ) {
+			$linked[ $lid ] = true;
+		}
+	}
+	return $linked;
+}
+
+/**
+ * Group lis_listings by exact (case-insensitive) title and work out, per
+ * duplicated title, which copies to keep and which to trash.
+ *
+ * Rule: keep every copy that carries the `_lis_migrated_from` marker (the
+ * migration preserved the real business owner as author); trash the copies
+ * WITHOUT the marker — but only in a group that HAS at least one marked twin,
+ * and never a copy a vendor links to. A group that's all-marked or all-unmarked
+ * is left completely alone (ambiguous — better to keep both than guess).
+ *
+ * @return array<int,array{title:string,keep:int[],trash:int[]}>
+ */
+function lis_directory_find_duplicate_listings() {
+	$posts = get_posts( array(
+		'post_type'      => 'lis_listing',
+		'post_status'    => array( 'publish', 'pending', 'draft', 'private' ),
+		'posts_per_page' => -1,
+		'orderby'        => 'ID',
+		'order'          => 'ASC',
+	) );
+
+	$linked = lis_directory_vendor_linked_listing_ids();
+
+	$by_title = array();
+	foreach ( $posts as $p ) {
+		$key = strtolower( trim( $p->post_title ) );
+		if ( '' === $key ) {
+			continue;
+		}
+		$by_title[ $key ][] = $p;
+	}
+
+	$groups = array();
+	foreach ( $by_title as $arr ) {
+		if ( count( $arr ) < 2 ) {
+			continue;
+		}
+		$marked   = array();
+		$unmarked = array();
+		foreach ( $arr as $p ) {
+			if ( '' !== (string) get_post_meta( $p->ID, '_lis_migrated_from', true ) ) {
+				$marked[] = $p;
+			} else {
+				$unmarked[] = $p;
+			}
+		}
+
+		$keep  = array();
+		$trash = array();
+		if ( ! empty( $marked ) && ! empty( $unmarked ) ) {
+			foreach ( $marked as $p ) {
+				$keep[] = (int) $p->ID;
+			}
+			foreach ( $unmarked as $p ) {
+				if ( isset( $linked[ $p->ID ] ) ) {
+					$keep[] = (int) $p->ID; // linked to a vendor — keep it
+				} else {
+					$trash[] = (int) $p->ID;
+				}
+			}
+		} else {
+			// Ambiguous — keep everything, trash nothing.
+			foreach ( $arr as $p ) {
+				$keep[] = (int) $p->ID;
+			}
+		}
+
+		$groups[] = array( 'title' => $arr[0]->post_title, 'keep' => $keep, 'trash' => $trash );
+	}
+
+	return $groups;
+}
+
+/**
+ * How many duplicate copies would be trashed (across all groups).
+ */
+function lis_directory_dedupe_count() {
+	$n = 0;
+	foreach ( lis_directory_find_duplicate_listings() as $g ) {
+		$n += count( $g['trash'] );
+	}
+	return $n;
+}
+
+/**
+ * Trash the stray duplicates in a bounded batch (trashing hundreds in one
+ * request times out). Returns { trashed, remaining } so the caller can re-run.
+ */
+function lis_directory_dedupe_run( $batch = 40 ) {
+	$trashed   = 0;
+	$remaining = 0;
+	foreach ( lis_directory_find_duplicate_listings() as $g ) {
+		foreach ( $g['trash'] as $id ) {
+			if ( $trashed < $batch ) {
+				wp_trash_post( $id );
+				$trashed++;
+			} else {
+				$remaining++;
+			}
+		}
+	}
+	return array( 'trashed' => $trashed, 'remaining' => $remaining );
+}
+
+function lis_directory_dedupe_run_handler() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'Not allowed.' );
+	}
+	check_admin_referer( 'lis_directory_dedupe', 'lis_dd_nonce' );
+
+	$r        = lis_directory_dedupe_run( 40 );
+	$redirect = admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' );
+	$redirect = add_query_arg( array( 'lis_dd' => 'ran', 'lis_dd_t' => (int) $r['trashed'], 'lis_dd_r' => (int) $r['remaining'] ), $redirect );
 	wp_safe_redirect( $redirect );
 	exit;
 }

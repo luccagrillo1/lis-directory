@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.11
+Stable tag: 0.36.12
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.12 =
+* Added a "De-duplicate listings" tool (LIS Directory Settings): keeps the correct migrated, real-owner copy of each listing and moves the stray admin-owned duplicate to Trash (reversible; batched; never touches unique listings or ones a showcase links to).
+* Added a manual "Vendor Showcase" checkbox to the listing editor: ticking it creates/activates a Vendor Showcase entry from the listingâs category, tagline, logo, and business card; unticking deactivates it.
 
 = 0.36.11 =
 * Vendor Showcase ticker cards/logos/business cards now link to the new self-hosted listing (by linked listing ID, or by matching the slug) instead of the old Directorist listing.
