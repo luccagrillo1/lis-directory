@@ -7,6 +7,16 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.18] â 2026-08-12 â No ticker start flash
+
+The random start applied on `window.load`, so the row painted at offset 0 then
+jumped. Now the track renders `visibility:hidden` inline and the script measures +
+random-positions + reveals it at DOM-ready (item sizes are CSS-fixed, so images
+arenât needed). A `<noscript>` rule keeps it visible without JS. **Files:**
+includes/shortcodes.php, assets/js/vendor-ticker.js.
+
+---
+
 ## [0.36.17] â 2026-08-12 â Random ticker start
 
 Each ticker seeds its initial offset to a random point in the loop on load, so it

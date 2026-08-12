@@ -382,7 +382,9 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 	ob_start();
 	?>
 	<div class="lis-pv-ticker lis-pv-ticker-<?php echo esc_attr( $style ); ?>" role="region" aria-label="Vendor showcase">
-		<div class="lis-pv-ticker-track">
+		<?php // Hidden until the script positions the track at its random start, so it never flashes at offset 0. No-JS reveals it below. ?>
+		<noscript><style>.lis-pv-ticker-track{visibility:visible !important;}</style></noscript>
+		<div class="lis-pv-ticker-track" style="visibility:hidden;">
 			<div class="lis-pv-ticker-group"><?php echo $items_html; // phpcs:ignore -- built from escaped markup above. ?></div>
 			<div class="lis-pv-ticker-group lis-pv-ticker-copy" aria-hidden="true"><?php echo $items_html; // phpcs:ignore -- same. ?></div>
 		</div>

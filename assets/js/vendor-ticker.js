@@ -102,24 +102,22 @@
 				offset = Math.random() * loopW;
 			}
 			apply();
+			// The track is rendered `visibility:hidden` inline (see the shortcode)
+			// so nothing paints at offset 0 first — reveal it now that it's already
+			// at its random position, so it's there as soon as it appears.
+			track.style.visibility = 'visible';
 			if ( ! raf ) {
 				raf = window.requestAnimationFrame( frame );
 			}
 		}
 
 		window.addEventListener( 'resize', measure );
-		// Widths depend on images; re-measure as each loads.
-		ticker.querySelectorAll( 'img' ).forEach( function ( img ) {
-			if ( ! img.complete ) {
-				img.addEventListener( 'load', measure );
-			}
-		} );
 
-		if ( document.readyState === 'complete' ) {
-			start();
-		} else {
-			window.addEventListener( 'load', start );
-		}
+		// Run immediately — this is a footer script, so the ticker is already in
+		// the DOM and laid out, and the item sizes are fixed by CSS (they don't
+		// depend on the images loading), so measuring now is accurate. Waiting for
+		// window.load was what made it flash at the start before jumping.
+		start();
 	}
 
 	function boot() {
