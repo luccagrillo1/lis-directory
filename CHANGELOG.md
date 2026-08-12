@@ -7,6 +7,13 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.16] â 2026-08-12 â Logo ticker spacing
+
+More breathing room between logos in `[lis_preferred_vendor_ticker style="logos"]`
+(item padding 16px â 44px per side). **Files:** assets/css/vendor-ticker-logos.css.
+
+---
+
 ## [0.36.15] â 2026-08-12 â Guard the showcase checkbox
 
 The listing meta boxâs Vendor Showcase checkbox deactivated the linked vendor
