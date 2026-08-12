@@ -291,6 +291,11 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 	} elseif ( 'business-cards' === $style ) {
 		$styles .= lis_directory_get_ticker_bizcard_styles_once();
 	}
+
+	// Motion + wheel/two-finger scrubbing (footer script — the shortcode runs
+	// during the_content, so wp_head has already fired but the footer hasn't).
+	wp_enqueue_script( 'lis-directory-vendor-ticker', LIS_DIRECTORY_URL . 'assets/js/vendor-ticker.js', array(), LIS_DIRECTORY_VERSION, true );
+
 	$items_html = implode( '', $items );
 
 	ob_start();

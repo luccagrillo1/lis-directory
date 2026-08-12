@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.9
+Stable tag: 0.36.10
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.10 =
+* Vendor Showcase ticker motion rebuilt in JavaScript: hovering now pauses it exactly where it is (it used to jump back to the start), and you can scrub the row with the mouse wheel or a Mac two-finger swipe.
 
 = 0.36.9 =
 * Admin "Listing Details" meta box is now fully editable: tagline, logo, business card, Google Business link, owner (reassign to any user), plan/tier + billing, Featured, payment reference, and expiry (date + never-expire).

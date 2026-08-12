@@ -7,6 +7,24 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.10] â 2026-08-12 â JS ticker: pause-in-place + wheel/drag scrub
+
+Replaced the pure-CSS marquee (a `@keyframes` translate paused via `:hover`) with
+a small JS transform loop (assets/js/vendor-ticker.js):
+- **Hover pauses in place.** The CSS version repainted from the keyframe start on
+  pause, so hovering jumped the row back to the beginning. JS freezes the exact
+  offset.
+- **Wheel / two-finger scrub.** `wheel` (deltaX or deltaY) moves the row; auto-
+  scroll yields ~1.5s after each scrub. Loops seamlessly both directions off the
+  duplicated group.
+- Same 40s cadence; honors `prefers-reduced-motion` (CSS falls back to a plain
+  horizontal scroll area, JS does not animate).
+
+**Files:** assets/js/vendor-ticker.js (new), assets/css/vendor-ticker.css,
+includes/shortcodes.php (enqueue).
+
+---
+
 ## [0.36.9] â 2026-08-12 â Full admin editing + card fills
 
 - **Everything editable in the admin meta box.** Added to Listing Details:

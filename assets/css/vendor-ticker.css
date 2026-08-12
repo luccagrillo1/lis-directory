@@ -7,7 +7,11 @@
 .lis-pv-ticker-track {
 	display: flex;
 	width: max-content;
-	animation: lis-pv-ticker-scroll 40s linear infinite;
+	will-change: transform;
+	/* Motion is driven by assets/js/vendor-ticker.js (transform), which pauses
+	   cleanly in place on hover and supports wheel / two-finger scrubbing —
+	   things a pure-CSS animation couldn't do (it also "jumped to the start" on
+	   hover). See that file for why. */
 }
 
 .lis-pv-ticker-group {
@@ -16,24 +20,10 @@
 	padding-right: 16px;
 }
 
-.lis-pv-ticker:hover .lis-pv-ticker-track,
-.lis-pv-ticker:focus-within .lis-pv-ticker-track {
-	animation-play-state: paused;
-}
-
 .lis-pv-ticker .lis-pv-card {
 	flex-shrink: 0;
 	width: 420px;
 	max-width: 420px;
-}
-
-@keyframes lis-pv-ticker-scroll {
-	from {
-		transform: translateX(0);
-	}
-	to {
-		transform: translateX(-50%);
-	}
 }
 
 /* The second group is an exact aria-hidden duplicate that makes the loop seamless.
