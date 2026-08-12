@@ -7,6 +7,17 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.14] â 2026-08-12 â Showcase branding follows the listing
+
+The showcase card / logo ticker / business-card ticker read the vendorâs own
+`_lis_pv_*` assets, so a business card set on the *listing* never showed. Now
+they prefer the vendorâs LINKED `lis_listing` branding
+(`_lis_listing_logo_id` / `_lis_listing_business_card_id` / `_lis_listing_tagline`)
+and fall back to the vendorâs own â so editing a listingâs logo/card/tagline
+updates the showcase immediately. **Files:** includes/shortcodes.php.
+
+---
+
 ## [0.36.13] â 2026-08-12 â Vendor links + directory parity
 
 - **Link Vendor Showcases to listings.** New Settings button backfills

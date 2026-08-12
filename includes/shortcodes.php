@@ -189,10 +189,42 @@ function lis_directory_vendor_listing_url( $vendor ) {
 	return $url;
 }
 
+/**
+ * A showcase asset attachment id (logo / business card), preferring the vendor's
+ * LINKED lis_listing so editing the listing's branding updates the showcase.
+ * Falls back to the vendor's own `_lis_pv_*` value when the listing doesn't set
+ * one (e.g. a vendor with no linked listing, or a sample card on the vendor).
+ */
+function lis_directory_vendor_branding_id( $vendor_id, $listing_meta_key, $vendor_meta_key ) {
+	$listing_id = (int) get_post_meta( $vendor_id, '_lis_pv_listing_id', true );
+	if ( $listing_id && 'trash' !== get_post_status( $listing_id ) ) {
+		$v = (int) get_post_meta( $listing_id, $listing_meta_key, true );
+		if ( $v ) {
+			return $v;
+		}
+	}
+	return (int) get_post_meta( $vendor_id, $vendor_meta_key, true );
+}
+
+/**
+ * The showcase tagline, preferring the linked listing's tagline over the
+ * vendor's own (same source-of-truth idea as the assets above).
+ */
+function lis_directory_vendor_tagline( $vendor_id ) {
+	$listing_id = (int) get_post_meta( $vendor_id, '_lis_pv_listing_id', true );
+	if ( $listing_id && 'trash' !== get_post_status( $listing_id ) ) {
+		$t = (string) get_post_meta( $listing_id, '_lis_listing_tagline', true );
+		if ( '' !== $t ) {
+			return $t;
+		}
+	}
+	return (string) get_post_meta( $vendor_id, '_lis_pv_tagline', true );
+}
+
 function lis_directory_render_vendor_card_html( $vendor ) {
-	$tagline  = get_post_meta( $vendor->ID, '_lis_pv_tagline', true );
+	$tagline  = lis_directory_vendor_tagline( $vendor->ID );
 	$link_url = lis_directory_vendor_listing_url( $vendor );
-	$logo_id  = (int) get_post_meta( $vendor->ID, '_lis_pv_logo_color_id', true );
+	$logo_id  = lis_directory_vendor_branding_id( $vendor->ID, '_lis_listing_logo_id', '_lis_pv_logo_color_id' );
 	$logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
 	$name     = get_the_title( $vendor );
 	$tag      = $link_url ? 'a' : 'div';
@@ -371,7 +403,7 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
  * includes/submission.php).
  */
 function lis_directory_render_vendor_logo_html( $vendor, $tone = 'color' ) {
-	$logo_id  = (int) get_post_meta( $vendor->ID, '_lis_pv_logo_color_id', true );
+	$logo_id  = lis_directory_vendor_branding_id( $vendor->ID, '_lis_listing_logo_id', '_lis_pv_logo_color_id' );
 	$logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
 	if ( ! $logo_url ) {
 		return '';
@@ -400,7 +432,7 @@ function lis_directory_render_vendor_logo_html( $vendor, $tone = 'color' ) {
  * ticker item just above.
  */
 function lis_directory_render_vendor_business_card_html( $vendor ) {
-	$card_id  = (int) get_post_meta( $vendor->ID, '_lis_pv_business_card_id', true );
+	$card_id  = lis_directory_vendor_branding_id( $vendor->ID, '_lis_listing_business_card_id', '_lis_pv_business_card_id' );
 	$card_url = $card_id ? wp_get_attachment_image_url( $card_id, 'large' ) : '';
 	if ( ! $card_url ) {
 		return '';
