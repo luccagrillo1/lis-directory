@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'admin_post_lis_directory_migration_run', 'lis_directory_migration_run_handler' );
 add_action( 'admin_post_lis_directory_dedupe', 'lis_directory_dedupe_run_handler' );
+add_action( 'admin_post_lis_directory_link_vendors', 'lis_directory_link_vendors_handler' );
 
 /**
  * How many Directorist listings exist, and how many we've already migrated.
@@ -436,4 +437,139 @@ function lis_directory_dedupe_run_handler() {
 	$redirect = add_query_arg( array( 'lis_dd' => 'ran', 'lis_dd_t' => (int) $r['trashed'], 'lis_dd_r' => (int) $r['remaining'] ), $redirect );
 	wp_safe_redirect( $redirect );
 	exit;
+}
+
+/* ------------------------------------------------------------------ *
+ * Link Vendor Showcase entries to their lis_listing, and report how   *
+ * the new directory lines up against Directorist.                     *
+ * ------------------------------------------------------------------ */
+
+/**
+ * The lis_listing a vendor should point at (0 if none). Prefers an already-set,
+ * still-valid `_lis_pv_listing_id`; else resolves from the stored link URL (a
+ * lis_listing it already points at, or a lis_listing with the same slug); else
+ * matches by title. Never returns a trashed listing.
+ */
+function lis_directory_resolve_vendor_listing_id( $vendor_id ) {
+	$cur = (int) get_post_meta( $vendor_id, '_lis_pv_listing_id', true );
+	if ( $cur && 'lis_listing' === get_post_type( $cur ) && 'trash' !== get_post_status( $cur ) ) {
+		return $cur;
+	}
+
+	$url = (string) get_post_meta( $vendor_id, '_lis_pv_link_url', true );
+	if ( '' !== $url ) {
+		$maybe = url_to_postid( $url );
+		if ( $maybe && 'lis_listing' === get_post_type( $maybe ) && 'trash' !== get_post_status( $maybe ) ) {
+			return $maybe;
+		}
+		$path = trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
+		if ( '' !== $path ) {
+			$parts = explode( '/', $path );
+			$slug  = end( $parts );
+			if ( $slug ) {
+				$m = get_page_by_path( $slug, OBJECT, 'lis_listing' );
+				if ( $m && 'trash' !== get_post_status( $m ) ) {
+					return (int) $m->ID;
+				}
+			}
+		}
+	}
+
+	$title = get_the_title( $vendor_id );
+	if ( $title ) {
+		$byt = get_page_by_title( $title, OBJECT, 'lis_listing' );
+		if ( $byt && 'trash' !== get_post_status( $byt ) ) {
+			return (int) $byt->ID;
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * Ensure every Vendor Showcase entry links to its lis_listing
+ * (`_lis_pv_listing_id`), and refresh its link URL to that listing's permalink.
+ *
+ * @return array{linked:int,already:int,unresolved:int,misses:string[]}
+ */
+function lis_directory_link_vendors_to_listings() {
+	$vendors    = get_posts( array( 'post_type' => 'lis_preferred_vendor', 'post_status' => 'any', 'posts_per_page' => -1, 'fields' => 'ids' ) );
+	$linked     = 0;
+	$already    = 0;
+	$unresolved = 0;
+	$misses     = array();
+
+	foreach ( $vendors as $vid ) {
+		$cur = (int) get_post_meta( $vid, '_lis_pv_listing_id', true );
+		if ( $cur && 'lis_listing' === get_post_type( $cur ) && 'trash' !== get_post_status( $cur ) ) {
+			$already++;
+			continue;
+		}
+		$id = lis_directory_resolve_vendor_listing_id( $vid );
+		if ( $id ) {
+			update_post_meta( $vid, '_lis_pv_listing_id', $id );
+			update_post_meta( $vid, '_lis_pv_link_url', get_permalink( $id ) );
+			$linked++;
+		} else {
+			$unresolved++;
+			$misses[] = get_the_title( $vid );
+		}
+	}
+
+	return array( 'linked' => $linked, 'already' => $already, 'unresolved' => $unresolved, 'misses' => $misses );
+}
+
+function lis_directory_link_vendors_handler() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'Not allowed.' );
+	}
+	check_admin_referer( 'lis_directory_link_vendors', 'lis_lv_nonce' );
+
+	$r        = lis_directory_link_vendors_to_listings();
+	$redirect = admin_url( 'edit.php?post_type=lis_preferred_vendor&page=lis_pv_settings' );
+	$redirect = add_query_arg( array( 'lis_lv' => 'ran', 'lis_lv_l' => (int) $r['linked'], 'lis_lv_a' => (int) $r['already'], 'lis_lv_u' => (int) $r['unresolved'] ), $redirect );
+	wp_safe_redirect( $redirect );
+	exit;
+}
+
+/**
+ * How the new lis_listing directory lines up with Directorist: how many
+ * Directorist listings have a matching lis_listing (by slug or title) and how
+ * many are missing one. Excludes trashed listings on the lis side.
+ *
+ * @return array{exists:bool,directorist:int,lis:int,matched:int,missing:int,missing_titles:string[]}
+ */
+function lis_directory_directory_parity() {
+	if ( ! post_type_exists( 'at_biz_dir' ) ) {
+		return array( 'exists' => false, 'directorist' => 0, 'lis' => 0, 'matched' => 0, 'missing' => 0, 'missing_titles' => array() );
+	}
+	$dir = get_posts( array( 'post_type' => 'at_biz_dir', 'post_status' => array( 'publish', 'pending', 'draft', 'private', 'expired' ), 'posts_per_page' => -1 ) );
+	$lis = get_posts( array( 'post_type' => 'lis_listing', 'post_status' => array( 'publish', 'pending', 'draft', 'private' ), 'posts_per_page' => -1 ) );
+
+	$by_title = array();
+	$by_slug  = array();
+	foreach ( $lis as $p ) {
+		$by_title[ strtolower( trim( $p->post_title ) ) ] = true;
+		$by_slug[ $p->post_name ]                          = true;
+	}
+
+	$matched = 0;
+	$missing = array();
+	foreach ( $dir as $d ) {
+		$t = strtolower( trim( $d->post_title ) );
+		if ( isset( $by_title[ $t ] ) || isset( $by_slug[ $d->post_name ] ) ) {
+			$matched++;
+		} else {
+			$missing[] = $d->post_title;
+		}
+	}
+
+	return array(
+		'exists'         => true,
+		'directorist'    => count( $dir ),
+		'lis'            => count( $lis ),
+		'matched'        => $matched,
+		'missing'        => count( $missing ),
+		'missing_titles' => array_slice( $missing, 0, 40 ),
+	);
 }

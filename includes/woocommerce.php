@@ -299,6 +299,46 @@ function lis_directory_render_settings_page() {
 		<?php endif; ?>
 
 		<hr />
+		<h2>Vendor Showcase links &amp; directory parity</h2>
+		<p class="description" style="max-width:640px;">
+			Link every Vendor Showcase entry to its <code>lis_listing</code>
+			(<code>_lis_pv_listing_id</code>) so cards/logos/tickers point at the new
+			listing, and see how the new directory lines up against Directorist.
+		</p>
+		<?php if ( isset( $_GET['lis_lv'] ) && 'ran' === $_GET['lis_lv'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only. ?>
+			<div class="notice notice-success inline"><p>Linked <?php echo isset( $_GET['lis_lv_l'] ) ? (int) $_GET['lis_lv_l'] : 0; ?> vendor(s) to a listing &middot; already linked <?php echo isset( $_GET['lis_lv_a'] ) ? (int) $_GET['lis_lv_a'] : 0; ?> &middot; couldn't resolve <?php echo isset( $_GET['lis_lv_u'] ) ? (int) $_GET['lis_lv_u'] : 0; ?>.</p></div>
+		<?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:16px;">
+			<input type="hidden" name="action" value="lis_directory_link_vendors" />
+			<?php wp_nonce_field( 'lis_directory_link_vendors', 'lis_lv_nonce' ); ?>
+			<?php submit_button( 'Link Vendor Showcases to listings', 'secondary', 'submit', false ); ?>
+		</form>
+		<?php
+		$parity = function_exists( 'lis_directory_directory_parity' ) ? lis_directory_directory_parity() : array( 'exists' => false );
+		if ( ! empty( $parity['exists'] ) ) : ?>
+			<p>
+				<strong>Directorist listings:</strong> <?php echo (int) $parity['directorist']; ?> &middot;
+				<strong>current LIS listings:</strong> <?php echo (int) $parity['lis']; ?> &middot;
+				<strong>matched:</strong> <?php echo (int) $parity['matched']; ?> &middot;
+				<strong>missing a LIS listing:</strong> <?php echo (int) $parity['missing']; ?>
+			</p>
+			<?php if ( ! empty( $parity['missing_titles'] ) ) : ?>
+				<details style="max-width:900px;">
+					<summary><?php echo (int) $parity['missing']; ?> Directorist listing(s) with no matching LIS listing (first <?php echo count( $parity['missing_titles'] ); ?>):</summary>
+					<ul style="margin-left:18px;list-style:disc;">
+						<?php foreach ( $parity['missing_titles'] as $t ) : ?>
+							<li><?php echo esc_html( $t ); ?></li>
+						<?php endforeach; ?>
+					</ul>
+				</details>
+			<?php else : ?>
+				<p><em>Every Directorist listing has a matching LIS listing. 🎉</em></p>
+			<?php endif; ?>
+		<?php else : ?>
+			<p><em>Directorist (<code>at_biz_dir</code>) isn't active, so there's nothing to compare.</em></p>
+		<?php endif; ?>
+
+		<hr />
 		<h3>Testing tool</h3>
 		<p class="description" style="max-width:640px;">
 			Creates a throwaway <strong>$0, non-subscription</strong> product tagged to

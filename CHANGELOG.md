@@ -7,6 +7,18 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.13] â 2026-08-12 â Vendor links + directory parity
+
+- **Link Vendor Showcases to listings.** New Settings button backfills
+  `_lis_pv_listing_id` on every vendor to its matching `lis_listing` (existing
+  link â same-slug â title match) and refreshes the link URL to that permalink.
+- **Directory parity report.** Compares `at_biz_dir` to `lis_listing`: totals,
+  matched, and which Directorist listings have no LIS twin.
+
+**Files:** includes/directorist-migration.php, includes/woocommerce.php.
+
+---
+
 ## [0.36.12] â 2026-08-12 â Dedupe tool + manual showcase checkbox
 
 - **De-duplicate listings.** An earlier import left an admin-owned copy of most
