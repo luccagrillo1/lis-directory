@@ -95,6 +95,12 @@
 
 		function start() {
 			measure();
+			// Start at a random point in the loop so the row isn't in the same
+			// place on every page load. Any offset in [0, loopW) shows a full row
+			// because the group is duplicated.
+			if ( loopW > 0 ) {
+				offset = Math.random() * loopW;
+			}
 			apply();
 			if ( ! raf ) {
 				raf = window.requestAnimationFrame( frame );

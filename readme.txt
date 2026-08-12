@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.16
+Stable tag: 0.36.17
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.17 =
+* Vendor Showcase tickers start at a random point in the loop on each page load (so theyâre not always in the same spot).
 
 = 0.36.16 =
 * More spacing between logos in the logo-only Vendor Showcase ticker.

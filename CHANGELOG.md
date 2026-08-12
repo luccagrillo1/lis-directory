@@ -7,6 +7,13 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.17] â 2026-08-12 â Random ticker start
+
+Each ticker seeds its initial offset to a random point in the loop on load, so it
+doesnât always begin at the same place. **Files:** assets/js/vendor-ticker.js.
+
+---
+
 ## [0.36.16] â 2026-08-12 â Logo ticker spacing
 
 More breathing room between logos in `[lis_preferred_vendor_ticker style="logos"]`
