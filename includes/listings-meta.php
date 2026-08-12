@@ -392,6 +392,7 @@ function lis_directory_render_listing_meta_box( $post ) {
 		<tr>
 			<th>Vendor Showcase</th>
 			<td>
+				<input type="hidden" name="lis_listing_showcase_present" value="1" />
 				<label><input type="checkbox" name="lis_listing_showcase" value="1" <?php checked( $showcase_on ); ?> /> Feature this listing in the Vendor Showcase</label>
 				<p class="description">Creates &amp; activates a Vendor Showcase entry for this listing using its category, tagline, logo, and business card. One business per category &mdash; if the category is already taken by another vendor it's held as pending instead of active. Unchecking deactivates it.</p>
 			</td>
@@ -604,7 +605,10 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 	}
 
 	// Vendor Showcase toggle — create/activate or deactivate the linked vendor.
-	if ( function_exists( 'lis_directory_sync_listing_showcase' ) ) {
+	// Only act when the checkbox was actually part of the submitted meta box
+	// (the hidden marker below). Without this guard, an editor loaded before the
+	// checkbox existed would post no value and silently deactivate the vendor.
+	if ( isset( $_POST['lis_listing_showcase_present'] ) && function_exists( 'lis_directory_sync_listing_showcase' ) ) {
 		lis_directory_sync_listing_showcase( $post_id, ! empty( $_POST['lis_listing_showcase'] ) );
 	}
 

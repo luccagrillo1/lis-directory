@@ -7,6 +7,16 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.15] â 2026-08-12 â Guard the showcase checkbox
+
+The listing meta boxâs Vendor Showcase checkbox deactivated the linked vendor
+whenever a save posted no checkbox value â including editors loaded before the
+checkbox shipped, which silently set active vendors to pending. Added a hidden
+`lis_listing_showcase_present` marker; the toggle only runs when that marker is
+in the POST. **Files:** includes/listings-meta.php.
+
+---
+
 ## [0.36.14] â 2026-08-12 â Showcase branding follows the listing
 
 The showcase card / logo ticker / business-card ticker read the vendorâs own
