@@ -140,9 +140,58 @@ function lis_directory_card_admin_hint( $message ) {
 	return '<p class="lis-pv-admin-hint" style="border:1px dashed #c00;padding:8px;color:#c00;">LIS Directory: ' . esc_html( $message ) . '</p>';
 }
 
+/**
+ * The URL a showcase item (card / logo / business card) should link to — the
+ * vendor's NEW self-hosted listing, not the old Directorist one.
+ *
+ * Resolves, in order: (1) the directly linked `lis_listing` (`_lis_pv_listing_id`,
+ * set by the wizard); (2) the stored link URL if it already points at a
+ * published `lis_listing`; (3) a `lis_listing` with the same slug as the stored
+ * link (the Directorist migration preserved slugs, so a `/directory/<slug>/`
+ * link maps cleanly to the new `/…/<slug>/`); (4) the stored URL as-is as a last
+ * resort. Returns '' if there's nothing to link to.
+ */
+function lis_directory_vendor_listing_url( $vendor ) {
+	$vid = is_object( $vendor ) ? (int) $vendor->ID : (int) $vendor;
+
+	// 1) Directly linked new listing.
+	$listing_id = (int) get_post_meta( $vid, '_lis_pv_listing_id', true );
+	if ( $listing_id && 'lis_listing' === get_post_type( $listing_id ) && 'publish' === get_post_status( $listing_id ) ) {
+		return (string) get_permalink( $listing_id );
+	}
+
+	$url = (string) get_post_meta( $vid, '_lis_pv_link_url', true );
+	if ( '' === $url ) {
+		return '';
+	}
+
+	// 2) The stored link already resolves to a published lis_listing.
+	$maybe = url_to_postid( $url );
+	if ( $maybe && 'lis_listing' === get_post_type( $maybe ) && 'publish' === get_post_status( $maybe ) ) {
+		return (string) get_permalink( $maybe );
+	}
+
+	// 3) Map the link's slug to a lis_listing of the same slug (migration kept
+	// slugs), so an old Directorist link points at the new listing instead.
+	$path = trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
+	if ( '' !== $path ) {
+		$parts = explode( '/', $path );
+		$slug  = end( $parts );
+		if ( $slug ) {
+			$match = get_page_by_path( $slug, OBJECT, 'lis_listing' );
+			if ( $match && 'publish' === get_post_status( $match ) ) {
+				return (string) get_permalink( $match );
+			}
+		}
+	}
+
+	// 4) Fall back to whatever was stored (may still be a Directorist link).
+	return $url;
+}
+
 function lis_directory_render_vendor_card_html( $vendor ) {
 	$tagline  = get_post_meta( $vendor->ID, '_lis_pv_tagline', true );
-	$link_url = get_post_meta( $vendor->ID, '_lis_pv_link_url', true );
+	$link_url = lis_directory_vendor_listing_url( $vendor );
 	$logo_id  = (int) get_post_meta( $vendor->ID, '_lis_pv_logo_color_id', true );
 	$logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
 	$name     = get_the_title( $vendor );
@@ -328,7 +377,7 @@ function lis_directory_render_vendor_logo_html( $vendor, $tone = 'color' ) {
 		return '';
 	}
 
-	$link_url = get_post_meta( $vendor->ID, '_lis_pv_link_url', true );
+	$link_url = lis_directory_vendor_listing_url( $vendor );
 	$name     = get_the_title( $vendor );
 	$tag      = $link_url ? 'a' : 'div';
 	$tone_class = in_array( $tone, array( 'black', 'white' ), true ) ? ' lis-pv-ticker-logo--' . $tone : '';
@@ -357,7 +406,7 @@ function lis_directory_render_vendor_business_card_html( $vendor ) {
 		return '';
 	}
 
-	$link_url = get_post_meta( $vendor->ID, '_lis_pv_link_url', true );
+	$link_url = lis_directory_vendor_listing_url( $vendor );
 	$name     = get_the_title( $vendor );
 	$tag      = $link_url ? 'a' : 'div';
 

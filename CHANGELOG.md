@@ -7,6 +7,17 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.11] â 2026-08-12 â Ticker links point at the new listings
+
+Showcase ticker items (card / logo / business card) linked to the vendorâs stored
+`_lis_pv_link_url`, which for older/migrated vendors is a Directorist URL. Added
+`lis_directory_vendor_listing_url()` which resolves the NEW `lis_listing`:
+linked `_lis_pv_listing_id` â stored URL if itâs already a lis_listing â a
+lis_listing with the same slug (migration preserved slugs) â stored URL as a
+last resort. **Files:** includes/shortcodes.php.
+
+---
+
 ## [0.36.10] â 2026-08-12 â JS ticker: pause-in-place + wheel/drag scrub
 
 Replaced the pure-CSS marquee (a `@keyframes` translate paused via `:hover`) with
