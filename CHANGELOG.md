@@ -7,6 +7,19 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.8] â 2026-08-11 â Top-category vendor card shortcode
+
+Added `[lis_preferred_vendor_top_category_card]`. Placed on the listings
+archive / search results / category archive, it tallies the `lis_listing_category`
+of the listings in the current main query, picks the most frequent, maps it to
+its Vendor Showcase category (by slug, same as the single-product model), and
+renders that categoryâs active vendor via the existing single-card path. So a
+results page thatâs mostly Lodging shows the Lodging showcase vendor, etc.
+`fallback="slug"` covers the no-results case; renders nothing (not an error) when
+thereâs no matching showcase slot. **Files:** includes/shortcodes.php.
+
+---
+
 ## [0.36.7] â 2026-08-11 â Cleaner checkout line item
 
 The listing name was showing twice on the Vendor Showcase checkout line â once

@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.7
+Stable tag: 0.36.8
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.8 =
+* New [lis_preferred_vendor_top_category_card] shortcode: on a search/archive results page it finds the most common listing category among the results and shows that categoryâs Vendor Showcase card in the single-vendor spot. Optional fallback="category-slug".
 
 = 0.36.7 =
 * Simplified the checkout line item: the listing shows once as a clean "Listing: <name>" row instead of also being appended to the product name ("â Featuring: <name>"), which read as a cluttered run-on.

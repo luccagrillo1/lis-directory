@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 add_shortcode( 'lis_preferred_vendor_card', 'lis_directory_render_vendor_card_shortcode' );
+add_shortcode( 'lis_preferred_vendor_top_category_card', 'lis_directory_render_top_category_vendor_card_shortcode' );
 
 function lis_directory_render_vendor_card_shortcode( $atts ) {
 	$atts = shortcode_atts( array( 'category' => '' ), $atts, 'lis_preferred_vendor_card' );
@@ -36,6 +37,95 @@ function lis_directory_render_vendor_card_shortcode( $atts ) {
 	}
 
 	return lis_directory_render_vendor_card_html( $vendor );
+}
+
+/**
+ * [lis_preferred_vendor_top_category_card] — one card for the category that
+ * appears MOST in the current results, dropped into the single vendor spot.
+ *
+ * Placed on the search results / listings archive (or a category archive): it
+ * tallies the lis_listing_category of the listings currently being shown, picks
+ * the most common one, maps it to its Vendor Showcase category (matched by slug,
+ * same as the single-product model), and renders that category's active vendor
+ * card. So a mostly-Lodging results page shows the Lodging showcase vendor, a
+ * mostly-Insurance page shows the insurance one, etc.
+ *
+ * Attributes:
+ *  - fallback="slug"   lis_listing_category slug to use when there are no results
+ *                      to tally (or the shortcode isn't on a results page).
+ *  - show_hint="yes"   show the admin-only "no vendor yet" hint instead of
+ *                      rendering nothing (default: no — stay invisible).
+ */
+function lis_directory_render_top_category_vendor_card_shortcode( $atts ) {
+	$atts = shortcode_atts( array( 'fallback' => '', 'show_hint' => 'no' ), $atts, 'lis_preferred_vendor_top_category_card' );
+
+	$listing_term_id = lis_directory_top_result_listing_category();
+
+	// Nothing to tally (e.g. placed off a results page) — fall back to a fixed
+	// category if one was given, otherwise render nothing.
+	if ( ! $listing_term_id && '' !== $atts['fallback'] ) {
+		$fb = get_term_by( 'slug', sanitize_title( $atts['fallback'] ), 'lis_listing_category' );
+		if ( $fb && ! is_wp_error( $fb ) ) {
+			$listing_term_id = (int) $fb->term_id;
+		}
+	}
+	if ( ! $listing_term_id ) {
+		return '';
+	}
+
+	$listing_term = get_term( $listing_term_id, 'lis_listing_category' );
+	if ( ! $listing_term || is_wp_error( $listing_term ) ) {
+		return '';
+	}
+
+	// Map the listing category to its Vendor Showcase category (same slug), then
+	// render that category's active vendor — reusing the single-card path.
+	$vendor_term = get_term_by( 'slug', $listing_term->slug, 'lis_vendor_category' );
+	if ( ! $vendor_term || is_wp_error( $vendor_term ) ) {
+		return ''; // No showcase slot mirrors this category (nobody's bought it).
+	}
+	$vendor = lis_directory_get_active_vendor_for_category( $vendor_term->term_id );
+	if ( ! $vendor ) {
+		return ( 'yes' === $atts['show_hint'] )
+			? lis_directory_card_admin_hint( sprintf( 'No active vendor showcase for the top result category "%s" yet.', $listing_term->name ) )
+			: '';
+	}
+
+	return lis_directory_render_vendor_card_html( $vendor );
+}
+
+/**
+ * The lis_listing_category term id that appears most across the listings in the
+ * current main query (i.e. the search/archive results on screen). 0 when the
+ * current query isn't showing listings or there's nothing to tally.
+ *
+ * Only the current page of results is counted — cheap, and the first page's
+ * dominant category is a fair proxy for "what this search is mostly about".
+ */
+function lis_directory_top_result_listing_category() {
+	global $wp_query;
+	if ( ! ( $wp_query instanceof WP_Query ) || empty( $wp_query->posts ) ) {
+		return 0;
+	}
+	$counts = array();
+	foreach ( $wp_query->posts as $p ) {
+		$pid = is_object( $p ) ? (int) $p->ID : (int) $p;
+		if ( 'lis_listing' !== get_post_type( $pid ) ) {
+			continue;
+		}
+		$terms = wp_get_post_terms( $pid, 'lis_listing_category', array( 'fields' => 'ids' ) );
+		if ( is_wp_error( $terms ) ) {
+			continue;
+		}
+		foreach ( $terms as $tid ) {
+			$counts[ $tid ] = isset( $counts[ $tid ] ) ? $counts[ $tid ] + 1 : 1;
+		}
+	}
+	if ( empty( $counts ) ) {
+		return 0;
+	}
+	arsort( $counts ); // Most frequent first; ties resolve to whichever was seen first.
+	return (int) array_key_first( $counts );
 }
 
 /**
