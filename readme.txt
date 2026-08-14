@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.34
+Stable tag: 0.36.35
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,16 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.35 =
+* Add Listing wizard: content-width form (was capped at an arbitrary 900px), thicker progress bar, "Save & finish later" moved to mirror the section label's row instead of sitting in its own bar, and its redundant helper text removed (it's already explained on the Draft Saved screen).
+* Draft Saved screen: tightened the gap between the body text and the action buttons.
+* Listing cards: fixed excerpt text inheriting the theme's loose line-height (read as oddly spaced-out); Featured/Popular/Verified and category badges now overlay the photo (top-left / top-right) instead of taking their own row in the card body.
+* Search results List view: fixed a bug where a tall (portrait) photo blew out the whole row's height, leaving a wall of empty space next to short text — rows are now a fixed compact height with the photo cropped to fit.
+* Search results Map view: now shows the map above the results instead of hiding them — results stay visible underneath in the same compact list layout.
+* Price filter removed from More Filters for now (easy to bring back — the underlying logic wasn't touched).
+* Removed the "All Directories" selector from [lis_listing_search] everywhere, by request.
+* [lis_listing_grid] (used by the per-type landing pages like "All Listings") now has the same toolbar as the real category archive — Grid/List/Map view + Sort By actually reorders its results, and Map view works the same way (same data-address/data-title card attributes).
 
 = 0.36.34 =
 * [lis_listing_edit] (the "Edit" link from the account dashboard) no longer uses the one-question-at-a-time wizard [lis_listing_submit] uses for new listings. It now renders every field at once in a flat, single-page layout, matching the format of the wp-admin "Listing Details" meta box, so a business owner can jump straight to and fix one field instead of stepping through the whole form.

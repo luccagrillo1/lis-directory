@@ -150,7 +150,6 @@ function lis_directory_render_listing_submission_form_shortcode() {
 
 		<div class="lis-listing-draft-bar">
 			<button type="submit" name="lis_listing_save_draft" value="1" class="lis-listing-draft-save" formnovalidate>Save &amp; finish later</button>
-			<span class="lis-listing-draft-hint">Saves what you've got so far — pick it back up any time from your dashboard.</span>
 		</div>
 		<script>
 		( function () {

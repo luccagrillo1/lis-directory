@@ -3,9 +3,14 @@
  * templates/archive-listing.php. Grid vs List is a pure client-side
  * display preference (same query results, different layout) — a CSS
  * class + localStorage, deliberately not a URL param, since it doesn't
- * change what's being shown, only how. Map view lazy-loads the Google
- * Maps JavaScript API (only if a listing's address triggers it — no
- * point loading it for visitors who never click Map) and geocodes each
+ * change what's being shown, only how.
+ *
+ * Map view puts the map on top (see the markup order in
+ * archive-listing.php) with the results still visible underneath, styled
+ * the same compact horizontal-card way as List view — not a replacement
+ * for the results the way it used to hide them. It lazy-loads the Google
+ * Maps JavaScript API (only if a listing's address triggers it — no point
+ * loading it for visitors who never click Map) and geocodes each
  * currently-visible card's address client-side, same approach as the
  * single-listing map (templates/single-listing.php).
  */
@@ -29,8 +34,11 @@
 				view = 'grid';
 			}
 
-			results.hidden = 'map' === view;
-			results.classList.toggle( 'lis-listing-grid--list', 'list' === view );
+			// Map view shows the map above the results (see archive-listing.php
+			// markup order), not instead of them — results stay visible, styled
+			// the same compact horizontal-card way as List view.
+			results.hidden = false;
+			results.classList.toggle( 'lis-listing-grid--list', 'list' === view || 'map' === view );
 			if ( mapView ) {
 				mapView.hidden = 'map' !== view;
 			}

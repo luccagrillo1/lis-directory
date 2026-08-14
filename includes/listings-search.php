@@ -83,7 +83,6 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 	$locked_type   = isset( $listing_types[ $atts['directory'] ] ) ? $atts['directory'] : '';
 
 	$current_q       = isset( $_GET['lis_q'] ) ? sanitize_text_field( wp_unslash( $_GET['lis_q'] ) ) : '';
-	$current_type    = isset( $_GET['lis_type'] ) ? sanitize_key( wp_unslash( $_GET['lis_type'] ) ) : '';
 	$current_cat     = isset( $_GET['lis_category'] ) ? sanitize_title( wp_unslash( $_GET['lis_category'] ) ) : '';
 	$current_price   = isset( $_GET['lis_price'] ) ? sanitize_text_field( wp_unslash( $_GET['lis_price'] ) ) : '';
 	$current_open    = ! empty( $_GET['lis_open_now'] );
@@ -100,14 +99,8 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 
 			<?php if ( $locked_type ) : ?>
 				<input type="hidden" name="lis_type" value="<?php echo esc_attr( $locked_type ); ?>" />
-			<?php else : ?>
-				<select name="lis_type" class="lis-listing-search-select">
-					<option value="">All Directories</option>
-					<?php foreach ( $listing_types as $value => $label ) : ?>
-						<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current_type, $value ); ?>><?php echo esc_html( $label ); ?></option>
-					<?php endforeach; ?>
-				</select>
 			<?php endif; ?>
+			<?php // No visible directory selector, by request — locked-type pages (directory="…") still filter via the hidden field above. ?>
 
 			<?php if ( ! is_wp_error( $categories ) && ! empty( $categories ) ) : ?>
 				<select name="lis_category" class="lis-listing-search-select">
@@ -128,18 +121,25 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 					<label><input type="checkbox" name="lis_open_now" value="1" <?php checked( $current_open ); ?> /> Open Now</label>
 				</div>
 
-				<div class="lis-listing-search-field">
-					<span class="lis-listing-search-field-label">Price</span>
-					<?php foreach ( lis_directory_get_price_tiers() as $value => $label ) : ?>
+				<?php
+				// Price filter removed for now (by request) — lis_directory_get_price_tiers()
+				// and the lis_price query-filtering logic in lis_directory_apply_search_filters()
+				// are left intact, so this can come back by flipping this to true.
+				if ( false ) :
+					?>
+					<div class="lis-listing-search-field">
+						<span class="lis-listing-search-field-label">Price</span>
+						<?php foreach ( lis_directory_get_price_tiers() as $value => $label ) : ?>
+							<label class="lis-listing-search-radio">
+								<input type="radio" name="lis_price" value="<?php echo esc_attr( $value ); ?>" <?php checked( $current_price, $value ); ?> />
+								<?php echo esc_html( $label ); ?>
+							</label>
+						<?php endforeach; ?>
 						<label class="lis-listing-search-radio">
-							<input type="radio" name="lis_price" value="<?php echo esc_attr( $value ); ?>" <?php checked( $current_price, $value ); ?> />
-							<?php echo esc_html( $label ); ?>
+							<input type="radio" name="lis_price" value="" <?php checked( $current_price, '' ); ?> /> Any
 						</label>
-					<?php endforeach; ?>
-					<label class="lis-listing-search-radio">
-						<input type="radio" name="lis_price" value="" <?php checked( $current_price, '' ); ?> /> Any
-					</label>
-				</div>
+					</div>
+				<?php endif; ?>
 
 				<?php if ( ! is_wp_error( $features ) && ! empty( $features ) ) : ?>
 					<div class="lis-listing-search-field" data-feature-field>

@@ -337,27 +337,42 @@
 	gap: 12px;
 }
 
+/* Fixed row height, not stretch-to-content — with height:auto the thumb's
+   own intrinsic aspect ratio decided the row height, so a portrait photo
+   blew the whole row out tall and left the (usually much shorter) text
+   stranded at the top with a wall of empty space below it. */
 .lis-listing-grid--list .lis-listing-card {
 	display: flex;
 	flex-direction: row;
 	align-items: stretch;
+	height: 150px;
 }
 
 .lis-listing-grid--list .lis-listing-card-thumb {
-	width: 160px;
-	height: auto;
+	width: 200px;
+	height: 100%;
+	object-fit: cover;
 	flex-shrink: 0;
 }
 
 .lis-listing-grid--list .lis-listing-card-body {
 	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
 }
 
+/* Map view: the map sits above the results (see archive-listing.php markup
+   order + listing-view-toggle.js), which stay visible underneath in the
+   same compact list-card layout as List view — not hidden behind the map
+   the way it used to be. */
 .lis-listing-map-view {
-	height: 520px;
+	height: 480px;
 	border-radius: 12px;
 	overflow: hidden;
 	border: 1px solid #e2e2e2;
+	margin-bottom: 24px;
 }
 
 .lis-listing-map-view-canvas {
@@ -382,12 +397,38 @@
 	transform: translateY(-2px);
 }
 
+.lis-listing-card-thumb-wrap {
+	position: relative;
+}
+
 .lis-listing-card-thumb {
 	width: 100%;
 	height: 170px;
 	object-fit: cover;
 	background: #f2f2f2;
 	display: block;
+}
+
+/* Featured/Popular/Verified + category badges, overlaid on the thumbnail
+   instead of taking up their own row in the card body — status badges
+   top-left, category top-right. */
+.lis-listing-card-thumb-badges {
+	position: absolute;
+	top: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	z-index: 2;
+}
+
+.lis-listing-card-thumb-badges--left {
+	left: 10px;
+	align-items: flex-start;
+}
+
+.lis-listing-card-thumb-badges--right {
+	right: 10px;
+	align-items: flex-end;
 }
 
 .lis-listing-card-body {
@@ -429,6 +470,7 @@
 
 .lis-listing-card-excerpt {
 	font-size: 0.9em;
+	line-height: 1.5;
 	color: #666;
 	margin: 4px 0 0 0;
 }
@@ -1076,7 +1118,7 @@
 /* ---------- Submission form ---------- */
 
 .lis-listing-submit-form {
-	max-width: 900px;
+	max-width: 1400px; /* matches .lis-listing-archive's content-column width, not an arbitrary narrower cap. */
 	padding-top: 28px; /* Breathing room now that the page banner/title area is disabled on this page - without it the progress bar sits flush against the breadcrumb bar. */
 	display: flex;
 	flex-direction: column;
@@ -1101,7 +1143,7 @@
 }
 
 .lis-listing-wizard-progress {
-	height: 6px;
+	height: 10px;
 	border-radius: 999px;
 	background: #e8e8e0;
 	overflow: hidden;
@@ -1137,8 +1179,22 @@
 	transform: translateY(0);
 }
 
-.lis-listing-wizard-panel-section {
+/* Holds the section label and the "Save & finish later" button on the same
+   row, mirrored to the right edge — draftBar is moved in here by JS
+   (goToPanel), one real element re-parented per active panel rather than a
+   copy built per panel. */
+.lis-listing-wizard-panel-section-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
 	margin: 0 0 10px;
+	flex-shrink: 0;
+}
+
+.lis-listing-wizard-panel-section {
+	margin: 0;
 	font-size: 0.8em;
 	color: #576846;
 	text-transform: uppercase;
@@ -1781,7 +1837,7 @@
 }
 
 .lis-listing-thankyou-text {
-	margin: 0 auto 28px;
+	margin: 0 auto 20px;
 	max-width: 460px;
 	color: #555;
 	line-height: 1.6;
@@ -2053,10 +2109,7 @@
 .lis-listing-draft-bar {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	flex-wrap: wrap;
-	justify-content: flex-end;
-	margin-bottom: 18px;
+	flex-shrink: 0;
 }
 
 .lis-listing-draft-save {
@@ -2076,12 +2129,6 @@
 	background: #f6f7f7;
 }
 
-.lis-listing-draft-hint {
-	color: #787c82;
-	font-size: 0.82em;
-	flex: 1 1 auto;
-	min-width: 180px;
-}
 
 /* Current logo / business card preview + Remove control on the edit form. */
 .lis-listing-edit-asset-current {

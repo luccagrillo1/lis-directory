@@ -28,6 +28,16 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 			<?php lis_directory_render_listing_toolbar(); ?>
 		<?php endif; ?>
 
+		<?php
+		$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
+		if ( $maps_api_key ) :
+			?>
+			<div class="lis-listing-map-view" data-lis-listing-map-view hidden>
+				<div class="lis-listing-map-view-canvas"></div>
+			</div>
+			<script>window.lisDirectoryMapsApiKey = <?php echo wp_json_encode( $maps_api_key ); ?>;</script>
+		<?php endif; ?>
+
 		<div class="lis-listing-grid" data-lis-listing-results>
 			<?php
 			while ( have_posts() ) :
@@ -105,15 +115,6 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 			<?php endwhile; ?>
 		</div>
 
-		<?php
-		$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
-		if ( $maps_api_key ) :
-			?>
-			<div class="lis-listing-map-view" data-lis-listing-map-view hidden>
-				<div class="lis-listing-map-view-canvas"></div>
-			</div>
-			<script>window.lisDirectoryMapsApiKey = <?php echo wp_json_encode( $maps_api_key ); ?>;</script>
-		<?php endif; ?>
 		<?php wp_enqueue_script( 'lis-directory-listing-view-toggle', LIS_DIRECTORY_URL . 'assets/js/listing-view-toggle.js', array(), LIS_DIRECTORY_VERSION, true ); ?>
 
 		<?php the_posts_pagination(); ?>

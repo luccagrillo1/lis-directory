@@ -45,6 +45,14 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			submitWrap.style.display = 'none'; // Only shown inside the review panel.
 		}
 
+		// "Save & finish later" (listings-submission.php / listings-edit.php)
+		// sits before the wizard in the markup as a fixed top bar. Instead,
+		// re-parent this SAME element into whichever panel's section-label row
+		// is currently active (see goToPanel below) so it visually mirrors the
+		// section label — same row, right-aligned — without needing N copies
+		// of a real submit button.
+		var draftBar = form.querySelector( ':scope > .lis-listing-draft-bar' );
+
 		var wizard = document.createElement( 'div' );
 		wizard.className = 'lis-listing-wizard';
 
@@ -90,6 +98,14 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			section.className = 'lis-listing-wizard-panel-section';
 			section.textContent = panel.dataset.panelSection || '';
 
+			// Same row as the section label, right-aligned — draftBar itself
+			// gets moved in here (see goToPanel) rather than built fresh per
+			// panel, since it's one real submit button, not N copies of one.
+			var sectionRow = document.createElement( 'div' );
+			sectionRow.className = 'lis-listing-wizard-panel-section-row';
+			sectionRow.appendChild( section );
+			panel.sectionRow = sectionRow; // stashed for goToPanel to find.
+
 			var question = document.createElement( 'h2' );
 			question.className = 'lis-listing-wizard-panel-question';
 			question.textContent = panel.dataset.panelQuestion || '';
@@ -105,7 +121,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				body.appendChild( panel.firstChild );
 			}
 			body.insertBefore( question, body.firstChild );
-			panel.appendChild( section );
+			panel.appendChild( sectionRow );
 			panel.appendChild( body );
 
 			if ( panel.dataset.panelHint ) {
@@ -175,6 +191,11 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		reviewSection.className = 'lis-listing-wizard-panel-section';
 		reviewSection.textContent = 'Almost done';
 
+		var reviewSectionRow = document.createElement( 'div' );
+		reviewSectionRow.className = 'lis-listing-wizard-panel-section-row';
+		reviewSectionRow.appendChild( reviewSection );
+		reviewPanel.sectionRow = reviewSectionRow;
+
 		var reviewQuestion = document.createElement( 'h2' );
 		reviewQuestion.className = 'lis-listing-wizard-panel-question';
 		reviewQuestion.textContent = 'Review before you submit';
@@ -205,7 +226,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		reviewBody.appendChild( reviewList );
 		reviewBody.appendChild( reviewControls );
 
-		reviewPanel.appendChild( reviewSection );
+		reviewPanel.appendChild( reviewSectionRow );
 		reviewPanel.appendChild( reviewBody );
 		stage.appendChild( reviewPanel );
 
@@ -339,6 +360,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 			currentPanel = targetPanel;
 			progressBar.style.width = ( ( index + 1 ) / seq.length * 100 ) + '%';
+			if ( draftBar && targetPanel.sectionRow ) {
+				targetPanel.sectionRow.appendChild( draftBar );
+			}
 			wizard.scrollIntoView( { block: 'start', behavior: 'smooth' } );
 		}
 
@@ -347,6 +371,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		} );
 		panels[0].classList.add( 'is-active' );
 		progressBar.style.width = ( 1 / activeSequence().length * 100 ) + '%';
+		if ( draftBar && panels[0].sectionRow ) {
+			panels[0].sectionRow.appendChild( draftBar );
+		}
 
 		// Final backstop: whichever panel you're on when you hit the real
 		// submit button, make sure nothing required got left invalid.
