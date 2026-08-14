@@ -24,31 +24,6 @@ add_filter( 'comment_text', 'lis_directory_prepend_rating_to_comment', 10, 2 );
 add_filter( 'comment_form_defaults', 'lis_directory_relabel_comment_form' );
 add_filter( 'gettext', 'lis_directory_relabel_jetpack_comment_form', 10, 3 );
 
-// TEMPORARY diagnostic — remove once the Jetpack Comments relabel is confirmed
-// working. Dumps every gettext string containing "reply" or "comment" on a
-// lis_listing page into an HTML comment near the end of <body>, so the exact
-// original string + domain Jetpack actually uses can be read from view-source
-// instead of guessed at again.
-add_filter( 'gettext', 'lis_directory_debug_capture_gettext', 5, 3 );
-add_action( 'wp_footer', 'lis_directory_debug_dump_gettext', 999 );
-function lis_directory_debug_capture_gettext( $translated, $original, $domain ) {
-	if ( ! isset( $_GET['lis_debug_gettext'] ) || 'lis_listing' !== get_post_type() ) {
-		return $translated;
-	}
-	if ( preg_match( '/reply|comment/i', $original ) ) {
-		global $lis_debug_gettext_hits;
-		$lis_debug_gettext_hits[] = $domain . ' | ' . $original . ' | ' . $translated;
-	}
-	return $translated;
-}
-function lis_directory_debug_dump_gettext() {
-	if ( ! isset( $_GET['lis_debug_gettext'] ) || 'lis_listing' !== get_post_type() ) {
-		return;
-	}
-	global $lis_debug_gettext_hits;
-	echo "\n<!-- LIS_DEBUG_GETTEXT\n" . esc_html( implode( "\n", array_unique( (array) $lis_debug_gettext_hits ) ) ) . "\n-->\n"; // phpcs:ignore -- temporary diagnostic, gated on explicit query param, removed before final release.
-}
-
 /**
  * Only shows/relabels on `lis_listing` single pages — get_the_ID() inside
  * comment_form() context reflects the post the form is for, which is

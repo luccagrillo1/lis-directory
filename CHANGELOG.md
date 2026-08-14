@@ -1,3 +1,10 @@
+## [0.36.28] — 2026-08-14 — Related Posts relocation, working version
+
+- 0.36.27 tried to relocate Jetpack Related Posts by removing its the_content filter and re-adding it via the [jetpack-related-posts] shortcode — didn't work live. Jetpack renders a single element with a fixed id (`#jp-relatedposts`), left empty at PHP render time and filled in by Jetpack's own client-side JS/AJAX after load. Disabling the filter didn't stop the auto-injection (wrong assumption about which callback was hooked), and the shortcode call added no second copy since Jetpack doesn't support multiple instances.
+- Replaced both with `assets/js/listing-related-posts.js`: a small script that moves the actual `#jp-relatedposts` DOM node to a fixed anchor (`#lis-listing-related-anchor`) right after the Claim/Report section, once at DOM-ready. Since it's the same live node (not a copy), Jetpack's own script still finds and fills it normally regardless of where it ends up in the page.
+- Confirmed order live: Description → Claim/Report → Related → Reviews.
+- Removed the temporary gettext diagnostic from 0.36.26 — the 0.36.25 Jetpack Comments "Leave a Review" relabel is confirmed working (`greeting=Leave+a+Review` in the live iframe URL).
+
 ## [0.36.27] — 2026-08-14 — Reorder single-listing sections
 
 - New section order on `templates/single-listing.php`: Description block(s) → Claim this listing → Report this listing → Related → Reviews (was: Description → Related → Reviews → Claim → Report).

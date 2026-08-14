@@ -242,11 +242,11 @@ while ( have_posts() ) :
 					<?php endif; ?>
 				</div>
 
-				<?php if ( shortcode_exists( 'jetpack-related-posts' ) ) : ?>
-					<div class="lis-listing-section lis-listing-related">
-						<?php echo do_shortcode( '[jetpack-related-posts]' ); ?>
-					</div>
-				<?php endif; ?>
+				<?php /* #jp-relatedposts (Jetpack's own auto-injected placeholder, populated
+				client-side) is relocated here from inside the Description block by
+				assets/js/listing-related-posts.js — see that file for why. This
+				marker just gives the script a fixed anchor to insert after. */ ?>
+				<span id="lis-listing-related-anchor"></span>
 
 				<div class="lis-listing-section">
 					<h2>Reviews <?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?> <?php echo esc_html( $avg_rating ); ?> (<?php echo (int) $review_count; ?> review<?php echo 1 === $review_count ? '' : 's'; ?>)</span><?php endif; ?></h2>

@@ -38,20 +38,21 @@ function lis_directory_listing_category_template( $template ) {
 }
 
 /**
- * Jetpack Related Posts auto-appends itself to the_content — on the single
- * listing template, that lands it right after the Description block, ahead
- * of Claim/Report and Reviews. templates/single-listing.php wants it further
- * down the page instead, so it's placed manually via the [jetpack-related-posts]
- * shortcode (Jetpack's own documented way to do this); this just turns off
- * the automatic placement so it isn't shown twice. Scoped to lis_listing only
- * — blog posts elsewhere on the site keep Jetpack's default placement.
+ * Jetpack Related Posts auto-appends an empty #jp-relatedposts placeholder to
+ * the_content (populated client-side via its own JS/AJAX, not at render
+ * time) — on the single listing template, that lands it right after the
+ * Description block, ahead of Claim/Report and Reviews. There's no PHP-side
+ * hook to relocate this cleanly: it's a single fixed-id element Jetpack's own
+ * JS finds and fills after load, so a server-side second copy (e.g. via the
+ * [jetpack-related-posts] shortcode) either renders nothing or risks a
+ * duplicate id. assets/js/listing-related-posts.js moves the actual element
+ * client-side instead — see that file.
  */
-add_action( 'wp', 'lis_directory_disable_auto_jetpack_related_posts' );
+add_action( 'wp_enqueue_scripts', 'lis_directory_enqueue_related_posts_mover' );
 
-function lis_directory_disable_auto_jetpack_related_posts() {
-	if ( ! is_singular( 'lis_listing' ) || ! class_exists( 'Jetpack_RelatedPosts' ) ) {
+function lis_directory_enqueue_related_posts_mover() {
+	if ( ! is_singular( 'lis_listing' ) ) {
 		return;
 	}
-	$related_posts = Jetpack_RelatedPosts::init();
-	remove_filter( 'the_content', array( $related_posts, 'filter_add_target_to_dom' ) );
+	wp_enqueue_script( 'lis-directory-listing-related-posts', LIS_DIRECTORY_URL . 'assets/js/listing-related-posts.js', array(), LIS_DIRECTORY_VERSION, true );
 }

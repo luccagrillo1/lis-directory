@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.27
+Stable tag: 0.36.28
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.28 =
+* Fixed: 0.36.27's Related Posts relocation didn't actually work — Jetpack's #jp-relatedposts is a single fixed-id placeholder populated by its own client-side JS, so removing the the_content filter / re-inserting via the shortcode had no effect; it was still appearing right after Description. Now moved with a small script (assets/js/listing-related-posts.js) that relocates the same live element to its new spot after Claim/Report, so Jetpack's own JS still fills it normally.
+* Removed the temporary gettext diagnostic added in 0.36.26 — confirmed live that the Jetpack Comments "Leave a Review" relabel (0.36.25) is working correctly.
+
 
 = 0.36.27 =
 * Reordered the single listing page sections to: Description (+ Services/Features/Video/Social/FAQs) → Claim this listing → Report this listing → Related → Reviews. "Related" (Jetpack Related Posts) previously auto-appended itself right after the Description text; it's now disabled from auto-placement and inserted manually via [jetpack-related-posts] in its new spot.

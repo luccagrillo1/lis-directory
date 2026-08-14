@@ -655,6 +655,13 @@
 	margin-bottom: 28px;
 }
 
+/* Jetpack's own #jp-relatedposts element (moved here by
+   assets/js/listing-related-posts.js) has no spacing of its own — give it
+   the same rhythm as the .lis-listing-section blocks around it. */
+.lis-listing-single #jp-relatedposts {
+	margin: 0 0 28px;
+}
+
 .lis-listing-realestate-facts {
 	display: flex;
 	flex-wrap: wrap;
