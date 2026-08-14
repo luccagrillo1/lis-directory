@@ -33,6 +33,12 @@
 	flex-shrink: 0;
 }
 
+/* The italic "i"'s slant + serif tail throws off visual centering inside the
+   circle even with the flex centering above — nudge it back on-axis. */
+.lis-pv-heading-info-icon {
+	padding-left: 1px;
+}
+
 /* Anchored to the icon's right edge (not centered) — the icon sits at the end
    of the heading row, so a centered tooltip runs off the right edge of
    narrow/mobile viewports. Growing leftward from the icon keeps it on-screen. */
@@ -46,6 +52,7 @@
 	background: #262420;
 	color: #fff;
 	font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	letter-spacing: 0.02em;
 	text-align: center;
 	white-space: normal;
 	padding: 6px 10px;

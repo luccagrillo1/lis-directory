@@ -1,3 +1,8 @@
+## [0.36.30] — 2026-08-14 — Info icon + tooltip polish
+
+- `.lis-pv-heading-info-icon`: added a 1px left padding nudge — the italic serif "i" glyph's slant threw off visual centering inside the circle even with flex centering already in place.
+- `.lis-pv-heading-tooltip`: added `letter-spacing: 0.02em` — text was reading as cramped at 12px.
+
 ## [0.36.29] — 2026-08-14 — Vendor Showcase offer button + account Listings takeover
 
 - New `_lis_listing_offer_url` / `_lis_listing_offer_label` meta on `lis_listing`, gated on `lis_directory_listing_is_active_showcase()` (new helper in includes/listings-pricing.php). Renders as a button on templates/single-listing.php, right under the header, only while the listing has an active linked Vendor Showcase entry.
