@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.28
+Stable tag: 0.36.29
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.29 =
+* New: listings with an active Vendor Showcase spot can set an "offer" link (with optional custom button text) that shows as a button on their listing page. Editable in the wp-admin Listing Details meta box, and in [lis_listing_edit] for the business owner (only while their Showcase spot is active).
+* The account hub's "Listings" tab (/account/listings/, a WooCommerce endpoint) now shows the [lis_listing_dashboard] — the business's own lis_listing entries with working Edit links — instead of Directorist's old dashboard. Only that tab's content changed; the endpoint, the nav link, and everything else Directorist owns is untouched.
+
 
 = 0.36.28 =
 * Fixed: 0.36.27's Related Posts relocation didn't actually work — Jetpack's #jp-relatedposts is a single fixed-id placeholder populated by its own client-side JS, so removing the the_content filter / re-inserting via the shortcode had no effect; it was still appearing right after Description. Now moved with a small script (assets/js/listing-related-posts.js) that relocates the same live element to its new spot after Claim/Report, so Jetpack's own JS still fills it normally.

@@ -1,3 +1,10 @@
+## [0.36.29] — 2026-08-14 — Vendor Showcase offer button + account Listings takeover
+
+- New `_lis_listing_offer_url` / `_lis_listing_offer_label` meta on `lis_listing`, gated on `lis_directory_listing_is_active_showcase()` (new helper in includes/listings-pricing.php). Renders as a button on templates/single-listing.php, right under the header, only while the listing has an active linked Vendor Showcase entry.
+- Editable in two places: the wp-admin "Listing Details" meta box (always visible, admin-only), and a new "Vendor Showcase" panel in `[lis_listing_edit]` (only rendered — and only saved — while the listing's Showcase spot is active, so a non-Showcase business never sees an offer field they can't use).
+- The account hub's existing "Listings" tab (`/account/listings/`, a WooCommerce My Account endpoint Directorist registers) previously rendered Directorist's own dashboard. `lis_directory_takeover_account_listings_endpoint()` in includes/listings-account.php now clears that one specific action hook (`woocommerce_account_listings_endpoint`) via `remove_all_actions()` — chosen over `remove_action()` since Directorist's exact callback signature isn't discoverable without reading its source on the server — and renders `[lis_listing_dashboard]` there instead. The endpoint registration, its nav link, and every other tab (Profile, Events, Orders, Bookmarks, Settings) are untouched.
+- New CSS: `.lis-listing-offer-banner` / `.lis-listing-offer-button` in assets/css/listings.css (amber tone, matching the existing "Featured" badge).
+
 ## [0.36.28] — 2026-08-14 — Related Posts relocation, working version
 
 - 0.36.27 tried to relocate Jetpack Related Posts by removing its the_content filter and re-adding it via the [jetpack-related-posts] shortcode — didn't work live. Jetpack renders a single element with a fixed id (`#jp-relatedposts`), left empty at PHP render time and filled in by Jetpack's own client-side JS/AJAX after load. Disabling the filter didn't stop the auto-injection (wrong assumption about which callback was hooked), and the shortcode call added no second copy since Jetpack doesn't support multiple instances.

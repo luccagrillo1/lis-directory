@@ -114,6 +114,11 @@ function lis_directory_register_listing_meta() {
 		'_lis_listing_logo_id'          => 'integer', // Logo attachment ID.
 		'_lis_listing_business_card_id' => 'integer', // Business-card attachment ID.
 		'_lis_listing_google_url'       => 'string',  // Google Maps / Business Profile link.
+		// Vendor Showcase offer — a link the business provides through their
+		// Showcase spot; shown as a button on the listing page only while
+		// Vendor Showcase is active (see lis_directory_listing_is_active_showcase()).
+		'_lis_listing_offer_url'        => 'string',
+		'_lis_listing_offer_label'      => 'string', // Optional custom button text, defaults to "View Offer".
 		// Plan / payment (normally set by the WooCommerce order flow; also
 		// editable by hand here so an admin can grant/adjust without a purchase).
 		'_lis_listing_pending_tier'     => 'string',  // '' | standard | featured | showcase.
@@ -192,6 +197,8 @@ function lis_directory_render_listing_meta_box( $post ) {
 	// Branding.
 	$tagline    = get_post_meta( $post->ID, '_lis_listing_tagline', true );
 	$google_url = get_post_meta( $post->ID, '_lis_listing_google_url', true );
+	$offer_url   = get_post_meta( $post->ID, '_lis_listing_offer_url', true );
+	$offer_label = get_post_meta( $post->ID, '_lis_listing_offer_label', true );
 	$logo_id    = (int) get_post_meta( $post->ID, '_lis_listing_logo_id', true );
 	$card_id    = (int) get_post_meta( $post->ID, '_lis_listing_business_card_id', true );
 	$logo_url   = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
@@ -398,6 +405,16 @@ function lis_directory_render_listing_meta_box( $post ) {
 			</td>
 		</tr>
 		<tr>
+			<th><label for="lis_listing_offer_url">Vendor Showcase offer</label></th>
+			<td>
+				<input type="url" id="lis_listing_offer_url" name="lis_listing_offer_url" class="regular-text" value="<?php echo esc_attr( $offer_url ); ?>" placeholder="https://…" />
+				<br /><br />
+				<label for="lis_listing_offer_label">Button text</label>
+				<input type="text" id="lis_listing_offer_label" name="lis_listing_offer_label" class="regular-text" value="<?php echo esc_attr( $offer_label ); ?>" placeholder="View Offer" />
+				<p class="description">An offer link this business is running through its Vendor Showcase spot &mdash; shown as a button on the listing page only while Vendor Showcase (above) is active. Button text is optional, defaults to &ldquo;View Offer&rdquo;.</p>
+			</td>
+		</tr>
+		<tr>
 			<th><label for="lis_listing_paid_order_id">Payment reference</label></th>
 			<td>
 				<input type="text" id="lis_listing_paid_order_id" name="lis_listing_paid_order_id" class="regular-text" value="<?php echo $order_id ? (int) $order_id : ''; ?>" placeholder="WooCommerce order / subscription ID" />
@@ -552,6 +569,12 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 	}
 	if ( isset( $_POST['lis_listing_google_url'] ) ) {
 		update_post_meta( $post_id, '_lis_listing_google_url', esc_url_raw( wp_unslash( $_POST['lis_listing_google_url'] ) ) );
+	}
+	if ( isset( $_POST['lis_listing_offer_url'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_offer_url', esc_url_raw( wp_unslash( $_POST['lis_listing_offer_url'] ) ) );
+	}
+	if ( isset( $_POST['lis_listing_offer_label'] ) ) {
+		update_post_meta( $post_id, '_lis_listing_offer_label', sanitize_text_field( wp_unslash( $_POST['lis_listing_offer_label'] ) ) );
 	}
 	if ( isset( $_POST['lis_listing_logo_id'] ) ) {
 		$logo_id = absint( $_POST['lis_listing_logo_id'] );

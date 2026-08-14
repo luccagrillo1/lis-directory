@@ -925,6 +925,45 @@
 	flex-shrink: 0;
 }
 
+/* Vendor Showcase offer — only shown while the listing has an active
+   Showcase spot (see lis_directory_listing_is_active_showcase()). Amber
+   tone matches the "Featured" badge, the closest existing "premium" cue. */
+.lis-listing-offer-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 0 0 24px;
+	padding: 14px 18px;
+	border-radius: 12px;
+	background: #fdf0d5;
+	border: 1px solid #f3dba8;
+}
+
+.lis-listing-offer-eyebrow {
+	font-size: 0.78em;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: #8a5a00;
+}
+
+.lis-listing-offer-button {
+	display: inline-block;
+	padding: 10px 20px;
+	border-radius: 8px;
+	background: #8a5a00;
+	color: #fff;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.lis-listing-offer-button:hover {
+	background: #6e4700;
+	color: #fff;
+}
+
 .lis-listing-bookmark-btn,
 .lis-listing-share-btn {
 	font-size: 0.85em;

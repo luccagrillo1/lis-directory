@@ -255,6 +255,20 @@ function lis_directory_render_listing_edit_form_shortcode() {
 			</p>
 		</div>
 
+		<?php if ( function_exists( 'lis_directory_listing_is_active_showcase' ) && lis_directory_listing_is_active_showcase( $listing_id ) ) : ?>
+			<div class="lis-listing-panel" data-panel-section="Vendor Showcase" data-panel-question="Running an offer?" data-panel-hint="Optional — a link visitors can follow from your listing page">
+				<p>
+					<label for="lis_listing_offer_url">Offer link</label>
+					<input type="url" id="lis_listing_offer_url" name="lis_listing_offer_url" value="<?php echo esc_attr( get_post_meta( $listing_id, '_lis_listing_offer_url', true ) ); ?>" placeholder="https://" />
+				</p>
+				<p>
+					<label for="lis_listing_offer_label">Button text <span class="lis-listing-optional">(optional)</span></label>
+					<input type="text" id="lis_listing_offer_label" name="lis_listing_offer_label" value="<?php echo esc_attr( get_post_meta( $listing_id, '_lis_listing_offer_label', true ) ); ?>" placeholder="View Offer" />
+				</p>
+				<p class="description">Shown as a button on your listing page while your Vendor Showcase spot is active. Leave the link blank to hide the button.</p>
+			</div>
+		<?php endif; ?>
+
 		<div class="lis-listing-panel" data-panel-section="Business Hours" data-panel-question="When are you open?" data-panel-hint="Leave a day blank if closed">
 			<?php $no_hours = (bool) get_post_meta( $listing_id, '_lis_listing_no_hours', true ); ?>
 			<p class="lis-listing-no-hours-toggle">
@@ -398,6 +412,14 @@ function lis_directory_handle_listing_update() {
 	foreach ( array( 'facebook', 'instagram', 'twitter', 'linkedin' ) as $network ) {
 		$field = "lis_listing_{$network}";
 		update_post_meta( $listing_id, "_{$field}", ! empty( $_POST[ $field ] ) ? esc_url_raw( wp_unslash( $_POST[ $field ] ) ) : '' );
+	}
+
+	// Vendor Showcase offer — only reachable from a panel that's only shown
+	// while the listing has an active Showcase entry, but re-checked here too
+	// rather than trusting the form's own conditional rendering.
+	if ( function_exists( 'lis_directory_listing_is_active_showcase' ) && lis_directory_listing_is_active_showcase( $listing_id ) ) {
+		update_post_meta( $listing_id, '_lis_listing_offer_url', ! empty( $_POST['lis_listing_offer_url'] ) ? esc_url_raw( wp_unslash( $_POST['lis_listing_offer_url'] ) ) : '' );
+		update_post_meta( $listing_id, '_lis_listing_offer_label', isset( $_POST['lis_listing_offer_label'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_listing_offer_label'] ) ) : '' );
 	}
 
 	// Branding: tagline + logo + business card.

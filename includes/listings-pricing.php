@@ -149,6 +149,16 @@ function lis_directory_get_vendor_for_listing( $listing_id ) {
 	return $ids ? (int) $ids[0] : 0;
 }
 
+/**
+ * Whether a listing currently has an ACTIVE Vendor Showcase entry — the gate
+ * for Showcase-only UI: the offer button on the single-listing template, and
+ * the offer panel in the front-end edit form (includes/listings-edit.php).
+ */
+function lis_directory_listing_is_active_showcase( $listing_id ) {
+	$vendor_id = lis_directory_get_vendor_for_listing( $listing_id );
+	return $vendor_id && 'active' === get_post_meta( $vendor_id, '_lis_pv_status', true );
+}
+
 function lis_directory_add_listing_id_to_cart_item( $cart_item_data, $product_id ) {
 	if ( ! lis_directory_listing_tier_for_product( (int) $product_id ) ) {
 		return $cart_item_data;

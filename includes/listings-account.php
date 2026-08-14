@@ -22,6 +22,38 @@ add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
 add_action( 'admin_post_lis_directory_toggle_sold', 'lis_directory_handle_toggle_sold' );
 
 /**
+ * Takes over the "Listings" tab already on this site's /account/ hub. It's a
+ * WooCommerce My Account endpoint that Directorist registers and renders its
+ * own (pre-migration) dashboard on — by request, fully replaced with
+ * [lis_listing_dashboard] instead. remove_action() would need Directorist's
+ * exact callback (class instance + method + priority), which isn't
+ * discoverable without reading its source on the server directly, so this
+ * uses remove_all_actions() instead: safe here specifically because
+ * `woocommerce_account_listings_endpoint` only ever fires while rendering
+ * this one endpoint's content — nothing else on the site hooks it, and nothing
+ * else is lost by clearing it. Deliberately not touching the endpoint
+ * registration itself, the "Listings" nav link, or anything else Directorist
+ * owns — only what renders inside this one tab.
+ */
+add_action( 'template_redirect', 'lis_directory_takeover_account_listings_endpoint' );
+
+function lis_directory_takeover_account_listings_endpoint() {
+	if ( ! function_exists( 'is_account_page' ) || ! is_account_page() ) {
+		return;
+	}
+	global $wp;
+	if ( ! isset( $wp->query_vars['listings'] ) ) {
+		return;
+	}
+	remove_all_actions( 'woocommerce_account_listings_endpoint' );
+	add_action( 'woocommerce_account_listings_endpoint', 'lis_directory_render_account_listings_endpoint' );
+}
+
+function lis_directory_render_account_listings_endpoint() {
+	echo do_shortcode( '[lis_listing_dashboard]' ); // phpcs:ignore -- escaped inside the shortcode itself.
+}
+
+/**
  * Lets a listing owner flip Sold/Rented from the Dashboard without needing
  * wp-admin edit access (most front-end registrants are Subscribers, who
  * don't have it — same reasoning as the Edit link above). Ownership is

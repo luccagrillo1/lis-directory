@@ -124,6 +124,21 @@ while ( have_posts() ) :
 			</div>
 		</div>
 
+		<?php
+		$offer_url = '';
+		if ( function_exists( 'lis_directory_listing_is_active_showcase' ) && lis_directory_listing_is_active_showcase( $post_id ) ) {
+			$offer_url = get_post_meta( $post_id, '_lis_listing_offer_url', true );
+		}
+		$offer_label = get_post_meta( $post_id, '_lis_listing_offer_label', true );
+		$offer_label = $offer_label ? $offer_label : 'View Offer';
+		?>
+		<?php if ( $offer_url ) : ?>
+			<div class="lis-listing-offer-banner">
+				<span class="lis-listing-offer-eyebrow">Vendor Showcase Offer</span>
+				<a class="lis-listing-offer-button" href="<?php echo esc_url( $offer_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $offer_label ); ?></a>
+			</div>
+		<?php endif; ?>
+
 		<div class="lis-listing-columns">
 			<div class="lis-listing-main">
 
