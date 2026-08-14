@@ -185,6 +185,18 @@
 	.lis-listing-search-row {
 		flex-direction: column;
 	}
+
+	/* .lis-listing-search-input/-select/-submit use `flex: 1 1 200px` for the
+	   row layout above — 200px as a WIDTH basis. Once the row switches to a
+	   column here, that same flex-basis applies to the main axis, which is now
+	   vertical, so each field would get a 200px-tall minimum instead. Reset it
+	   back to auto so fields take their natural height when stacked. */
+	.lis-listing-search-input,
+	.lis-listing-search-select,
+	.lis-listing-search-submit {
+		flex: 1 1 auto;
+		width: 100%;
+	}
 }
 
 /* ---------- Archive / grid ---------- */

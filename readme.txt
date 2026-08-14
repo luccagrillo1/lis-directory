@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.21
+Stable tag: 0.36.22
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.22 =
+* Fixed: on mobile, the [lis_listing_search] widget's fields (search box, category dropdown, submit button) each got a 200px-tall dead-space gap instead of their normal height. Root cause: the fields use `flex: 1 1 200px` intended as a *width* basis for the desktop row layout; the mobile breakpoint switches the row to `flex-direction: column`, which reinterprets that same 200px as a *height* basis. Reset to `flex: 1 1 auto` at that breakpoint. This also fixes the form visually pushing up into the hero photo above it on mobile.
+
 
 = 0.36.21 =
 * Fixed: the "Sponsored" tooltip on the Vendor Showcase heading was clipped off the right edge of the screen on mobile (it was centered under the info icon, which sits at the end of the heading row). Now anchored to the icon's right edge so it stays on-screen.

@@ -1,3 +1,8 @@
+## [0.36.22] — 2026-08-14 — Mobile search widget dead-space fix
+
+- Fixed a flex-basis bug in `[lis_listing_search]` on mobile: `.lis-listing-search-input`/`-select`/`-submit` use `flex: 1 1 200px` as a width basis for the desktop row layout. The `max-width: 600px` breakpoint switches `.lis-listing-search-row` to `flex-direction: column`, which reinterprets that same flex-basis as a *height* basis — each field ballooned to a 200px-tall box with a big dead-space gap below its text. Reset to `flex: 1 1 auto; width: 100%` inside that breakpoint.
+- This also fixes the form's total height overshooting and visually pushing "More Filters" up into the hero photo above it on mobile — same root cause, not a separate layout bug.
+
 ## [0.36.21] — 2026-08-14 — Mobile tooltip clipping fix
 
 - Fixed the "Sponsored" tooltip on `[lis_preferred_vendor_heading]` running off the right edge of the viewport on mobile. It was horizontally centered under the info icon, but the icon sits at the end of the heading row (near the right edge on narrow screens), so the centered tooltip overflowed. Now anchored to the icon's right edge, growing leftward, so it always stays on-screen.
