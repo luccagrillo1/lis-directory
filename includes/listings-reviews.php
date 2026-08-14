@@ -22,6 +22,7 @@ add_action( 'comment_post', 'lis_directory_save_review_rating' );
 add_action( 'comment_form_before_fields', 'lis_directory_render_rating_field' );
 add_filter( 'comment_text', 'lis_directory_prepend_rating_to_comment', 10, 2 );
 add_filter( 'comment_form_defaults', 'lis_directory_relabel_comment_form' );
+add_filter( 'gettext', 'lis_directory_relabel_jetpack_comment_form', 10, 3 );
 
 /**
  * Only shows/relabels on `lis_listing` single pages — get_the_ID() inside
@@ -54,6 +55,31 @@ function lis_directory_relabel_comment_form( $defaults ) {
 		$defaults['label_submit'] = 'Submit Review';
 	}
 	return $defaults;
+}
+
+/**
+ * This site's Jetpack Comments module replaces the form above with its own
+ * cross-domain iframe (jetpack.wordpress.com/jetpack-comment/) for visitors
+ * with JS enabled — comment_form_defaults above only reaches the hidden
+ * no-JS fallback markup, never what most visitors actually see. Jetpack
+ * builds that iframe's greeting/button copy from its own translatable
+ * strings rather than calling comment_form() locally, so the only hook that
+ * reaches it is gettext, scoped to Jetpack's own text domain so nothing
+ * outside the comment form is touched. Confirmed live: the iframe's
+ * `greeting` query param carried the untranslated "Leave a Reply" despite
+ * the filter above already being in place.
+ */
+function lis_directory_relabel_jetpack_comment_form( $translated, $original, $domain ) {
+	if ( 'jetpack' !== $domain || 'lis_listing' !== get_post_type() ) {
+		return $translated;
+	}
+	$map = array(
+		'Leave a Reply'       => 'Leave a Review',
+		'Leave a Reply to %s' => 'Leave a Review for %s',
+		'Post Comment'        => 'Submit Review',
+		'Comment'             => 'Submit Review',
+	);
+	return isset( $map[ $original ] ) ? $map[ $original ] : $translated;
 }
 
 function lis_directory_prepend_rating_to_comment( $text, $comment = null ) {

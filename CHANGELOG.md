@@ -1,3 +1,9 @@
+## [0.36.24] — 2026-08-14 — Jetpack Comments "Leave a Review" fix
+
+- The comment/review form on `lis_listing` single pages was showing WordPress/Jetpack's default "Leave a Reply" title and "Comment" submit button, not "Leave a Review" / "Submit Review" as intended.
+- Root cause: this site's Jetpack Comments module replaces the native comment form with its own cross-domain iframe (`jetpack.wordpress.com/jetpack-comment/`) for JS-enabled visitors. The existing `comment_form_defaults` filter (`lis_directory_relabel_comment_form()`, shipped in v0.16.1) only reaches the hidden no-JS fallback markup — never what visitors actually see.
+- Added `lis_directory_relabel_jetpack_comment_form()` on the `gettext` filter, scoped to Jetpack's own text domain and `lis_listing` post type only, to relabel the strings Jetpack's iframe is actually built from.
+
 ## [0.36.23] — 2026-08-14 — "More Filters" contrast fix
 
 - `.lis-listing-search-more summary` ("More Filters") was bare green text with no background. Flagged during the mobile pass on the "local directory" page, where the search form overlaps a hero photo — plain text has no reliable contrast against an arbitrary image. Now a solid white chip (`background:#fff; padding:8px 14px; border-radius:8px;`), matching the look of the search input/select fields next to it.

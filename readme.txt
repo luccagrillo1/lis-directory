@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.23
+Stable tag: 0.36.24
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.24 =
+* Fixed: the comment form on listing pages showed WordPress/Jetpack's default "Leave a Reply" heading and "Comment" button instead of "Leave a Review" / "Submit Review". This site's Jetpack Comments module renders its own cross-domain iframe for the form, which doesn't pick up the existing comment_form_defaults relabel (that only reached a hidden no-JS fallback). Added a gettext filter scoped to Jetpack's own text domain and lis_listing pages only.
+
 
 = 0.36.23 =
 * Fixed: the "More Filters" toggle on [lis_listing_search] was bare green text with no background, so it had poor contrast when the form overlaps a hero photo (as on the "local directory" page). It's now a solid white chip, matching the search input/select styling.
