@@ -53,6 +53,26 @@ function lis_directory_render_account_listings_endpoint() {
 	echo do_shortcode( '[lis_listing_dashboard]' ); // phpcs:ignore -- escaped inside the shortcode itself.
 }
 
+// TEMPORARY diagnostic — remove once the "Listings" tab takeover above is
+// confirmed working. Dumps is_account_page()/query_vars into an HTML
+// comment, gated on ?lis_debug_account=1 + manage_options, so it's visible
+// from view-source without guessing why the takeover isn't firing.
+add_action( 'wp_footer', 'lis_directory_debug_dump_account_state', 999 );
+function lis_directory_debug_dump_account_state() {
+	if ( ! isset( $_GET['lis_debug_account'] ) || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	global $wp;
+	$info = array(
+		'is_account_page_exists' => function_exists( 'is_account_page' ) ? 'yes' : 'no',
+		'is_account_page'        => function_exists( 'is_account_page' ) ? ( is_account_page() ? 'true' : 'false' ) : 'n/a',
+		'query_vars'             => implode( ',', array_keys( $wp->query_vars ) ),
+		'listings_var'           => isset( $wp->query_vars['listings'] ) ? var_export( $wp->query_vars['listings'], true ) : 'NOT SET',
+		'has_woo_hook'           => has_action( 'woocommerce_account_listings_endpoint' ) ? 'yes (priority ' . has_action( 'woocommerce_account_listings_endpoint', 'lis_directory_render_account_listings_endpoint' ) . ' for ours)' : 'no',
+	);
+	echo "\n<!-- LIS_DEBUG_ACCOUNT\n" . esc_html( print_r( $info, true ) ) . "\n-->\n"; // phpcs:ignore -- temporary diagnostic, gated on explicit query param + capability, removed before final release.
+}
+
 /**
  * Lets a listing owner flip Sold/Rented from the Dashboard without needing
  * wp-admin edit access (most front-end registrants are Subscribers, who

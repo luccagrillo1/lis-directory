@@ -1,3 +1,7 @@
+## [0.36.31] — 2026-08-14 — diagnostic build
+
+- Temporary: dumps is_account_page()/query_vars/hook state into an HTML comment on the /account/listings/ page, gated behind ?lis_debug_account=1, to find why the 0.36.29 takeover of that tab isn't taking effect live. No visible behavior change.
+
 ## [0.36.30] — 2026-08-14 — Info icon + tooltip polish
 
 - `.lis-pv-heading-info-icon`: added a 1px left padding nudge — the italic serif "i" glyph's slant threw off visual centering inside the circle even with flex centering already in place.
