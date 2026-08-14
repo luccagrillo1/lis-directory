@@ -22,55 +22,43 @@ add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
 add_action( 'admin_post_lis_directory_toggle_sold', 'lis_directory_handle_toggle_sold' );
 
 /**
- * Takes over the "Listings" tab already on this site's /account/ hub. It's a
- * WooCommerce My Account endpoint that Directorist registers and renders its
- * own (pre-migration) dashboard on — by request, fully replaced with
- * [lis_listing_dashboard] instead. remove_action() would need Directorist's
- * exact callback (class instance + method + priority), which isn't
- * discoverable without reading its source on the server directly, so this
- * uses remove_all_actions() instead: safe here specifically because
- * `woocommerce_account_listings_endpoint` only ever fires while rendering
- * this one endpoint's content — nothing else on the site hooks it, and nothing
- * else is lost by clearing it. Deliberately not touching the endpoint
- * registration itself, the "Listings" nav link, or anything else Directorist
- * owns — only what renders inside this one tab.
+ * Takes over the "Listings" tab already on this site's /account/ hub
+ * (a real page — id 4364, slug "listings", child of "Account" id 4361 — not
+ * a WooCommerce endpoint as first assumed; that approach didn't work and has
+ * been replaced with this one). The page's own saved content is just an
+ * "Add Listing" button plus the shared account-nav reusable block;
+ * Directorist appends its own (pre-migration) dashboard on top of that via
+ * a the_content filter. By request, fully replaced with
+ * [lis_listing_dashboard] instead.
+ *
+ * remove_filter() would need Directorist's exact callback (class instance +
+ * method + priority), which isn't discoverable without reading its source on
+ * the server directly. Instead this captures the page's own clean content at
+ * an early priority (before Directorist's filter runs), then at the very
+ * last priority discards whatever's accumulated by then — Directorist's
+ * dashboard included — and returns that captured clean content with our
+ * dashboard appended. Scoped to this one page ID only.
  */
-add_action( 'template_redirect', 'lis_directory_takeover_account_listings_endpoint' );
+add_filter( 'the_content', 'lis_directory_capture_clean_account_listings_content', 1 );
+add_filter( 'the_content', 'lis_directory_takeover_account_listings_content', PHP_INT_MAX );
 
-function lis_directory_takeover_account_listings_endpoint() {
-	if ( ! function_exists( 'is_account_page' ) || ! is_account_page() ) {
-		return;
-	}
-	global $wp;
-	if ( ! isset( $wp->query_vars['listings'] ) ) {
-		return;
-	}
-	remove_all_actions( 'woocommerce_account_listings_endpoint' );
-	add_action( 'woocommerce_account_listings_endpoint', 'lis_directory_render_account_listings_endpoint' );
+function lis_directory_is_account_listings_page() {
+	return is_page( 4364 ) && in_the_loop() && is_main_query();
 }
 
-function lis_directory_render_account_listings_endpoint() {
-	echo do_shortcode( '[lis_listing_dashboard]' ); // phpcs:ignore -- escaped inside the shortcode itself.
+function lis_directory_capture_clean_account_listings_content( $content ) {
+	if ( lis_directory_is_account_listings_page() ) {
+		$GLOBALS['lis_directory_clean_account_listings_content'] = $content;
+	}
+	return $content;
 }
 
-// TEMPORARY diagnostic — remove once the "Listings" tab takeover above is
-// confirmed working. Dumps is_account_page()/query_vars into an HTML
-// comment, gated on ?lis_debug_account=1 + manage_options, so it's visible
-// from view-source without guessing why the takeover isn't firing.
-add_action( 'wp_footer', 'lis_directory_debug_dump_account_state', 999 );
-function lis_directory_debug_dump_account_state() {
-	if ( ! isset( $_GET['lis_debug_account'] ) || ! current_user_can( 'manage_options' ) ) {
-		return;
+function lis_directory_takeover_account_listings_content( $content ) {
+	if ( ! lis_directory_is_account_listings_page() ) {
+		return $content;
 	}
-	global $wp;
-	$info = array(
-		'is_account_page_exists' => function_exists( 'is_account_page' ) ? 'yes' : 'no',
-		'is_account_page'        => function_exists( 'is_account_page' ) ? ( is_account_page() ? 'true' : 'false' ) : 'n/a',
-		'query_vars'             => implode( ',', array_keys( $wp->query_vars ) ),
-		'listings_var'           => isset( $wp->query_vars['listings'] ) ? var_export( $wp->query_vars['listings'], true ) : 'NOT SET',
-		'has_woo_hook'           => has_action( 'woocommerce_account_listings_endpoint' ) ? 'yes (priority ' . has_action( 'woocommerce_account_listings_endpoint', 'lis_directory_render_account_listings_endpoint' ) . ' for ours)' : 'no',
-	);
-	echo "\n<!-- LIS_DEBUG_ACCOUNT\n" . esc_html( print_r( $info, true ) ) . "\n-->\n"; // phpcs:ignore -- temporary diagnostic, gated on explicit query param + capability, removed before final release.
+	$clean = isset( $GLOBALS['lis_directory_clean_account_listings_content'] ) ? $GLOBALS['lis_directory_clean_account_listings_content'] : $content;
+	return $clean . do_shortcode( '[lis_listing_dashboard]' );
 }
 
 /**
@@ -248,6 +236,39 @@ function lis_directory_render_dashboard_shortcode() {
 		'draft'   => 'Draft',
 	);
 
+	// "Expired" isn't a real post_status — the daily sweep (listings-expiry.php)
+	// drops an expired listing to draft and flags it, so it's computed here
+	// per-listing rather than queried directly.
+	$dash_status_of = function ( $listing ) {
+		if ( 'draft' === $listing->post_status && get_post_meta( $listing->ID, '_lis_listing_expired', true ) ) {
+			return 'expired';
+		}
+		return $listing->post_status;
+	};
+
+	$filter_tabs = array(
+		''        => 'All Listings',
+		'publish' => 'Published',
+		'pending' => 'Pending',
+		'draft'   => 'Draft',
+		'expired' => 'Expired',
+	);
+	$current_filter = isset( $_GET['lis_dash_status'] ) && isset( $filter_tabs[ sanitize_key( wp_unslash( $_GET['lis_dash_status'] ) ) ] )
+		? sanitize_key( wp_unslash( $_GET['lis_dash_status'] ) )
+		: '';
+
+	$visible_listings = $current_filter
+		? array_values( array_filter( $listings, function ( $listing ) use ( $dash_status_of, $current_filter ) {
+			return $current_filter === $dash_status_of( $listing );
+		} ) )
+		: $listings;
+
+	$plan_labels = array(
+		'standard' => 'Standard',
+		'featured' => 'Featured',
+		'showcase' => 'Vendor Showcase',
+	);
+
 	ob_start();
 	?>
 	<div class="lis-listing-dashboard">
@@ -255,33 +276,49 @@ function lis_directory_render_dashboard_shortcode() {
 		<?php if ( empty( $listings ) ) : ?>
 			<p class="lis-listing-empty">You haven't submitted any listings yet.</p>
 		<?php else : ?>
+			<div class="lis-listing-dashboard-filters">
+				<?php foreach ( $filter_tabs as $value => $label ) : ?>
+					<a class="lis-listing-dashboard-filter<?php echo $current_filter === $value ? ' is-active' : ''; ?>" href="<?php echo esc_url( $value ? add_query_arg( 'lis_dash_status', $value ) : remove_query_arg( 'lis_dash_status' ) ); ?>"><?php echo esc_html( $label ); ?></a>
+				<?php endforeach; ?>
+			</div>
+			<?php if ( empty( $visible_listings ) ) : ?>
+				<p class="lis-listing-empty">No listings match this filter.</p>
+			<?php else : ?>
 			<table class="lis-listing-dashboard-table">
 				<thead>
 					<tr>
 						<th>Listing</th>
 						<th>Directory</th>
+						<th>Expiration Date</th>
 						<th>Status</th>
-						<th>Submitted</th>
+						<th>Plan</th>
 						<th></th>
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $listings as $listing ) :
-						$types      = lis_directory_get_listing_types();
-						$status     = isset( $status_labels[ $listing->post_status ] ) ? $status_labels[ $listing->post_status ] : $listing->post_status;
-						$type       = lis_directory_get_listing_type( $listing->ID );
-						$is_re      = 'real-estate-sale' === $type || 'real-estate-rent' === $type;
-						$sold       = $is_re && (bool) get_post_meta( $listing->ID, '_lis_listing_sold', true );
-						$sold_label = 'real-estate-rent' === $type ? 'Rented' : 'Sold';
+					<?php foreach ( $visible_listings as $listing ) :
+						$types       = lis_directory_get_listing_types();
+						$dash_status = $dash_status_of( $listing );
+						$status      = 'expired' === $dash_status ? 'Expired' : ( isset( $status_labels[ $dash_status ] ) ? $status_labels[ $dash_status ] : $dash_status );
+						$type        = lis_directory_get_listing_type( $listing->ID );
+						$is_re       = 'real-estate-sale' === $type || 'real-estate-rent' === $type;
+						$sold        = $is_re && (bool) get_post_meta( $listing->ID, '_lis_listing_sold', true );
+						$sold_label  = 'real-estate-rent' === $type ? 'Rented' : 'Sold';
+						$never_expire = (bool) get_post_meta( $listing->ID, '_lis_listing_never_expire', true );
+						$expiry_raw  = lis_directory_get_listing_expiry( $listing->ID );
+						$expiry_display = $never_expire ? 'Never' : ( $expiry_raw ? date_i18n( 'F j, Y', strtotime( $expiry_raw ) ) : '—' );
+						$plan_tier   = get_post_meta( $listing->ID, '_lis_listing_pending_tier', true );
+						$plan_label  = $plan_tier && isset( $plan_labels[ $plan_tier ] ) ? $plan_labels[ $plan_tier ] : 'No Plan';
 						?>
 						<tr>
 							<td><?php echo esc_html( get_the_title( $listing ) ); ?></td>
 							<td><?php echo esc_html( $types[ $type ] ); ?></td>
+							<td><?php echo esc_html( $expiry_display ); ?></td>
 							<td>
-								<span class="lis-listing-dashboard-status lis-listing-dashboard-status--<?php echo esc_attr( $listing->post_status ); ?>"><?php echo esc_html( $status ); ?></span>
+								<span class="lis-listing-dashboard-status lis-listing-dashboard-status--<?php echo esc_attr( $dash_status ); ?>"><?php echo esc_html( $status ); ?></span>
 								<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo esc_html( $sold_label ); ?></span><?php endif; ?>
 							</td>
-							<td><?php echo esc_html( get_the_date( '', $listing ) ); ?></td>
+							<td><?php echo esc_html( $plan_label ); ?></td>
 							<td>
 								<?php if ( 'publish' === $listing->post_status ) : ?>
 									<a href="<?php echo esc_url( get_permalink( $listing ) ); ?>">View</a>
@@ -317,6 +354,7 @@ function lis_directory_render_dashboard_shortcode() {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			<?php endif; ?>
 		<?php endif; ?>
 	</div>
 	<?php

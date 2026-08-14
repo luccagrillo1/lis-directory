@@ -1,3 +1,10 @@
+## [0.36.32] — 2026-08-14 — Account Listings takeover, corrected + dashboard parity
+
+- 0.36.29's takeover targeted `woocommerce_account_listings_endpoint`, assuming /account/listings/ was a WooCommerce My Account endpoint. It isn't — it's a real WP page (id 4364, slug "listings", child of "Account" id 4361) whose own saved content is just an "Add Listing" button + the shared account-nav reusable block; Directorist appends its dashboard on top via a `the_content` filter. Diagnosed live via a temporary gettext-style debug dump (0.36.31) showing `is_account_page() === false` and `query_vars => page,pagename`.
+- Replaced with a `the_content`-based takeover in includes/listings-account.php: captures the page's own clean content at priority 1 (before Directorist's filter runs), then at `PHP_INT_MAX` discards whatever's accumulated by then (Directorist's dashboard included) and returns the captured clean content with `[lis_listing_dashboard]` appended. Scoped to page ID 4364 only.
+- Enhanced `lis_directory_render_dashboard_shortcode()` to match Directorist's reference more closely, per request: filter tabs (All Listings / Published / Pending / Draft / Expired, via `?lis_dash_status=`), plus Expiration Date and Plan table columns. "Expired" is computed (not a real post_status — the daily expiry sweep drops a listing to draft and sets `_lis_listing_expired`), not queried directly. No "Rejected" tab — this system doesn't have that moderation state, so it wasn't fabricated to match Directorist feature-for-feature.
+- New CSS: `.lis-listing-dashboard-filters` / `.lis-listing-dashboard-filter` / `.lis-listing-dashboard-status--expired`.
+
 ## [0.36.31] — 2026-08-14 — diagnostic build
 
 - Temporary: dumps is_account_page()/query_vars/hook state into an HTML comment on the /account/listings/ page, gated behind ?lis_debug_account=1, to find why the 0.36.29 takeover of that tab isn't taking effect live. No visible behavior change.

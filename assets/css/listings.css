@@ -2168,6 +2168,37 @@
 	color: #666;
 }
 
+.lis-listing-dashboard-status--expired {
+	background: #fbe6e6;
+	color: #7a1f1f;
+}
+
+.lis-listing-dashboard-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 16px;
+}
+
+.lis-listing-dashboard-filter {
+	padding: 6px 14px;
+	border-radius: 999px;
+	border: 1px solid #ddd;
+	color: #444;
+	font-size: 0.88em;
+	text-decoration: none;
+}
+
+.lis-listing-dashboard-filter:hover {
+	border-color: #576846;
+}
+
+.lis-listing-dashboard-filter.is-active {
+	background: #576846;
+	border-color: #576846;
+	color: #fff;
+}
+
 .lis-listing-dashboard-inline-form {
 	display: inline;
 }
