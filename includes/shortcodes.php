@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_shortcode( 'lis_preferred_vendor_card', 'lis_directory_render_vendor_card_shortcode' );
 add_shortcode( 'lis_preferred_vendor_top_category_card', 'lis_directory_render_top_category_vendor_card_shortcode' );
+add_shortcode( 'lis_preferred_vendor_directory', 'lis_directory_render_vendor_directory_shortcode' );
 
 function lis_directory_render_vendor_card_shortcode( $atts ) {
 	$atts = shortcode_atts( array( 'category' => '' ), $atts, 'lis_preferred_vendor_card' );
@@ -292,10 +293,21 @@ function lis_directory_render_heading_shortcode( $atts ) {
 
 	$styles = lis_directory_get_heading_styles_once();
 
+	$dir_page_id = (int) get_option( 'lis_directory_vendor_directory_page_id' );
+	$browse_url  = ( $dir_page_id && 'publish' === get_post_status( $dir_page_id ) ) ? get_permalink( $dir_page_id ) : '';
+	$tooltip     = 'Sponsored — these businesses paid to be featured here.';
+	$tooltip_id  = wp_unique_id( 'lis-pv-heading-tip-' );
+
 	ob_start();
 	?>
 	<<?php echo esc_html( $tag ); ?> class="lis-pv-heading">
+		<?php if ( $browse_url ) : ?><a class="lis-pv-heading-link" href="<?php echo esc_url( $browse_url ); ?>"><?php endif; ?>
 		<img class="lis-pv-heading-lockup" src="<?php echo esc_url( LIS_DIRECTORY_URL . 'assets/img/lis-vendor-showcase-lockup.png?ver=' . LIS_DIRECTORY_VERSION ); ?>" alt="LIS Vendor Showcase" />
+		<?php if ( $browse_url ) : ?></a><?php endif; ?>
+		<span class="lis-pv-heading-info" tabindex="0" aria-describedby="<?php echo esc_attr( $tooltip_id ); ?>">
+			<span class="lis-pv-heading-info-icon" aria-hidden="true">i</span>
+			<span class="lis-pv-heading-tooltip" id="<?php echo esc_attr( $tooltip_id ); ?>" role="tooltip"><?php echo esc_html( $tooltip ); ?></span>
+		</span>
 	</<?php echo esc_html( $tag ); ?>>
 	<?php
 	return $styles . ob_get_clean();
@@ -314,6 +326,77 @@ function lis_directory_get_heading_styles_once() {
 		return '';
 	}
 	return '<style id="lis-pv-heading-style">' . file_get_contents( $css_path ) . '</style>'; // phpcs:ignore -- static local asset, not user input.
+}
+
+/**
+ * [lis_preferred_vendor_directory] — every active Vendor Showcase entry as a
+ * browsable grid, reusing the same card markup as the tickers. This is the
+ * page the heading lockup links to.
+ */
+function lis_directory_render_vendor_directory_shortcode() {
+	$vendors = function_exists( 'lis_directory_get_all_active_vendors' ) ? lis_directory_get_all_active_vendors() : array();
+	if ( empty( $vendors ) ) {
+		return lis_directory_card_admin_hint( 'No active Vendor Showcase entries yet.' );
+	}
+
+	$styles = lis_directory_get_card_styles_once() . lis_directory_get_directory_grid_styles_once();
+
+	$cards = array();
+	foreach ( $vendors as $vendor ) {
+		$cards[] = lis_directory_render_vendor_card_html( $vendor );
+	}
+
+	return $styles . '<div class="lis-pv-directory-grid">' . implode( '', $cards ) . '</div>';
+}
+
+/** See lis_directory_get_card_styles_once() — same "return, don't echo" reasoning. */
+function lis_directory_get_directory_grid_styles_once() {
+	static $printed = false;
+	if ( $printed ) {
+		return '';
+	}
+	$printed = true;
+
+	$css_path = LIS_DIRECTORY_PATH . 'assets/css/vendor-directory.css';
+	if ( ! file_exists( $css_path ) ) {
+		return '';
+	}
+	return '<style id="lis-pv-directory-style">' . file_get_contents( $css_path ) . '</style>'; // phpcs:ignore -- static local asset, not user input.
+}
+
+/**
+ * Self-provisions the "browse all vendors" page the first time an admin
+ * screen loads after this ships, so the heading link works without any
+ * manual setup. Cheap on every load after the first: a single autoloaded
+ * get_option() read, then an immediate return. Only does real work (one
+ * wp_insert_post) once, ever — safe unlike a heavier admin_init reconcile
+ * would be.
+ */
+add_action( 'admin_init', 'lis_directory_maybe_create_vendor_directory_page' );
+
+function lis_directory_maybe_create_vendor_directory_page() {
+	$page_id = (int) get_option( 'lis_directory_vendor_directory_page_id' );
+	if ( $page_id && get_post( $page_id ) && 'trash' !== get_post_status( $page_id ) ) {
+		return;
+	}
+
+	$existing = get_page_by_path( 'vendor-showcase' );
+	if ( $existing ) {
+		update_option( 'lis_directory_vendor_directory_page_id', $existing->ID );
+		return;
+	}
+
+	$new_id = wp_insert_post( array(
+		'post_type'    => 'page',
+		'post_title'   => 'Vendor Showcase',
+		'post_name'    => 'vendor-showcase',
+		'post_status'  => 'publish',
+		'post_content' => '[lis_preferred_vendor_directory]',
+	), true );
+
+	if ( ! is_wp_error( $new_id ) && $new_id ) {
+		update_option( 'lis_directory_vendor_directory_page_id', $new_id );
+	}
 }
 
 /**

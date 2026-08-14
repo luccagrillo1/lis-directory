@@ -1,3 +1,10 @@
+## [0.36.20] — 2026-08-14 — Vendor Showcase info tooltip + browse-all page
+
+- Added a small "i" info icon next to the `[lis_preferred_vendor_heading]` lockup with a "Sponsored" tooltip (hover/focus), disclosing that showcased businesses paid to be featured.
+- Added `[lis_preferred_vendor_directory]` — a card grid of every active Vendor Showcase vendor, reusing the existing card markup/CSS.
+- The heading's lockup image now links to a new "Vendor Showcase" page running that shortcode. The page is self-provisioned (slug `vendor-showcase`) the first time an admin screen loads post-update, so no manual setup is needed; its ID is stored in the `lis_directory_vendor_directory_page_id` option.
+- New files: `assets/css/vendor-directory.css`.
+
 # LIS Directory — Detailed Changelog
 
 All notable changes to the LIS Directory plugin. Format inspired by [Keep a Changelog](https://keepachangelog.com/).

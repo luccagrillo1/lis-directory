@@ -1,0 +1,13 @@
+/* [lis_preferred_vendor_directory] — grid of every active Vendor Showcase
+   entry, using the same .lis-pv-card markup/CSS as the tickers. */
+
+.lis-pv-directory-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 20px;
+}
+
+.lis-pv-directory-grid .lis-pv-card {
+	max-width: none;
+	width: 100%;
+}
