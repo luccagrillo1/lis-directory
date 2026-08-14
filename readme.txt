@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.25
+Stable tag: 0.36.26
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.26 =
+* Temporary diagnostic build to track down why the Jetpack Comments "Leave a Reply" text wasn't relabeling (gated behind ?lis_debug_gettext=1, no visible change).
+
 
 = 0.36.25 =
 * Follow-up to 0.36.24: the gettext filter scoped to domain 'jetpack' still wasn't catching the "Leave a Reply" / "Comment" text live (Jetpack likely pulls it from WP core's own translation catalog via comment_form_title(), not its own domain). Removed the domain restriction — now matches on the exact strings + lis_listing post type only.
