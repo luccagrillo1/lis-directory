@@ -1,3 +1,7 @@
+## [0.36.23] — 2026-08-14 — "More Filters" contrast fix
+
+- `.lis-listing-search-more summary` ("More Filters") was bare green text with no background. Flagged during the mobile pass on the "local directory" page, where the search form overlaps a hero photo — plain text has no reliable contrast against an arbitrary image. Now a solid white chip (`background:#fff; padding:8px 14px; border-radius:8px;`), matching the look of the search input/select fields next to it.
+
 ## [0.36.22] — 2026-08-14 — Mobile search widget dead-space fix
 
 - Fixed a flex-basis bug in `[lis_listing_search]` on mobile: `.lis-listing-search-input`/`-select`/`-submit` use `flex: 1 1 200px` as a width basis for the desktop row layout. The `max-width: 600px` breakpoint switches `.lis-listing-search-row` to `flex-direction: column`, which reinterprets that same flex-basis as a *height* basis — each field ballooned to a 200px-tall box with a big dead-space gap below its text. Reset to `flex: 1 1 auto; width: 100%` inside that breakpoint.

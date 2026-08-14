@@ -44,11 +44,18 @@
 	margin-top: 12px;
 }
 
+/* A solid chip, not bare text — this form is often placed overlapping a hero
+   photo (see the "local directory" page), where plain green text has no
+   reliable contrast against whatever image is behind it. */
 .lis-listing-search-more summary {
 	cursor: pointer;
 	font-weight: 600;
 	color: #576846;
 	list-style: none;
+	display: inline-block;
+	background: #fff;
+	padding: 8px 14px;
+	border-radius: 8px;
 }
 
 .lis-listing-search-more summary::-webkit-details-marker {
