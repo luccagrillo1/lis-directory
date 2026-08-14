@@ -36,3 +36,22 @@ function lis_directory_listing_category_template( $template ) {
 	$theme_template = locate_template( array( 'taxonomy-lis_listing_category.php' ) );
 	return $theme_template ? $theme_template : LIS_DIRECTORY_PATH . 'templates/archive-listing.php';
 }
+
+/**
+ * Jetpack Related Posts auto-appends itself to the_content — on the single
+ * listing template, that lands it right after the Description block, ahead
+ * of Claim/Report and Reviews. templates/single-listing.php wants it further
+ * down the page instead, so it's placed manually via the [jetpack-related-posts]
+ * shortcode (Jetpack's own documented way to do this); this just turns off
+ * the automatic placement so it isn't shown twice. Scoped to lis_listing only
+ * — blog posts elsewhere on the site keep Jetpack's default placement.
+ */
+add_action( 'wp', 'lis_directory_disable_auto_jetpack_related_posts' );
+
+function lis_directory_disable_auto_jetpack_related_posts() {
+	if ( ! is_singular( 'lis_listing' ) || ! class_exists( 'Jetpack_RelatedPosts' ) ) {
+		return;
+	}
+	$related_posts = Jetpack_RelatedPosts::init();
+	remove_filter( 'the_content', array( $related_posts, 'filter_add_target_to_dom' ) );
+}

@@ -1,3 +1,8 @@
+## [0.36.27] — 2026-08-14 — Reorder single-listing sections
+
+- New section order on `templates/single-listing.php`: Description block(s) → Claim this listing → Report this listing → Related → Reviews (was: Description → Related → Reviews → Claim → Report).
+- Jetpack Related Posts auto-appends to `the_content`, which is why it previously landed right after Description regardless of anything else on the page. Added `lis_directory_disable_auto_jetpack_related_posts()` in `includes/listings-template.php` (hooked on `wp`, scoped to `is_singular('lis_listing')` only) to turn off that auto-placement, and the template now inserts it manually via the `[jetpack-related-posts]` shortcode in its new spot — Jetpack's own documented way to relocate it. Blog posts elsewhere on the site are unaffected.
+
 ## [0.36.26] — 2026-08-14 — diagnostic build
 
 - Temporary: captures gettext calls containing "reply"/"comment" on lis_listing pages into an HTML comment, gated behind `?lis_debug_gettext=1`, to find the exact string/domain Jetpack Comments uses for its greeting after two failed relabel attempts (0.36.24, 0.36.25). No visible behavior change.

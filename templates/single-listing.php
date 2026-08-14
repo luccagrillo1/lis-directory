@@ -211,15 +211,6 @@ while ( have_posts() ) :
 					</div>
 				<?php endif; ?>
 
-				<div class="lis-listing-section">
-					<h2>Reviews <?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?> <?php echo esc_html( $avg_rating ); ?> (<?php echo (int) $review_count; ?> review<?php echo 1 === $review_count ? '' : 's'; ?>)</span><?php endif; ?></h2>
-					<?php
-					if ( comments_open() || $review_count ) {
-						comments_template();
-					}
-					?>
-				</div>
-
 				<div class="lis-listing-section lis-listing-flag-actions">
 					<?php if ( is_user_logged_in() ) : ?>
 						<?php if ( ! $verified ) : ?>
@@ -249,6 +240,21 @@ while ( have_posts() ) :
 					<?php else : ?>
 						<p><a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">Log in</a> to claim or report this listing.</p>
 					<?php endif; ?>
+				</div>
+
+				<?php if ( shortcode_exists( 'jetpack-related-posts' ) ) : ?>
+					<div class="lis-listing-section lis-listing-related">
+						<?php echo do_shortcode( '[jetpack-related-posts]' ); ?>
+					</div>
+				<?php endif; ?>
+
+				<div class="lis-listing-section">
+					<h2>Reviews <?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?> <?php echo esc_html( $avg_rating ); ?> (<?php echo (int) $review_count; ?> review<?php echo 1 === $review_count ? '' : 's'; ?>)</span><?php endif; ?></h2>
+					<?php
+					if ( comments_open() || $review_count ) {
+						comments_template();
+					}
+					?>
 				</div>
 
 			</div>
