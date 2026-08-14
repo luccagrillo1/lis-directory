@@ -1,3 +1,7 @@
+## [0.36.21] — 2026-08-14 — Mobile tooltip clipping fix
+
+- Fixed the "Sponsored" tooltip on `[lis_preferred_vendor_heading]` running off the right edge of the viewport on mobile. It was horizontally centered under the info icon, but the icon sits at the end of the heading row (near the right edge on narrow screens), so the centered tooltip overflowed. Now anchored to the icon's right edge, growing leftward, so it always stays on-screen.
+
 ## [0.36.20] — 2026-08-14 — Vendor Showcase info tooltip + browse-all page
 
 - Added a small "i" info icon next to the `[lis_preferred_vendor_heading]` lockup with a "Sponsored" tooltip (hover/focus), disclosing that showcased businesses paid to be featured.

@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.20
+Stable tag: 0.36.21
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.21 =
+* Fixed: the "Sponsored" tooltip on the Vendor Showcase heading was clipped off the right edge of the screen on mobile (it was centered under the info icon, which sits at the end of the heading row). Now anchored to the icon's right edge so it stays on-screen.
+
 
 = 0.36.20 =
 * Vendor Showcase heading now shows a small "i" info icon with a "Sponsored" tooltip.
