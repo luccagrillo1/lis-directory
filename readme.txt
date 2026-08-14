@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.18
+Stable tag: 0.36.19
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.19 =
+* Fixed the single-listing hero photo cropping portrait photos badly (e.g. a headshot losing the top of the head and chin). It now shows the whole photo (object-fit: contain), letterboxed on a neutral fill when the photo is taller than the hero cap, instead of zoom-cropping.
 
 = 0.36.18 =
 * Ticker no longer flashes at the start then jumps â itâs at its random position the moment it appears (track hidden until positioned; positioned at DOM-ready instead of after images load).

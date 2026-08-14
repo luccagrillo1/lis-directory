@@ -7,6 +7,17 @@ This file is the authoritative project history.
 
 ---
 
+## [0.36.19] â 2026-08-14 â No more hero photo cropping
+
+`.lis-listing-single-thumb` (and the lone-gallery-photo hero variant) used
+`object-fit: cover` inside a fixed max-height, so a portrait photo (a headshot)
+got zoom-cropped â chin and forehead cut off. Switched to `height:auto` +
+`object-fit: contain` inside the height cap, with a neutral background fill for
+letterboxing: the full photo always shows, at its native aspect ratio, never
+cropped. **Files:** assets/css/listings.css.
+
+---
+
 ## [0.36.18] â 2026-08-12 â No ticker start flash
 
 The random start applied on `window.load`, so the row painted at offset 0 then

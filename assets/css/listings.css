@@ -515,18 +515,28 @@
 	display: block;
 }
 
-/* A lone gallery image reads as a full-width hero, not a stray thumbnail. */
+/* A lone gallery image reads as a full-width hero, not a stray thumbnail — and,
+   like the single-thumb hero below, must show the WHOLE photo rather than
+   cropping it: a `cover` hero on a portrait photo (a headshot, say) zoomed in
+   and cut off the top of the head and the chin. `contain` inside a height cap
+   always shows the full frame, letterboxed on a neutral fill when the photo's
+   native ratio is taller than the cap — never cropped. */
 .lis-listing-gallery-strip:has(.lis-listing-gallery-img:only-child) {
 	grid-template-columns: 1fr;
+	background: #efece0;
 }
 .lis-listing-gallery-strip:has(.lis-listing-gallery-img:only-child) .lis-listing-gallery-img {
-	height: 380px;
+	height: auto;
+	max-height: 480px;
+	object-fit: contain;
 }
 
 .lis-listing-single-thumb {
 	width: 100%;
-	max-height: 380px;
-	object-fit: cover;
+	height: auto;
+	max-height: 480px;
+	object-fit: contain;
+	background: #efece0;
 	border-radius: 14px;
 	margin-bottom: 24px;
 	display: block;
