@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.33
+Stable tag: 0.36.34
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.34 =
+* [lis_listing_edit] (the "Edit" link from the account dashboard) no longer uses the one-question-at-a-time wizard [lis_listing_submit] uses for new listings. It now renders every field at once in a flat, single-page layout, matching the format of the wp-admin "Listing Details" meta box, so a business owner can jump straight to and fix one field instead of stepping through the whole form.
+
 
 = 0.36.33 =
 * Removed the the_content takeover added in 0.36.32 for the account "Listings" tab — turned out unnecessary. The page's saved content literally has a [directorist_user_dashboard] shortcode block in it (confirmed via the raw content, not injected by any filter); swapping that one shortcode for [lis_listing_dashboard] directly in the page content is the actual fix, done as a content edit rather than plugin code.

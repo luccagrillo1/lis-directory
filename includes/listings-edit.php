@@ -50,7 +50,12 @@ function lis_directory_get_listing_edit_url( $listing_id ) {
 function lis_directory_render_listing_edit_form_shortcode() {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 	wp_enqueue_script( 'lis-directory-listing-photos', LIS_DIRECTORY_URL . 'assets/js/listing-photos.js', array(), LIS_DIRECTORY_VERSION, true );
-	wp_enqueue_script( 'lis-directory-listing-form-wizard', LIS_DIRECTORY_URL . 'assets/js/listing-form-wizard.js', array(), LIS_DIRECTORY_VERSION, true );
+	// Deliberately NOT the one-question-at-a-time wizard (listing-form-wizard.js)
+	// that [lis_listing_submit] uses — that's a guided onboarding flow for a
+	// brand-new listing. Editing an existing one is a different job: a
+	// business owner wants to find and fix one field fast, not step through a
+	// dozen questions to reach it. Flat, all-fields-visible layout instead,
+	// same panel markup — see the .lis-listing-edit-flat CSS.
 	lis_directory_enqueue_places_autocomplete();
 
 	if ( ! is_user_logged_in() ) {
@@ -123,7 +128,7 @@ function lis_directory_render_listing_edit_form_shortcode() {
 		<?php
 	}
 	?>
-	<form class="lis-listing-submit-form" method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+	<form class="lis-listing-submit-form lis-listing-edit-flat" method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="lis_directory_update_listing" />
 		<input type="hidden" name="listing_id" value="<?php echo (int) $listing_id; ?>" />
 		<input type="hidden" name="lis_listing_redirect_to" value="<?php echo esc_url( $current_url ); ?>" />

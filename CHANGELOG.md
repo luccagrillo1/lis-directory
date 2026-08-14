@@ -1,3 +1,9 @@
+## [0.36.34] — 2026-08-14 — Flat edit form
+
+- `[lis_listing_edit]` no longer loads `listing-form-wizard.js` (the one-question-at-a-time flow `[lis_listing_submit]` uses for onboarding a new listing). By request: editing an existing listing is a find-and-fix-one-field job, not an onboarding flow — it should look like the wp-admin "Listing Details" meta box, not a step-by-step wizard.
+- Added a `.lis-listing-edit-flat` class on the edit form; new CSS in assets/css/listings.css keeps every `.lis-listing-panel` visible at once and surfaces each panel's existing `data-panel-question`/`data-panel-hint` attributes as plain visible text via `::before`/`::after` generated content — no PHP markup changes needed, since those attributes were already being written for the (now-unused-here) wizard JS to read.
+- `[lis_listing_submit]` is unaffected — still the full guided wizard for new listings. Updated the doc comment at the top of listing-form-wizard.js to reflect that it now only runs against the submit form.
+
 ## [0.36.33] — 2026-08-14 — Remove unnecessary account-page takeover code
 
 - 0.36.32's `the_content` capture-and-override hack for page 4364 was solving a problem that didn't exist the way it assumed. Fetching the page's raw content in full (not truncated) showed Directorist's dashboard comes from a literal `wp:shortcode` block — `[directorist_user_dashboard]` — saved directly in the page's own content. No filter injection involved.

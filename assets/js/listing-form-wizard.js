@@ -1,27 +1,32 @@
 /**
- * Real one-question-at-a-time onboarding flow for [lis_listing_submit] and
- * [lis_listing_edit] — Lucca's ask: progress bar, small section label,
- * one big bold question per panel, clean input below it, an elegant
- * transition between panels, and a review screen before the real submit.
- * Deliberately NOT a real multi-page wizard with server-side partial
- * saves — every field still lives in the same single <form> and posts in
- * one request exactly as before. This only changes what's visible and in
- * what order, driven entirely client-side.
+ * Real one-question-at-a-time onboarding flow for [lis_listing_submit] —
+ * Lucca's ask: progress bar, small section label, one big bold question per
+ * panel, clean input below it, an elegant transition between panels, and a
+ * review screen before the real submit. Deliberately NOT a real multi-page
+ * wizard with server-side partial saves — every field still lives in the
+ * same single <form> and posts in one request exactly as before. This only
+ * changes what's visible and in what order, driven entirely client-side.
+ *
+ * [lis_listing_edit] used to share this same script, but not anymore —
+ * editing an existing listing is a find-and-fix-one-field job, not an
+ * onboarding flow, so it now renders every `.lis-listing-panel` flat and
+ * visible at once instead (see the .lis-listing-edit-flat CSS in
+ * listings.css, and the enqueue note in listings-edit.php). This file only
+ * runs against `[lis_listing_submit]`'s own form now.
  *
  * Panels are read from the markup itself: each `.lis-listing-panel` in
- * listings-submission.php / listings-edit.php carries
- * `data-panel-section` (small label), `data-panel-question` (the big
- * question), and an optional `data-panel-hint`. That keeps the actual
- * copy in the PHP templates where content belongs, not hardcoded here.
+ * listings-submission.php carries `data-panel-section` (small label),
+ * `data-panel-question` (the big question), and an optional
+ * `data-panel-hint`. That keeps the actual copy in the PHP template where
+ * content belongs, not hardcoded here.
  *
- * [lis_listing_submit] only: the first panel is a fork
- * (`.lis-listing-fork-panel`) — "Find it on Google" vs "Enter manually".
- * Panels marked `data-google-fillable="true"` (Address, Phone, Website,
- * Business Hours) are skipped from the walkthrough when the Google path
- * is chosen, since listing-places-autocomplete.js fills them directly.
- * They still get shown on the review screen since Google did fill real
- * values into them — just not as their own step. [lis_listing_edit] has
- * no fork panel at all, so every panel there is always in the sequence.
+ * The first panel is a fork (`.lis-listing-fork-panel`) — "Find it on
+ * Google" vs "Enter manually". Panels marked `data-google-fillable="true"`
+ * (Address, Phone, Website, Business Hours) are skipped from the
+ * walkthrough when the Google path is chosen, since
+ * listing-places-autocomplete.js fills them directly. They still get shown
+ * on the review screen since Google did fill real values into them — just
+ * not as their own step.
  */
 document.addEventListener( 'DOMContentLoaded', function () {
 	document.querySelectorAll( '.lis-listing-submit-form' ).forEach( function ( form ) {

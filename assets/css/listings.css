@@ -1325,6 +1325,43 @@
 	}
 }
 
+/* Flat edit form ([lis_listing_edit]) — every .lis-listing-panel stays
+   visible at once instead of being turned into a one-question-at-a-time
+   wizard (that JS is deliberately not loaded here, see listings-edit.php).
+   The panels already carry data-panel-question/-hint attributes for the
+   wizard to read; reused here as plain CSS-generated labels so nothing in
+   the PHP markup had to change. */
+.lis-listing-edit-flat .lis-listing-panel {
+	padding-bottom: 24px;
+	margin-bottom: 24px;
+	border-bottom: 1px solid #eee;
+}
+
+.lis-listing-edit-flat .lis-listing-panel:last-of-type {
+	border-bottom: none;
+}
+
+.lis-listing-edit-flat .lis-listing-panel::before {
+	content: attr(data-panel-question);
+	display: block;
+	font-weight: 700;
+	font-size: 1.05em;
+	color: #262420;
+	margin-bottom: 4px;
+}
+
+/* The hint (a handful of panels only) renders after the panel's own fields,
+   not right under the question — ::after can't be placed mid-content — but
+   still reads fine as a trailing note ("Optional — YouTube or Vimeo link"
+   etc.). */
+.lis-listing-edit-flat .lis-listing-panel[data-panel-hint]::after {
+	content: attr(data-panel-hint);
+	display: block;
+	font-size: 0.85em;
+	color: #888;
+	margin-top: 8px;
+}
+
 .lis-listing-panel p {
 	margin: 0 0 24px 0;
 }
