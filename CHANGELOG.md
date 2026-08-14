@@ -1,3 +1,8 @@
+## [0.36.33] — 2026-08-14 — Remove unnecessary account-page takeover code
+
+- 0.36.32's `the_content` capture-and-override hack for page 4364 was solving a problem that didn't exist the way it assumed. Fetching the page's raw content in full (not truncated) showed Directorist's dashboard comes from a literal `wp:shortcode` block — `[directorist_user_dashboard]` — saved directly in the page's own content. No filter injection involved.
+- Removed `lis_directory_capture_clean_account_listings_content()` / `lis_directory_takeover_account_listings_content()` from includes/listings-account.php. The actual fix is a one-time content edit — replacing that shortcode with `[lis_listing_dashboard]` directly in the page — done outside plugin code, same as any other content change.
+
 ## [0.36.32] — 2026-08-14 — Account Listings takeover, corrected + dashboard parity
 
 - 0.36.29's takeover targeted `woocommerce_account_listings_endpoint`, assuming /account/listings/ was a WooCommerce My Account endpoint. It isn't — it's a real WP page (id 4364, slug "listings", child of "Account" id 4361) whose own saved content is just an "Add Listing" button + the shared account-nav reusable block; Directorist appends its dashboard on top via a `the_content` filter. Diagnosed live via a temporary gettext-style debug dump (0.36.31) showing `is_account_page() === false` and `query_vars => page,pagename`.

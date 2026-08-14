@@ -22,46 +22,6 @@ add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
 add_action( 'admin_post_lis_directory_toggle_sold', 'lis_directory_handle_toggle_sold' );
 
 /**
- * Takes over the "Listings" tab already on this site's /account/ hub
- * (a real page — id 4364, slug "listings", child of "Account" id 4361 — not
- * a WooCommerce endpoint as first assumed; that approach didn't work and has
- * been replaced with this one). The page's own saved content is just an
- * "Add Listing" button plus the shared account-nav reusable block;
- * Directorist appends its own (pre-migration) dashboard on top of that via
- * a the_content filter. By request, fully replaced with
- * [lis_listing_dashboard] instead.
- *
- * remove_filter() would need Directorist's exact callback (class instance +
- * method + priority), which isn't discoverable without reading its source on
- * the server directly. Instead this captures the page's own clean content at
- * an early priority (before Directorist's filter runs), then at the very
- * last priority discards whatever's accumulated by then — Directorist's
- * dashboard included — and returns that captured clean content with our
- * dashboard appended. Scoped to this one page ID only.
- */
-add_filter( 'the_content', 'lis_directory_capture_clean_account_listings_content', 1 );
-add_filter( 'the_content', 'lis_directory_takeover_account_listings_content', PHP_INT_MAX );
-
-function lis_directory_is_account_listings_page() {
-	return is_page( 4364 ) && in_the_loop() && is_main_query();
-}
-
-function lis_directory_capture_clean_account_listings_content( $content ) {
-	if ( lis_directory_is_account_listings_page() ) {
-		$GLOBALS['lis_directory_clean_account_listings_content'] = $content;
-	}
-	return $content;
-}
-
-function lis_directory_takeover_account_listings_content( $content ) {
-	if ( ! lis_directory_is_account_listings_page() ) {
-		return $content;
-	}
-	$clean = isset( $GLOBALS['lis_directory_clean_account_listings_content'] ) ? $GLOBALS['lis_directory_clean_account_listings_content'] : $content;
-	return $clean . do_shortcode( '[lis_listing_dashboard]' );
-}
-
-/**
  * Lets a listing owner flip Sold/Rented from the Dashboard without needing
  * wp-admin edit access (most front-end registrants are Subscribers, who
  * don't have it — same reasoning as the Edit link above). Ownership is
