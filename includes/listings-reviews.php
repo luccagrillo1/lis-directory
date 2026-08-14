@@ -62,15 +62,19 @@ function lis_directory_relabel_comment_form( $defaults ) {
  * cross-domain iframe (jetpack.wordpress.com/jetpack-comment/) for visitors
  * with JS enabled — comment_form_defaults above only reaches the hidden
  * no-JS fallback markup, never what most visitors actually see. Jetpack
- * builds that iframe's greeting/button copy from its own translatable
- * strings rather than calling comment_form() locally, so the only hook that
- * reaches it is gettext, scoped to Jetpack's own text domain so nothing
- * outside the comment form is touched. Confirmed live: the iframe's
- * `greeting` query param carried the untranslated "Leave a Reply" despite
- * the filter above already being in place.
+ * builds that iframe's greeting/button copy by calling WP core's
+ * comment_form_title(), which pulls "Leave a Reply" from core's own
+ * translation catalog (domain 'default'), not a 'jetpack'-domain string —
+ * confirmed live by checking the iframe's `greeting` query param, which is
+ * still untranslated even with a domain==='jetpack' version of this filter
+ * in place. Deliberately not filtering on $domain at all (only on post
+ * type + the exact original strings) since it's unclear whether every WP/
+ * Jetpack version resolves this from 'default' or 'jetpack', and the
+ * strings matched are specific enough that a false-positive match outside
+ * a real comment-form context isn't a realistic risk.
  */
 function lis_directory_relabel_jetpack_comment_form( $translated, $original, $domain ) {
-	if ( 'jetpack' !== $domain || 'lis_listing' !== get_post_type() ) {
+	if ( 'lis_listing' !== get_post_type() ) {
 		return $translated;
 	}
 	$map = array(

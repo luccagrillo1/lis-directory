@@ -1,3 +1,8 @@
+## [0.36.25] — 2026-08-14 — Jetpack Comments relabel, take 2
+
+- v0.36.24's fix didn't take live: the domain==='jetpack' check in the gettext filter never matched, most likely because Jetpack builds this greeting via WP core's own `comment_form_title()`, which translates "Leave a Reply" against core's 'default' domain rather than 'jetpack'.
+- Removed the domain check; `lis_directory_relabel_jetpack_comment_form()` now matches on the exact original strings + `lis_listing` post type only, regardless of domain.
+
 ## [0.36.24] — 2026-08-14 — Jetpack Comments "Leave a Review" fix
 
 - The comment/review form on `lis_listing` single pages was showing WordPress/Jetpack's default "Leave a Reply" title and "Comment" submit button, not "Leave a Review" / "Submit Review" as intended.
