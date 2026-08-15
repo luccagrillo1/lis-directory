@@ -125,6 +125,12 @@ function lis_directory_register_listing_meta() {
 		'_lis_listing_pending_billing'  => 'string',  // '' | month | year.
 		'_lis_listing_featured'         => 'boolean',
 		'_lis_listing_paid_order_id'    => 'integer', // WooCommerce order/subscription ID.
+		// Standard is the required foundation for Featured/Showcase (see
+		// lis_directory_get_listing_upgrade_url() in listings-pricing.php) —
+		// tracked the same way Featured already tracks itself, so cancelling
+		// the Standard subscription can find and revoke the upgrades too.
+		'_lis_listing_standard_active'   => 'boolean',
+		'_lis_listing_standard_order_id' => 'integer',
 		'_lis_listing_facebook'     => 'string',
 		'_lis_listing_instagram'    => 'string',
 		'_lis_listing_twitter'      => 'string',

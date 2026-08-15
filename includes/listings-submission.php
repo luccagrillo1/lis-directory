@@ -361,21 +361,32 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		};
 
 		// Standard / Featured tier cards (product + monthly/annual price).
+		// Featured and Vendor Showcase both require Standard as a foundation
+		// (lis_directory_get_listing_upgrade_url() bundles it into the same
+		// checkout automatically when a listing doesn't already have it) — a
+		// brand-new listing never does, so the price shown here for those two
+		// is the real bundled total, not just the upgrade's own price, so
+		// there's no surprise jump between this step and the checkout total.
+		$std_month_p = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] : null;
+		$std_year_p  = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] : null;
+
 		$plan_tiers = array();
 		if ( $std_pid ) {
 			$plan_tiers['standard'] = array(
 				'label' => 'Standard',
 				'blurb' => 'Your business listed in the directory.',
-				'm'     => $fmt_price( lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] ),
-				'y'     => $fmt_price( lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] ),
+				'm'     => $fmt_price( $std_month_p ),
+				'y'     => $fmt_price( $std_year_p ),
 			);
 		}
 		if ( $feat_pid ) {
+			$feat_month_p = lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'];
+			$feat_year_p  = lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'];
 			$plan_tiers['featured'] = array(
 				'label' => 'Featured',
-				'blurb' => 'A Featured badge and priority placement.',
-				'm'     => $fmt_price( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] ),
-				'y'     => $fmt_price( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] ),
+				'blurb' => $std_pid ? 'Includes Standard, plus a Featured badge and priority placement.' : 'A Featured badge and priority placement.',
+				'm'     => $fmt_price( null !== $feat_month_p && null !== $std_month_p ? (float) $feat_month_p + (float) $std_month_p : $feat_month_p ),
+				'y'     => $fmt_price( null !== $feat_year_p && null !== $std_year_p ? (float) $feat_year_p + (float) $std_year_p : $feat_year_p ),
 			);
 		}
 
@@ -393,9 +404,9 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			$vs_year_p  = $vs_year_v && wc_get_product( $vs_year_v ) ? wc_get_product( $vs_year_v )->get_price() : null;
 			$plan_tiers['showcase'] = array(
 				'label' => 'Vendor Showcase',
-				'blurb' => 'The exclusive one-per-category slot — your logo in the showcase.',
-				'm'     => $fmt_price( $vs_month_p ),
-				'y'     => $fmt_price( $vs_year_p ),
+				'blurb' => $std_pid ? 'Includes Standard, plus the exclusive one-per-category slot — your logo in the showcase.' : 'The exclusive one-per-category slot — your logo in the showcase.',
+				'm'     => $fmt_price( null !== $vs_month_p && null !== $std_month_p ? (float) $vs_month_p + (float) $std_month_p : $vs_month_p ),
+				'y'     => $fmt_price( null !== $vs_year_p && null !== $std_year_p ? (float) $vs_year_p + (float) $std_year_p : $vs_year_p ),
 			);
 		}
 

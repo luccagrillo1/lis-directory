@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.36
+Stable tag: 0.36.37
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.37 =
+* Standard Listing is now a required foundation for Featured and Vendor Showcase, by request. Rather than blocking the purchase, checking out for Featured or Showcase silently also adds Standard to the same cart when the listing doesn't already have it active — one checkout, both line items visible before paying. Applies at initial signup (the wizard's price now shows the real bundled total) and to the Dashboard's post-publish upsell links (new "Join the Vendor Showcase" link added alongside the existing "Feature this listing" one).
+* Cancelling or expiring a Standard subscription now cascades: it also revokes Featured and expires a linked Vendor Showcase entry on the same listing, matching how each of those already revokes itself when its own subscription ends.
+
 
 = 0.36.36 =
 * Vendor Showcase cards (the browse-all page, tickers) now show the same small "i" info icon + "Sponsored" tooltip used on the [lis_preferred_vendor_heading] lockup, instead of a plain "SPONSORED" text badge.

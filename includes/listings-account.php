@@ -339,6 +339,15 @@ function lis_directory_render_dashboard_shortcode() {
 								<?php elseif ( $featured ) : ?>
 									<span class="lis-listing-badge lis-listing-badge--featured">Featured</span>
 								<?php endif; ?>
+								<?php
+								$is_showcase  = function_exists( 'lis_directory_listing_is_active_showcase' ) && lis_directory_listing_is_active_showcase( $listing->ID );
+								$showcase_url = ( 'publish' === $listing->post_status && ! $is_showcase && function_exists( 'lis_directory_get_showcase_upgrade_url' ) ) ? lis_directory_get_showcase_upgrade_url( $listing->ID ) : '';
+								if ( $showcase_url ) :
+									?>
+									<a href="<?php echo esc_url( $showcase_url ); ?>">Join the Vendor Showcase</a>
+								<?php elseif ( $is_showcase ) : ?>
+									<span class="lis-listing-badge lis-listing-badge--featured">Vendor Showcase</span>
+								<?php endif; ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>
