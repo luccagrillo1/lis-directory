@@ -8,19 +8,67 @@
 	box-sizing: border-box;
 }
 
-.lis-pv-card-badge {
+/* Info icon + "Sponsored" tooltip — same pattern as the [lis_preferred_vendor_heading]
+   lockup's info icon (assets/css/vendor-heading.css), reused here in place of the
+   old plain "SPONSORED" text badge. */
+.lis-pv-card-info {
 	position: absolute;
 	top: 8px;
 	right: 8px;
-	font-size: 0.65em;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 1.5px solid #999;
 	color: #777;
-	background: #f0f0f0;
-	border-radius: 4px;
-	padding: 2px 6px;
-	line-height: 1.4;
+	font: italic 700 11px/1 Georgia, serif;
+	cursor: default;
+	z-index: 1;
+}
+
+.lis-pv-card-info-icon {
+	padding-left: 1px; /* optical nudge — the italic "i"'s slant throws off flex centering */
+}
+
+.lis-pv-card-tooltip {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	right: -4px;
+	transform: translateY(4px);
+	width: max-content;
+	max-width: 200px;
+	background: #262420;
+	color: #fff;
+	font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	letter-spacing: 0.02em;
+	text-align: center;
+	white-space: normal;
+	padding: 6px 10px;
+	border-radius: 6px;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity 0.15s ease, transform 0.15s ease;
+	z-index: 5;
+}
+
+.lis-pv-card-tooltip::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	right: 10px;
+	border: 5px solid transparent;
+	border-top-color: #262420;
+}
+
+.lis-pv-card-info:hover .lis-pv-card-tooltip,
+.lis-pv-card-info:focus .lis-pv-card-tooltip,
+.lis-pv-card-info:focus-visible .lis-pv-card-tooltip {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
 }
 
 .lis-pv-card-inner {

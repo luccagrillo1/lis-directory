@@ -1,3 +1,8 @@
+## [0.36.36] — 2026-08-14 — Card sponsored badge → info tooltip
+
+- `lis_directory_render_vendor_card_html()` (includes/shortcodes.php): replaced the plain "SPONSORED" text badge (`.lis-pv-card-badge`) with the same info-icon + tooltip pattern already used on `[lis_preferred_vendor_heading]` — a small circled "i", "Sponsored — this business paid to be featured here." on hover/focus, anchored to its own right edge so it doesn't clip.
+- New `.lis-pv-card-info` / `.lis-pv-card-tooltip` CSS in assets/css/vendor-card.css, `.lis-pv-card-badge` removed (no other usages).
+
 ## [0.36.35] — 2026-08-14 — Wizard/card layout pass + map view restructure
 
 - `.lis-listing-submit-form` max-width raised from an arbitrary 900px to 1400px, matching `.lis-listing-archive`'s real content-column width. Applies to both the Add Listing wizard and the flat Edit form (they share the base class).

@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.35
+Stable tag: 0.36.36
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.36 =
+* Vendor Showcase cards (the browse-all page, tickers) now show the same small "i" info icon + "Sponsored" tooltip used on the [lis_preferred_vendor_heading] lockup, instead of a plain "SPONSORED" text badge.
+
 
 = 0.36.35 =
 * Add Listing wizard: content-width form (was capped at an arbitrary 900px), thicker progress bar, "Save & finish later" moved to mirror the section label's row instead of sitting in its own bar, and its redundant helper text removed (it's already explained on the Draft Saved screen).

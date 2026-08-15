@@ -223,19 +223,24 @@ function lis_directory_vendor_tagline( $vendor_id ) {
 }
 
 function lis_directory_render_vendor_card_html( $vendor ) {
-	$tagline  = lis_directory_vendor_tagline( $vendor->ID );
-	$link_url = lis_directory_vendor_listing_url( $vendor );
-	$logo_id  = lis_directory_vendor_branding_id( $vendor->ID, '_lis_listing_logo_id', '_lis_pv_logo_color_id' );
-	$logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
-	$name     = get_the_title( $vendor );
-	$tag      = $link_url ? 'a' : 'div';
+	$tagline    = lis_directory_vendor_tagline( $vendor->ID );
+	$link_url   = lis_directory_vendor_listing_url( $vendor );
+	$logo_id    = lis_directory_vendor_branding_id( $vendor->ID, '_lis_listing_logo_id', '_lis_pv_logo_color_id' );
+	$logo_url   = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+	$name       = get_the_title( $vendor );
+	$tag        = $link_url ? 'a' : 'div';
+	$tooltip    = 'Sponsored — this business paid to be featured here.';
+	$tooltip_id = wp_unique_id( 'lis-pv-card-tip-' );
 
 	$styles = lis_directory_get_card_styles_once();
 
 	ob_start();
 	?>
 	<div class="lis-pv-card">
-		<span class="lis-pv-card-badge">Sponsored</span>
+		<span class="lis-pv-card-info" tabindex="0" aria-describedby="<?php echo esc_attr( $tooltip_id ); ?>">
+			<span class="lis-pv-card-info-icon" aria-hidden="true">i</span>
+			<span class="lis-pv-card-tooltip" id="<?php echo esc_attr( $tooltip_id ); ?>" role="tooltip"><?php echo esc_html( $tooltip ); ?></span>
+		</span>
 		<<?php echo esc_html( $tag ); ?> class="lis-pv-card-inner"<?php if ( $link_url ) : ?> href="<?php echo esc_url( $link_url ); ?>" target="_blank" rel="noopener noreferrer"<?php endif; ?>>
 			<?php if ( $logo_url ) : ?>
 				<img class="lis-pv-card-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy" />
