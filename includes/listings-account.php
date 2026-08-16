@@ -297,8 +297,13 @@ function lis_directory_render_dashboard_shortcode() {
 						$never_expire = (bool) get_post_meta( $listing->ID, '_lis_listing_never_expire', true );
 						$expiry_raw  = lis_directory_get_listing_expiry( $listing->ID );
 						$expiry_display = $never_expire ? 'Never' : ( $expiry_raw ? date_i18n( 'F j, Y', strtotime( $expiry_raw ) ) : '—' );
-						$plan_tier   = get_post_meta( $listing->ID, '_lis_listing_pending_tier', true );
-						$plan_label  = $plan_tier && isset( $plan_labels[ $plan_tier ] ) ? $plan_labels[ $plan_tier ] : 'No Plan';
+						// Comma-joined since the wizard's Plan step allows Featured and Vendor
+						// Showcase together (Standard is always the first entry — see the write
+						// site in includes/listings-submission.php) — e.g. "standard,featured".
+						$plan_tier_keys = array_filter( explode( ',', (string) get_post_meta( $listing->ID, '_lis_listing_pending_tier', true ) ) );
+						$plan_label     = $plan_tier_keys
+							? implode( ' + ', array_map( function ( $k ) use ( $plan_labels ) { return isset( $plan_labels[ $k ] ) ? $plan_labels[ $k ] : ucfirst( $k ); }, $plan_tier_keys ) )
+							: 'No Plan';
 						?>
 						<tr>
 							<td><?php echo esc_html( get_the_title( $listing ) ); ?></td>

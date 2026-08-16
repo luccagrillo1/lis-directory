@@ -1925,10 +1925,31 @@
 	box-shadow: 0 0 0 3px rgba(87, 104, 70, 0.15);
 }
 
-.lis-listing-plan-card input[type="radio"] {
+.lis-listing-plan-card input[type="radio"],
+.lis-listing-plan-card input[type="checkbox"] {
 	position: absolute;
 	top: 16px;
 	right: 16px;
+}
+
+.lis-listing-plan-card--included {
+	cursor: default;
+	background: #f7f8f4;
+}
+
+.lis-listing-plan-card--included:hover {
+	border-color: #e2e2e2;
+}
+
+.lis-listing-plan-included-tag {
+	display: inline-block;
+	vertical-align: middle;
+	font-weight: 500;
+	font-size: 0.6em;
+	color: #576846;
+	background: #eef1e8;
+	padding: 2px 8px;
+	border-radius: 999px;
 }
 
 .lis-listing-plan-name {
@@ -1936,6 +1957,15 @@
 	font-weight: 700;
 	font-size: 1.15em;
 	margin-bottom: 4px;
+}
+
+.lis-listing-plan-total {
+	margin: 16px 2px 0;
+	font-size: 1.05em;
+}
+
+.lis-listing-plan-total-amount {
+	color: #576846;
 }
 
 .lis-listing-plan-price {

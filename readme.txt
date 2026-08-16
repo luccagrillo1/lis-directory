@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.38
+Stable tag: 0.36.39
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.39 =
+* Add Listing wizard's Plan step redesigned, by request: Standard is now always shown as an included baseline (not a selectable option), with Featured and Vendor Showcase as independent checkboxes — pick either, both, or neither. Heading changed from "Choose your plan" to "Want more eyes on your listing?", and a live running total updates as you check boxes / switch Monthly-Annually.
+* Backend now supports buying Featured and Vendor Showcase together in one checkout (previously the wizard only allowed one tier at signup) — Standard is still bundled in automatically for either, same as before.
 
 = 0.36.38 =
 * Fixed a bug in the v0.36.37 Standard-bundling checkout: WooCommerce Subscriptions rejects a second cart line for the same subscription product, so if a buyer's cart already held a Standard or Featured line from a different, unfinished listing upgrade, the new listing's Standard line would silently fail to add — checkout would go through missing that line item, with only a WooCommerce notice (easy to miss) explaining why. Now detected up front: the buyer is sent to their cart with a clear message to finish or empty it first, instead of reaching an incomplete checkout.

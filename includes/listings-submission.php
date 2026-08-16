@@ -360,33 +360,35 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			return wp_strip_all_tags( wc_price( $price, array( 'decimals' => $decimals ) ) );
 		};
 
-		// Standard / Featured tier cards (product + monthly/annual price).
-		// Featured and Vendor Showcase both require Standard as a foundation
-		// (lis_directory_get_listing_upgrade_url() bundles it into the same
-		// checkout automatically when a listing doesn't already have it) — a
-		// brand-new listing never does, so the price shown here for those two
-		// is the real bundled total, not just the upgrade's own price, so
-		// there's no surprise jump between this step and the checkout total.
+		// Standard is now the always-included baseline (shown as its own
+		// locked/checked card, not a selectable option) — Featured and Vendor
+		// Showcase are independent checkboxes, either or both, each showing
+		// its OWN incremental price (not a bundled total, since Standard is
+		// now visible separately); a live running total below the cards adds
+		// them up so nothing is a surprise at checkout.
+		$raw_price = function ( $price ) {
+			return ( null !== $price && '' !== $price ) ? (float) $price : 0;
+		};
 		$std_month_p = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] : null;
 		$std_year_p  = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] : null;
+		$std_card    = $std_pid ? array(
+			'label' => 'Standard',
+			'blurb' => 'Your business listed in the directory — included with every listing.',
+			'm'     => $fmt_price( $std_month_p ),
+			'y'     => $fmt_price( $std_year_p ),
+		) : null;
 
 		$plan_tiers = array();
-		if ( $std_pid ) {
-			$plan_tiers['standard'] = array(
-				'label' => 'Standard',
-				'blurb' => 'Your business listed in the directory.',
-				'm'     => $fmt_price( $std_month_p ),
-				'y'     => $fmt_price( $std_year_p ),
-			);
-		}
 		if ( $feat_pid ) {
 			$feat_month_p = lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'];
 			$feat_year_p  = lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'];
 			$plan_tiers['featured'] = array(
-				'label' => 'Featured',
-				'blurb' => $std_pid ? 'Includes Standard, plus a Featured badge and priority placement.' : 'A Featured badge and priority placement.',
-				'm'     => $fmt_price( null !== $feat_month_p && null !== $std_month_p ? (float) $feat_month_p + (float) $std_month_p : $feat_month_p ),
-				'y'     => $fmt_price( null !== $feat_year_p && null !== $std_year_p ? (float) $feat_year_p + (float) $std_year_p : $feat_year_p ),
+				'label'   => 'Featured',
+				'blurb'   => 'A Featured badge and priority placement.',
+				'm'       => $fmt_price( $feat_month_p ),
+				'y'       => $fmt_price( $feat_year_p ),
+				'amount_m' => $raw_price( $feat_month_p ),
+				'amount_y' => $raw_price( $feat_year_p ),
 			);
 		}
 
@@ -403,10 +405,12 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			$vs_month_p = $vs_month_v && wc_get_product( $vs_month_v ) ? wc_get_product( $vs_month_v )->get_price() : null;
 			$vs_year_p  = $vs_year_v && wc_get_product( $vs_year_v ) ? wc_get_product( $vs_year_v )->get_price() : null;
 			$plan_tiers['showcase'] = array(
-				'label' => 'Vendor Showcase',
-				'blurb' => $std_pid ? 'Includes Standard, plus the exclusive one-per-category slot — your logo in the showcase.' : 'The exclusive one-per-category slot — your logo in the showcase.',
-				'm'     => $fmt_price( null !== $vs_month_p && null !== $std_month_p ? (float) $vs_month_p + (float) $std_month_p : $vs_month_p ),
-				'y'     => $fmt_price( null !== $vs_year_p && null !== $std_year_p ? (float) $vs_year_p + (float) $std_year_p : $vs_year_p ),
+				'label'   => 'Vendor Showcase',
+				'blurb'   => 'The exclusive one-per-category slot — your logo in the showcase.',
+				'm'       => $fmt_price( $vs_month_p ),
+				'y'       => $fmt_price( $vs_year_p ),
+				'amount_m' => $raw_price( $vs_month_p ),
+				'amount_y' => $raw_price( $vs_year_p ),
 			);
 		}
 
@@ -422,23 +426,33 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		}
 		$vs_contact_url = apply_filters( 'lis_directory_showcase_contact_url', home_url( '/contact/' ) );
 
-		if ( ! empty( $plan_tiers ) ) :
+		if ( $std_card || ! empty( $plan_tiers ) ) :
 			?>
-			<div class="lis-listing-panel" data-panel-section="Your plan" data-panel-question="Choose your plan">
+			<div class="lis-listing-panel" data-panel-section="Your plan" data-panel-question="Want more eyes on your listing?" data-panel-hint="Standard is included with every listing — add these if you want to stand out more.">
 				<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Billing">
 					<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
 					<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
 				</div>
 				<div class="lis-listing-plans">
+					<?php if ( $std_card ) : ?>
+						<label class="lis-listing-plan-card lis-listing-plan-card--included">
+							<input type="checkbox" checked disabled aria-hidden="true" />
+							<span class="lis-listing-plan-name"><?php echo esc_html( $std_card['label'] ); ?> <span class="lis-listing-plan-included-tag">Included</span></span>
+							<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $std_card['m'] . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $std_card['y'] . '/yr' ); ?>"><?php echo esc_html( $std_card['m'] ); ?>/mo</span>
+							<span class="lis-listing-plan-blurb"><?php echo esc_html( $std_card['blurb'] ); ?></span>
+						</label>
+					<?php endif; ?>
 					<?php foreach ( $plan_tiers as $key => $t ) : ?>
 						<label class="lis-listing-plan-card">
-							<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" required />
+							<input type="checkbox" name="lis_listing_upgrades[]" value="<?php echo esc_attr( $key ); ?>" data-amount-month="<?php echo esc_attr( $t['amount_m'] ); ?>" data-amount-year="<?php echo esc_attr( $t['amount_y'] ); ?>" />
 							<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
-							<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $t['m'] . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $t['y'] . '/yr' ); ?>"><?php echo esc_html( $t['m'] ); ?>/mo</span>
+							<span class="lis-listing-plan-price" data-price-month="+<?php echo esc_attr( $t['m'] . '/mo' ); ?>" data-price-year="+<?php echo esc_attr( $t['y'] . '/yr' ); ?>">+<?php echo esc_html( $t['m'] ); ?>/mo</span>
 							<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
 						</label>
 					<?php endforeach; ?>
 				</div>
+
+				<p class="lis-listing-plan-total">Total: <strong class="lis-listing-plan-total-amount" data-std-month="<?php echo esc_attr( $raw_price( $std_month_p ) ); ?>" data-std-year="<?php echo esc_attr( $raw_price( $std_year_p ) ); ?>"><?php echo esc_html( $std_card ? $std_card['m'] : '—' ); ?>/mo</strong></p>
 
 				<?php if ( isset( $plan_tiers['showcase'] ) ) : ?>
 					<div class="lis-listing-showcase-fields" hidden data-taken-cats="<?php echo esc_attr( wp_json_encode( $vs_taken_cats ) ); ?>">
@@ -456,18 +470,31 @@ function lis_directory_render_listing_submission_form_shortcode() {
 				var form = document.currentScript.closest( 'form' );
 				if ( ! form ) { return; }
 				var showcase = form.querySelector( '.lis-listing-showcase-fields' );
+				var totalEl = form.querySelector( '.lis-listing-plan-total-amount' );
 				var taken = [];
 				if ( showcase ) {
 					try { taken = JSON.parse( showcase.getAttribute( 'data-taken-cats' ) || '[]' ); } catch ( e ) { taken = []; }
+				}
+				function fmtDollars( n ) {
+					n = Math.round( n * 100 ) / 100;
+					return '$' + ( n % 1 === 0 ? n.toFixed( 0 ) : n.toFixed( 2 ) );
 				}
 				function sync() {
 					var billing = ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month';
 					form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
 						el.textContent = 'year' === billing ? el.dataset.priceYear : el.dataset.priceMonth;
 					} );
-					var plan = ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '';
+					var checked = Array.prototype.slice.call( form.querySelectorAll( 'input[name="lis_listing_upgrades[]"]:checked' ) );
+					var upgradeKeys = checked.map( function ( c ) { return c.value; } );
+					if ( totalEl ) {
+						var total = parseFloat( totalEl.dataset[ 'year' === billing ? 'stdYear' : 'stdMonth' ] ) || 0;
+						checked.forEach( function ( c ) {
+							total += parseFloat( c.dataset[ 'year' === billing ? 'amountYear' : 'amountMonth' ] ) || 0;
+						} );
+						totalEl.textContent = fmtDollars( total ) + ( 'year' === billing ? '/yr' : '/mo' );
+					}
 					if ( showcase ) {
-						var on = 'showcase' === plan;
+						var on = upgradeKeys.indexOf( 'showcase' ) !== -1;
 						showcase.hidden = ! on;
 						var catSel = form.querySelector( '#lis_listing_category' );
 						var chosen = catSel ? parseInt( catSel.value, 10 ) : 0;
@@ -480,7 +507,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 						if ( submitBtn ) { submitBtn.disabled = !! occupied; }
 					}
 				}
-				form.querySelectorAll( 'input[name="lis_listing_billing"], input[name="lis_listing_plan"]' ).forEach( function ( r ) {
+				form.querySelectorAll( 'input[name="lis_listing_billing"], input[name="lis_listing_upgrades[]"]' ).forEach( function ( r ) {
 					r.addEventListener( 'change', sync );
 				} );
 				var catSel = form.querySelector( '#lis_listing_category' );
@@ -581,8 +608,13 @@ function lis_directory_handle_listing_submission() {
 	$logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', false, $errors );
 	$card_id = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
 
-	// Chosen plan (final wizard step). Skipped entirely for a "save as draft".
-	$plan    = $is_draft ? '' : ( isset( $_POST['lis_listing_plan'] ) ? sanitize_key( wp_unslash( $_POST['lis_listing_plan'] ) ) : '' );
+	// Chosen upgrades (final wizard step, checkboxes — Standard is the always-
+	// included baseline and isn't itself one of these). Skipped entirely for
+	// a "save as draft".
+	$upgrades = $is_draft ? array() : array_values( array_intersect(
+		array( 'featured', 'showcase' ),
+		array_map( 'sanitize_key', (array) ( isset( $_POST['lis_listing_upgrades'] ) ? wp_unslash( $_POST['lis_listing_upgrades'] ) : array() ) )
+	) );
 	$billing = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
 
 	// Vendor Showcase tier: single-product model. The category the vendor
@@ -594,7 +626,7 @@ function lis_directory_handle_listing_submission() {
 	$vendor_logo_id    = $logo_id;
 	$vendor_card_id    = $card_id;
 	$checkout_category = 0; // A lis_listing_category term id (for the taken-check in the checkout URL builder).
-	if ( 'showcase' === $plan ) {
+	if ( in_array( 'showcase', $upgrades, true ) ) {
 		if ( ! $term || is_wp_error( $term ) ) {
 			$errors[] = 'category';
 		} elseif ( function_exists( 'lis_directory_is_listing_category_showcase_taken' ) && lis_directory_is_listing_category_showcase_taken( $term_id ) ) {
@@ -616,12 +648,14 @@ function lis_directory_handle_listing_submission() {
 		exit;
 	}
 
-	// If the tier's product is live/purchasable we route through WooCommerce
-	// checkout and the listing starts as a draft "awaiting payment" (auto-
-	// published by the order-complete hook). If no purchasable product is
-	// configured yet, fall back to the original free pending flow so the form
-	// keeps working while products are still draft.
-	$can_checkout = ( $plan && function_exists( 'lis_directory_build_listing_checkout_url' ) && '' !== lis_directory_build_listing_checkout_url( $plan, $billing, 0, $checkout_category ) );
+	// Standard is mandatory, so this is checked regardless of $upgrades — if
+	// its product is live/purchasable (with or without Featured/Showcase
+	// added on) we route through WooCommerce checkout and the listing starts
+	// as a draft "awaiting payment" (auto-published by the order-complete
+	// hook). If no purchasable product is configured yet, fall back to the
+	// original free pending flow so the form keeps working while products
+	// are still draft. Skipped for a draft save regardless.
+	$can_checkout = ( ! $is_draft && function_exists( 'lis_directory_build_listing_checkout_url' ) && '' !== lis_directory_build_listing_checkout_url( $upgrades, $billing, 0, $checkout_category ) );
 
 	// draft = "save & finish later" OR awaiting payment; pending = free fallback reviewed in admin.
 	$post_status = ( $is_draft || $can_checkout ) ? 'draft' : 'pending';
@@ -697,7 +731,7 @@ function lis_directory_handle_listing_submission() {
 	// Vendor Showcase: create the pending vendor entry now (linked to this
 	// listing), so the whole application lives in the one wizard. Payment
 	// activates it (see lis_directory_handle_featured_listing_order).
-	if ( 'showcase' === $plan && $vendor_term && ! is_wp_error( $vendor_term ) ) {
+	if ( in_array( 'showcase', $upgrades, true ) && $vendor_term && ! is_wp_error( $vendor_term ) ) {
 		$vendor_id = wp_insert_post( array(
 			'post_type'   => 'lis_preferred_vendor',
 			'post_title'  => $business_name,
@@ -721,9 +755,13 @@ function lis_directory_handle_listing_submission() {
 	}
 
 	if ( $can_checkout ) {
-		update_post_meta( $post_id, '_lis_listing_pending_tier', $plan );
+		// Standard is always part of the purchase, so it's always the first
+		// entry — 'standard', 'standard,featured', 'standard,showcase', or
+		// 'standard,featured,showcase'. See the Dashboard "Plan" column
+		// (includes/listings-account.php) for where this gets displayed.
+		update_post_meta( $post_id, '_lis_listing_pending_tier', implode( ',', array_merge( array( 'standard' ), $upgrades ) ) );
 		update_post_meta( $post_id, '_lis_listing_pending_billing', $billing );
-		$checkout_url = lis_directory_build_listing_checkout_url( $plan, $billing, $post_id, $checkout_category );
+		$checkout_url = lis_directory_build_listing_checkout_url( $upgrades, $billing, $post_id, $checkout_category );
 		if ( $checkout_url ) {
 			wp_safe_redirect( $checkout_url );
 			exit;

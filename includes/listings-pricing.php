@@ -73,60 +73,78 @@ function lis_directory_init_listing_pricing_woocommerce() {
 }
 
 /**
- * Upgrade checkout URL for an existing listing to buy Featured or Vendor
- * Showcase — shared by the Dashboard's post-publish upsell links
- * (lis_directory_get_feature_listing_url() / lis_directory_get_showcase_upgrade_url()
- * below) and by lis_directory_build_listing_checkout_url() for the initial
- * wizard. By request, Standard is a required foundation for both upgrades:
- * rather than blocking the purchase, lis_directory_handle_bundle_checkout()
- * silently also adds Standard to the SAME cart when this listing doesn't
- * already have an active one (_lis_listing_standard_active) — the buyer
- * sees both line items on the normal WooCommerce cart/checkout review before
- * paying, same as adding two products by hand would look.
+ * Upgrade checkout URL for an existing listing to buy Featured and/or Vendor
+ * Showcase together — shared by the Dashboard's single-tier post-publish
+ * upsell links (lis_directory_get_feature_listing_url() /
+ * lis_directory_get_showcase_upgrade_url() below, via the single-tier
+ * wrapper lis_directory_get_listing_upgrade_url() further down) and by
+ * lis_directory_build_listing_checkout_url() for the initial wizard's
+ * checkbox-based Plan step, which can select both at once. By request,
+ * Standard is a required foundation for either upgrade: rather than
+ * blocking the purchase, lis_directory_handle_bundle_checkout() silently
+ * also adds Standard to the SAME cart when this listing doesn't already
+ * have an active one (_lis_listing_standard_active) — the buyer sees every
+ * line item on the normal WooCommerce cart/checkout review before paying,
+ * same as adding the products by hand would look.
  *
- * Returns '' when the tier's product isn't configured/publish/purchasable,
- * or — Showcase only — this listing's own category is already taken by
- * another active vendor, so callers can hide the button rather than link to
- * a checkout that will fail.
+ * Returns '' if ANY requested tier's product isn't configured/published/
+ * purchasable, or — Showcase only — this listing's own category is already
+ * taken by another active vendor, so callers can hide the button/checkbox
+ * rather than link to a checkout that will fail.
  */
-function lis_directory_get_listing_upgrade_url( $listing_id, $tier, $billing = 'month' ) {
+function lis_directory_get_listing_upgrades_url( $listing_id, $tiers, $billing = 'month' ) {
 	$listing_id = (int) $listing_id;
-	if ( ! in_array( $tier, array( 'featured', 'showcase' ), true ) || ! function_exists( 'wc_get_product' ) ) {
+	$tiers      = array_values( array_unique( array_intersect( array( 'featured', 'showcase' ), (array) $tiers ) ) );
+	if ( empty( $tiers ) || ! function_exists( 'wc_get_product' ) ) {
 		return '';
 	}
 	// $listing_id === 0 is a real, intentional case: lis_directory_build_listing_checkout_url()
-	// pre-validates a chosen plan before the listing post exists yet (see the
-	// $can_checkout check in listings-submission.php), just to confirm the
-	// tier's product is configured/purchasable. get_post_meta(0, ...) and
-	// get_the_terms(0, ...) below both correctly return empty for a
+	// pre-validates chosen upgrades before the listing post exists yet (see
+	// the $can_checkout check in listings-submission.php), just to confirm
+	// each tier's product is configured/purchasable. get_post_meta(0, ...)
+	// and get_the_terms(0, ...) below both correctly return empty for a
 	// nonexistent post, so the "already has Standard" / "category taken"
 	// checks harmlessly no-op rather than falsely blocking a real submission.
 
-	$product_id = ( 'showcase' === $tier )
-		? ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0 )
-		: (int) get_option( 'lis_directory_featured_listing_product_id' );
-	if ( ! $product_id ) {
-		return '';
-	}
-	$product = wc_get_product( $product_id );
-	if ( ! $product || 'publish' !== $product->get_status() || ! $product->is_purchasable() ) {
-		return '';
-	}
-
-	if ( 'showcase' === $tier && function_exists( 'lis_directory_is_listing_category_showcase_taken' ) ) {
-		$cats    = get_the_terms( $listing_id, 'lis_listing_category' );
-		$term_id = ( $cats && ! is_wp_error( $cats ) && ! empty( $cats ) ) ? (int) $cats[0]->term_id : 0;
-		if ( $term_id && lis_directory_is_listing_category_showcase_taken( $term_id ) ) {
+	foreach ( $tiers as $tier ) {
+		$product_id = ( 'showcase' === $tier )
+			? ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0 )
+			: (int) get_option( 'lis_directory_featured_listing_product_id' );
+		if ( ! $product_id ) {
 			return '';
+		}
+		$product = wc_get_product( $product_id );
+		if ( ! $product || 'publish' !== $product->get_status() || ! $product->is_purchasable() ) {
+			return '';
+		}
+
+		if ( 'showcase' === $tier && function_exists( 'lis_directory_is_listing_category_showcase_taken' ) ) {
+			$cats    = get_the_terms( $listing_id, 'lis_listing_category' );
+			$term_id = ( $cats && ! is_wp_error( $cats ) && ! empty( $cats ) ) ? (int) $cats[0]->term_id : 0;
+			if ( $term_id && lis_directory_is_listing_category_showcase_taken( $term_id ) ) {
+				return '';
+			}
 		}
 	}
 
 	return add_query_arg( array(
 		'action'         => 'lis_directory_bundle_checkout',
-		'tier'           => $tier,
+		'tier'           => implode( ',', $tiers ),
 		'lis_listing_id' => $listing_id,
 		'billing'        => ( 'year' === $billing ) ? 'year' : 'month',
 	), admin_url( 'admin-post.php' ) );
+}
+
+/**
+ * Single-tier convenience wrapper around lis_directory_get_listing_upgrades_url()
+ * — used by the Dashboard's two separate upsell links (Featured, Showcase),
+ * each its own button rather than a combined checkbox picker.
+ */
+function lis_directory_get_listing_upgrade_url( $listing_id, $tier, $billing = 'month' ) {
+	if ( ! in_array( $tier, array( 'featured', 'showcase' ), true ) ) {
+		return '';
+	}
+	return lis_directory_get_listing_upgrades_url( $listing_id, array( $tier ), $billing );
 }
 
 /**
@@ -155,11 +173,12 @@ function lis_directory_get_showcase_upgrade_url( $listing_id, $billing = 'month'
  * the rest of this file.
  */
 function lis_directory_handle_bundle_checkout() {
-	$tier       = isset( $_GET['tier'] ) ? sanitize_key( wp_unslash( $_GET['tier'] ) ) : '';
+	$tiers_raw  = isset( $_GET['tier'] ) ? sanitize_text_field( wp_unslash( $_GET['tier'] ) ) : '';
+	$tiers      = array_values( array_unique( array_intersect( array( 'featured', 'showcase' ), array_map( 'sanitize_key', explode( ',', $tiers_raw ) ) ) ) );
 	$listing_id = isset( $_GET['lis_listing_id'] ) ? absint( $_GET['lis_listing_id'] ) : 0;
 	$billing    = ( isset( $_GET['billing'] ) && 'year' === $_GET['billing'] ) ? 'year' : 'month';
 
-	if ( ! in_array( $tier, array( 'featured', 'showcase' ), true ) || ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) || ! function_exists( 'WC' ) ) {
+	if ( empty( $tiers ) || ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) || ! function_exists( 'WC' ) ) {
 		wp_safe_redirect( home_url( '/' ) );
 		exit;
 	}
@@ -168,11 +187,18 @@ function lis_directory_handle_bundle_checkout() {
 		wc_load_cart();
 	}
 
-	$std_pid     = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
-	$needs_std   = $std_pid && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
-	$upgrade_pid = ( 'showcase' === $tier )
-		? ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0 )
-		: (int) get_option( 'lis_directory_featured_listing_product_id' );
+	$std_pid   = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
+	$needs_std = $std_pid && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
+
+	$upgrade_pids = array();
+	foreach ( $tiers as $tier ) {
+		$pid = ( 'showcase' === $tier )
+			? ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0 )
+			: (int) get_option( 'lis_directory_featured_listing_product_id' );
+		if ( $pid ) {
+			$upgrade_pids[] = $pid;
+		}
+	}
 
 	// WooCommerce Subscriptions only allows ONE cart line per subscription
 	// product at a time — a leftover item from a DIFFERENT listing's
@@ -183,7 +209,7 @@ function lis_directory_handle_bundle_checkout() {
 	// rather than continuing on to a checkout that's silently missing a
 	// line item — that's how a "Featured" purchase could complete without
 	// its required Standard line, defeating the whole bundle.
-	foreach ( array_filter( array( $needs_std ? $std_pid : 0, $upgrade_pid ) ) as $pid ) {
+	foreach ( array_filter( array_merge( array( $needs_std ? $std_pid : 0 ), $upgrade_pids ) ) as $pid ) {
 		if ( lis_directory_cart_has_product_for_other_listing( $pid, $listing_id ) ) {
 			$product = wc_get_product( $pid );
 			wc_add_notice(
@@ -204,9 +230,9 @@ function lis_directory_handle_bundle_checkout() {
 		WC()->cart->add_to_cart( $std_pid, 1, (int) $std_var['variation_id'], $std_var['variation_id'] ? array( 'attribute_billing' => $std_var['attr'] ) : array() );
 	}
 
-	if ( $upgrade_pid ) {
-		$var = lis_directory_resolve_plan_variation( $upgrade_pid, $billing );
-		WC()->cart->add_to_cart( $upgrade_pid, 1, (int) $var['variation_id'], $var['variation_id'] ? array( 'attribute_billing' => $var['attr'] ) : array() );
+	foreach ( $upgrade_pids as $pid ) {
+		$var = lis_directory_resolve_plan_variation( $pid, $billing );
+		WC()->cart->add_to_cart( $pid, 1, (int) $var['variation_id'], $var['variation_id'] ? array( 'attribute_billing' => $var['attr'] ) : array() );
 	}
 
 	wp_safe_redirect( wc_get_checkout_url() );
@@ -364,43 +390,53 @@ function lis_directory_resolve_plan_variation( $product_id, $billing ) {
 }
 
 /**
- * Build the URL that lands the buyer on checkout for a chosen plan tier, used
- * by the initial [lis_listing_submit] wizard's "Choose your plan" step. 'featured'
- * and 'showcase' delegate to lis_directory_get_listing_upgrade_url() — the
- * same bundling logic the Dashboard's post-publish upsell links use, so
- * choosing either at initial signup silently includes Standard too (by
- * request, Standard is a required foundation for both). 'standard' keeps its
- * own simple add-to-cart flow — it never needs to bundle itself.
+ * Build the URL that lands the buyer on checkout for their chosen upgrades,
+ * used by the initial [lis_listing_submit] wizard's Plan step — Standard is
+ * always the (non-optional) baseline there, with Featured/Vendor Showcase as
+ * independent checkboxes, so $plan_or_upgrades is normally an array of zero
+ * or more of 'featured'/'showcase'. A non-empty array delegates to
+ * lis_directory_get_listing_upgrades_url() — the same bundling logic the
+ * Dashboard's post-publish upsell links use, so choosing either at initial
+ * signup silently includes Standard too (by request, Standard is a required
+ * foundation for both). An empty array falls through to a plain Standard-only
+ * add-to-cart — it never needs to bundle itself.
  *
- * Returns '' when the tier's product isn't configured, published, or
+ * Also accepts the legacy single-tier string ('standard'|'featured'|'showcase')
+ * still used by the claim-listing flow (includes/listings-claim.php), whose
+ * plan picker predates the wizard's checkbox redesign and stays single-select.
+ *
+ * Returns '' when a requested tier's product isn't configured, published, or
  * purchasable yet — callers fall back to the free pending flow in that case,
  * so the form keeps working while the products are still draft/unpriced.
  */
-function lis_directory_build_listing_checkout_url( $tier, $billing, $listing_id, $category_term_id = 0 ) {
+function lis_directory_build_listing_checkout_url( $plan_or_upgrades, $billing, $listing_id, $category_term_id = 0 ) {
 	if ( ! function_exists( 'wc_get_checkout_url' ) ) {
 		return '';
 	}
 
-	if ( 'showcase' === $tier ) {
+	$upgrades = is_array( $plan_or_upgrades )
+		? array_values( array_intersect( array( 'featured', 'showcase' ), $plan_or_upgrades ) )
+		: ( in_array( $plan_or_upgrades, array( 'featured', 'showcase' ), true ) ? array( $plan_or_upgrades ) : array() );
+
+	if ( ! empty( $upgrades ) ) {
 		// Which category the buyer occupies is the listing's OWN category
 		// ($category_term_id is a lis_listing_category term id here) —
 		// exclusivity is enforced in PHP (return '' when that category
 		// already has an active showcase vendor, so the caller falls
 		// back/blocks), not via per-variation stock. Re-checked again inside
-		// lis_directory_get_listing_upgrade_url() from the listing's actual
+		// lis_directory_get_listing_upgrades_url() from the listing's actual
 		// saved category, since at this point in the wizard the category may
 		// not be saved to the post yet.
-		if ( $category_term_id && function_exists( 'lis_directory_is_listing_category_showcase_taken' )
+		if ( in_array( 'showcase', $upgrades, true ) && $category_term_id
+			&& function_exists( 'lis_directory_is_listing_category_showcase_taken' )
 			&& lis_directory_is_listing_category_showcase_taken( $category_term_id ) ) {
 			return '';
 		}
-		return lis_directory_get_listing_upgrade_url( $listing_id, 'showcase', $billing );
+		return lis_directory_get_listing_upgrades_url( $listing_id, $upgrades, $billing );
 	}
 
-	if ( 'featured' === $tier ) {
-		return lis_directory_get_listing_upgrade_url( $listing_id, 'featured', $billing );
-	}
-
+	// No upgrades ('standard', '', or an empty array) — just the mandatory
+	// Standard product on its own; it never needs to bundle itself.
 	$product_id = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
 	if ( ! $product_id ) {
 		return '';
