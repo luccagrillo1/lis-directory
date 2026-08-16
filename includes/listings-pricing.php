@@ -168,24 +168,67 @@ function lis_directory_handle_bundle_checkout() {
 		wc_load_cart();
 	}
 
-	if ( ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true ) ) {
-		$std_pid = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
-		if ( $std_pid ) {
-			$std_var = lis_directory_resolve_plan_variation( $std_pid, $billing );
-			WC()->cart->add_to_cart( $std_pid, 1, (int) $std_var['variation_id'], $std_var['variation_id'] ? array( 'attribute_billing' => $std_var['attr'] ) : array() );
+	$std_pid     = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
+	$needs_std   = $std_pid && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
+	$upgrade_pid = ( 'showcase' === $tier )
+		? ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0 )
+		: (int) get_option( 'lis_directory_featured_listing_product_id' );
+
+	// WooCommerce Subscriptions only allows ONE cart line per subscription
+	// product at a time — a leftover item from a DIFFERENT listing's
+	// still-open cart (e.g. an earlier upgrade the buyer never finished
+	// checking out) makes add_to_cart() below fail silently (it just
+	// queues a "You cannot add another X" notice, no exception). Catch
+	// that up front and send the buyer to their cart to resolve it,
+	// rather than continuing on to a checkout that's silently missing a
+	// line item — that's how a "Featured" purchase could complete without
+	// its required Standard line, defeating the whole bundle.
+	foreach ( array_filter( array( $needs_std ? $std_pid : 0, $upgrade_pid ) ) as $pid ) {
+		if ( lis_directory_cart_has_product_for_other_listing( $pid, $listing_id ) ) {
+			$product = wc_get_product( $pid );
+			wc_add_notice(
+				sprintf(
+					/* translators: %s: product name already in the cart for a different listing */
+					__( 'Your cart already has "%s" for a different listing. Please finish or empty that order before upgrading another listing.', 'lis-directory' ),
+					$product ? $product->get_name() : __( 'a listing product', 'lis-directory' )
+				),
+				'error'
+			);
+			wp_safe_redirect( wc_get_cart_url() );
+			exit;
 		}
 	}
 
-	$product_id = ( 'showcase' === $tier )
-		? ( function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0 )
-		: (int) get_option( 'lis_directory_featured_listing_product_id' );
-	if ( $product_id ) {
-		$var = lis_directory_resolve_plan_variation( $product_id, $billing );
-		WC()->cart->add_to_cart( $product_id, 1, (int) $var['variation_id'], $var['variation_id'] ? array( 'attribute_billing' => $var['attr'] ) : array() );
+	if ( $needs_std ) {
+		$std_var = lis_directory_resolve_plan_variation( $std_pid, $billing );
+		WC()->cart->add_to_cart( $std_pid, 1, (int) $std_var['variation_id'], $std_var['variation_id'] ? array( 'attribute_billing' => $std_var['attr'] ) : array() );
+	}
+
+	if ( $upgrade_pid ) {
+		$var = lis_directory_resolve_plan_variation( $upgrade_pid, $billing );
+		WC()->cart->add_to_cart( $upgrade_pid, 1, (int) $var['variation_id'], $var['variation_id'] ? array( 'attribute_billing' => $var['attr'] ) : array() );
 	}
 
 	wp_safe_redirect( wc_get_checkout_url() );
 	exit;
+}
+
+/**
+ * Whether the cart already contains $product_id tagged to a DIFFERENT
+ * listing than $listing_id (see the note in lis_directory_handle_bundle_checkout()
+ * above for why this matters — WC Subscriptions rejects a second cart line
+ * for the same product outright).
+ */
+function lis_directory_cart_has_product_for_other_listing( $product_id, $listing_id ) {
+	if ( ! WC()->cart ) {
+		return false;
+	}
+	foreach ( WC()->cart->get_cart() as $item ) {
+		if ( (int) $item['product_id'] === (int) $product_id && (int) ( $item['lis_listing_id'] ?? 0 ) !== (int) $listing_id ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
