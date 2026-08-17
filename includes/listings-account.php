@@ -80,7 +80,11 @@ function lis_directory_handle_toggle_sold() {
 function lis_directory_render_grid_shortcode( $atts ) {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 
-	$atts  = shortcode_atts( array( 'type' => '', 'count' => 12, 'search' => 'auto' ), $atts, 'lis_listing_grid' );
+	// count="-1" (the default) means every published listing, no pagination —
+	// same "scroll, don't click through pages" behavior as the main archive
+	// (see lis_directory_show_all_listings_on_one_page() in listings-search.php).
+	// A caller can still pass an explicit count for a genuine preview widget.
+	$atts  = shortcode_atts( array( 'type' => '', 'count' => -1, 'search' => 'auto' ), $atts, 'lis_listing_grid' );
 	$types = lis_directory_get_listing_types();
 	$type  = isset( $types[ $atts['type'] ] ) ? $atts['type'] : '';
 
@@ -101,7 +105,7 @@ function lis_directory_render_grid_shortcode( $atts ) {
 	$query_args = array(
 		'post_type'      => 'lis_listing',
 		'post_status'    => 'publish',
-		'posts_per_page' => max( 1, (int) $atts['count'] ),
+		'posts_per_page' => ( -1 === (int) $atts['count'] ) ? -1 : max( 1, (int) $atts['count'] ),
 	);
 
 	if ( $type ) {

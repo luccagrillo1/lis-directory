@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.39
+Stable tag: 0.36.40
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.36.40 =
+* By request: no more numbered pagination on listings pages — every published listing now shows on one page, scroll instead of click through pages. Applies to the main directory archive/category pages and the [lis_listing_grid] "All Listings" pages (previously hard-capped at 12 with no way to see more).
 
 = 0.36.39 =
 * Add Listing wizard's Plan step redesigned, by request: Standard is now always shown as an included baseline (not a selectable option), with Featured and Vendor Showcase as independent checkboxes — pick either, both, or neither. Heading changed from "Choose your plan" to "Want more eyes on your listing?", and a live running total updates as you check boxes / switch Monthly-Annually.

@@ -18,6 +18,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_shortcode( 'lis_listing_search', 'lis_directory_render_search_form_shortcode' );
 add_action( 'pre_get_posts', 'lis_directory_apply_search_filters' );
+add_action( 'pre_get_posts', 'lis_directory_show_all_listings_on_one_page' );
+
+/**
+ * By request: no numbered pagination on the listings archive (or a
+ * `lis_listing_category` term archive — same template, same query) — every
+ * published listing on one page, scroll instead of click through pages.
+ * Separate from lis_directory_apply_search_filters() above since this always
+ * applies, whether or not a search/sort filter is also present.
+ */
+function lis_directory_show_all_listings_on_one_page( $query ) {
+	if ( is_admin() || ! $query->is_main_query() ) {
+		return;
+	}
+	if ( ! $query->is_post_type_archive( 'lis_listing' ) && ! $query->is_tax( 'lis_listing_category' ) ) {
+		return;
+	}
+	$query->set( 'posts_per_page', -1 );
+}
 
 /**
  * Price is free text on `lis_listing` (matches how Directorist's own
