@@ -1,10 +1,21 @@
+/* Design tokens, namespaced to this plugin (see the token-adoption
+   migration). Each fallback is the real brand value, not a pre-migration
+   color, so this renders correctly even where the site-wide token
+   stylesheet hasn't loaded (wp-admin, block editor, etc.). */
+:root {
+	--lisdir-ink-600: var(--lis-ink-600, #5C6159);
+	--lisdir-ink-900: var(--lis-ink-900, #1A1D19);
+	--lisdir-line: var(--lis-line, #DEDFD8);
+	--lisdir-surface: var(--lis-surface, #FFFFFF);
+}
+
 .lis-pv-card {
 	position: relative;
-	border: 1px solid #ddd;
+	border: 1px solid var(--lisdir-line);
 	border-radius: 8px;
 	padding: 16px;
 	max-width: 420px;
-	background: #fff;
+	background: var(--lisdir-surface);
 	box-sizing: border-box;
 }
 
@@ -21,9 +32,10 @@
 	width: 16px;
 	height: 16px;
 	border-radius: 50%;
-	border: 1.5px solid #999;
-	color: #777;
+	border: 1.5px solid var(--lisdir-ink-600);
+	color: var(--lisdir-ink-600);
 	font: italic 700 11px/1 Georgia, serif;
+	font-family: inherit;
 	cursor: default;
 	z-index: 1;
 }
@@ -39,9 +51,10 @@
 	transform: translateY(4px);
 	width: max-content;
 	max-width: 200px;
-	background: #262420;
-	color: #fff;
+	background: var(--lisdir-ink-900);
+	color: var(--lisdir-surface);
 	font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	font-family: inherit;
 	letter-spacing: 0.02em;
 	text-align: center;
 	white-space: normal;
@@ -60,7 +73,7 @@
 	top: 100%;
 	right: 10px;
 	border: 5px solid transparent;
-	border-top-color: #262420;
+	border-top-color: var(--lisdir-ink-900);
 }
 
 .lis-pv-card-info:hover .lis-pv-card-tooltip,
@@ -100,7 +113,7 @@
 
 .lis-pv-card-tagline {
 	font-size: 0.9em;
-	color: #555;
+	color: var(--lisdir-ink-600);
 }
 
 @media (max-width: 480px) {

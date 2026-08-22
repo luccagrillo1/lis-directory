@@ -1,3 +1,13 @@
+/* Design tokens, namespaced to this plugin (see the token-adoption
+   migration). Each fallback is the real brand value, not a pre-migration
+   color, so this renders correctly even where the site-wide token
+   stylesheet hasn't loaded (wp-admin, block editor, etc.). */
+:root {
+	--lisdir-ink-600: var(--lis-ink-600, #5C6159);
+	--lisdir-ink-900: var(--lis-ink-900, #1A1D19);
+	--lisdir-surface: var(--lis-surface, #FFFFFF);
+}
+
 .lis-pv-heading {
 	line-height: 0;
 	margin: 0 0 8px 0 !important;
@@ -26,9 +36,10 @@
 	width: 16px;
 	height: 16px;
 	border-radius: 50%;
-	border: 1.5px solid #999;
-	color: #777;
+	border: 1.5px solid var(--lisdir-ink-600);
+	color: var(--lisdir-ink-600);
 	font: italic 700 11px/1 Georgia, serif;
+	font-family: inherit;
 	cursor: default;
 	flex-shrink: 0;
 }
@@ -49,9 +60,10 @@
 	transform: translateY(4px);
 	width: max-content;
 	max-width: 220px;
-	background: #262420;
-	color: #fff;
+	background: var(--lisdir-ink-900);
+	color: var(--lisdir-surface);
 	font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	font-family: inherit;
 	letter-spacing: 0.02em;
 	text-align: center;
 	white-space: normal;
@@ -70,7 +82,7 @@
 	top: 100%;
 	right: 10px;
 	border: 5px solid transparent;
-	border-top-color: #262420;
+	border-top-color: var(--lisdir-ink-900);
 }
 
 .lis-pv-heading-info:hover .lis-pv-heading-tooltip,

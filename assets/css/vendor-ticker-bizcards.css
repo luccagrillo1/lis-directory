@@ -1,3 +1,11 @@
+/* Design tokens, namespaced to this plugin (see the token-adoption
+   migration). Each fallback is the real brand value, not a pre-migration
+   color, so this renders correctly even where the site-wide token
+   stylesheet hasn't loaded (wp-admin, block editor, etc.). */
+:root {
+	--lisdir-surface: var(--lis-surface, #FFFFFF);
+}
+
 /* Extra rules for [lis_preferred_vendor_ticker style="business-cards"] — the
    base .lis-pv-ticker / .lis-pv-ticker-track / .lis-pv-ticker-group rules in
    vendor-ticker.css already handle the scroll/loop mechanics; this file only
@@ -32,5 +40,5 @@
 	   left dead white space in each corner. */
 	border-radius: 0;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-	background: #fff;
+	background: var(--lisdir-surface);
 }

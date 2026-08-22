@@ -1,3 +1,72 @@
+## [0.37.0] — 2026-08-17 — Adopt the site-wide design-token system (CSS only)
+
+Followed the pattern from `lis-events` v1.3.1: own variables namespaced `--lisdir-*`
+(never bare `--lis-*`, which is the design system's own namespace), each pointing
+at a real `--lis-*` token with **the actual brand value as its fallback** — never
+the old pre-migration color, which is the exact mistake `lis-events` v1.3.0 made
+and had to fix in 1.3.1.
+
+### Full inventory (before this change)
+
+Every distinct hardcoded color found by `grep -noE '#[0-9a-fA-F]{3,8}'` across all
+7 of this plugin's stylesheets (`listings.css`, `vendor-card.css`,
+`vendor-directory.css`, `vendor-heading.css`, `vendor-ticker-bizcards.css`,
+`vendor-ticker-logos.css`, `vendor-ticker.css`) — **~70 distinct hex values, ~380
+occurrences total** in `listings.css` alone, plus a handful in `vendor-card.css` /
+`vendor-heading.css` / `vendor-ticker-bizcards.css`. `vendor-directory.css`,
+`vendor-ticker.css`, and `vendor-ticker-logos.css` had none. This is a much larger
+set than the 14-color sample audit (that sample was a *whitelist scan of one
+rendered page* — the archive — so it only caught colors actually visible there;
+wizard-only, dashboard-only, and single-listing-only rules in the same
+`listings.css` file didn't render on that page and so didn't show up, even though
+they're the same off-token problem). One more off-token color was found beyond
+the hex grep: `rgba(87, 104, 70, 0.15)` in a focus-ring box-shadow — a literal
+channel-by-channel decomposition of the old `#576846` green.
+
+| Mapped to | Colors (hex) | Rough instance count |
+|---|---|---|
+| `--lisdir-pine-700` | `#576846`, `#3a5a2c`, `#2e7d32`, `#2271b1`, `#b5462b`→clay (see below) | ~45 |
+| `--lisdir-pine-900` | `#46552f`, `#465538`, `#2f3a20` | ~10 |
+| `--lisdir-pine-100` | `#eef1e9`, `#eef1e8`, `#f7faf4`, `#f5f7f1`, `#f0f2ec`, `#dfe6d6`, `#f2f5ee`, `#e6f4ea` | ~16 |
+| `--lisdir-pine-200` | `#c9d4bd`, `#b9c4a8` | 2 |
+| `--lisdir-clay-600` | `#b5462b` | 1 |
+| `--lisdir-surface` | `#fff` / `#ffffff` | ~35 |
+| `--lisdir-canvas` | `#fafafa`, `#f5f5f0`, `#f7f7f2`, `#f7f7f5`, `#f2f2f2`, `#f2f2f0`, `#efece0`, `#e8e8e0`, `#fafaf7`, `#fafbf8`, `#f0f0ee`, `#f7f8f4`, `#f6f7f7`, one `#eee` instance | ~20 |
+| `--lisdir-line` | `#ddd`, `#eee` (all but one instance), `#e2e2e2`, `#e2e2da`, `#d8d8d0`, `#d5d5d5`, `#ccc`, `#c9ccd1` | ~35 |
+| `--lisdir-ink-600` | `#666`, `#888`, `#999`, `#777`, `#555`, `#444`, `#787c82`, `#7a8288`, `#50575e`, `#3c434a` | ~50 |
+| `--lisdir-ink-900` | `#333`, `#262420` | ~9 |
+| `--lisdir-error` | `#a12a2a`, `#7a1f1f`, `#9a2b2b` | ~8 |
+| `--lisdir-error-bg` (derived) | `#fbe9e9`, `#fbe6e6`, `#fbeaea` | 3 |
+| `--lisdir-error-border` (derived) | `#e6c3c3` | 1 |
+| **flagged, unmapped** (amber family) | `#8a5a00`, `#fdf0d5`, `#f3dba8`, `#6e4700`, `#d99a2b`, `#fdf6e3`, `#f0d58a`, `#6b5410`, `#fff4e0`, `#a1701f` | ~12 |
+| **flagged, unmapped** (magenta) | `#a13a7a`, `#fbe9f4` | 2 |
+
+### Architecture
+
+- Each stylesheet gets its own self-contained `:root { --lisdir-*: var(--lis-*, #brand-fallback); }` block — not one shared block in a single "root container selector" — because these files don't all nest under one common wrapper (a vendor ticker can render on a page that never enqueues `listings.css`), and duplicate `:root` declarations of the same value across files are harmless.
+- `--lisdir-error-bg` / `--lisdir-error-border` have no dedicated light-tint token in the palette (only one solid `--lis-error`), so they're **derived from the token itself** via `color-mix(in srgb, var(--lisdir-error) 12%/32%, var(--lisdir-canvas))` rather than a second invented literal — still connected to the token, still updates if it changes.
+- `font: italic 700 11px/1 Georgia, serif;` / `font: 500 12px/1.4 -apple-system, ... sans-serif;` (4 instances, `vendor-card.css` + `vendor-heading.css`) — a following `font-family: inherit;` declaration was added after each, which correctly overrides just the family sub-property from the shorthand while keeping the shorthand's weight/size/line-height. `listings.css` named no font faces.
+
+### Judgement calls (reported, not silently decided)
+
+- **Open/closed status** (`.lis-listing-open-status`) carries functional meaning — collapsing both to one Pine tone would destroy the distinction the ticket warned about. Mapped **is-open → Pine 700/100** (reusing brand green for "positive/active," since no dedicated success token exists) and **is-closed → Error/error-bg** (the one available danger tone). Same "no success token, reuse Pine" logic extended to the *other* existing green-success instances that share `#2e7d32`/`#e6f4ea`: the Verified badge, the Places "address confirmed" text, the Dashboard "Published" status pill, and the submission "success" banner — all the same semantic (positive/confirmed), all now Pine.
+- **`.lis-listing-badge--popular`** (`#a13a7a` / `#fbe9f4`, magenta) — no token in the given palette covers this hue, and Clay is explicitly reserved for transactions, not general accents. Left as `--lisdir-magenta` / `--lisdir-magenta-bg`, **deliberately not wired to a `--lis-*` token**, clearly commented in the CSS as flagged for a design decision — not silently forced into Pine or Clay.
+- **Amber/gold family** — the same problem, bigger: `.lis-listing-badge--featured`, the Vendor Showcase offer banner (+ its hover), the review-star color, the "category occupied" warning box, and the Dashboard "Pending" status pill are *all* the same unmapped amber hue family (`#8a5a00` and its relatives). Consolidated into `--lisdir-amber*` variables, same "flagged, not wired to a token" treatment as Popular — reported as one gap rather than five, since forcing five different amber-family UI meanings onto Info/Clay/Pine would each individually misrepresent the palette **and** contradict each other (all currently read as "the same warm accent," so scattering them across tokens would newly *introduce* an inconsistency that doesn't exist today).
+- **`#2271b1` (Dashboard "link button")** — this is literally WordPress admin's own link blue, evidently copy-pasted into a front-end account-dashboard control rather than a deliberate design choice. Mapped to Pine 700 as the site's general interactive/link color.
+- **`.lis-listing-price` (`#b5462b`)** — not in the sample audit, found during the full inventory. Numerically very close to `--lis-clay-600` (`#A94F2C`, off by single-digit RGB) and semantically a price/cost cue, which reads as transaction-adjacent — mapped to Clay 600 rather than folded into Pine.
+
+### Out of scope / not found
+
+- The ticket's sample table also listed `#000626` (`user-refund-modal__title`), `#64748b` (`a.at-modal-close`), and `#c73a3a` (`span.asterisk`). **None of these classes exist anywhere in this plugin's repository** — confirmed by grepping all PHP/CSS/JS. They're rendered on the audited page by something else entirely (another plugin, a snippet, or the theme) and are out of this ticket's stated scope ("Anything in another plugin, snippet, or the theme").
+- `assets/img/lis-logomark-green.svg` has a hardcoded `fill: #576846` and technically matches the verification grep's pattern over `assets/`, but it's an image asset, not CSS — out of the declared "CSS only" scope. Flagged rather than touched; also worth noting an `<img>`-loaded SVG can't consume page-level CSS custom properties at all (would need inlining or a `currentColor` pattern to ever be token-driven).
+- `lib/plugin-update-checker/css/puc-debug-bar.css` is vendored third-party library code (not this plugin's own styling) — left untouched.
+
+### Verification
+
+`grep -rnE '#[0-9a-fA-F]{3,8}' assets/` returns only the fallback literals inside
+each file's `:root` block, plus the (out-of-scope, non-CSS) SVG logomark file
+noted above.
+
 ## [0.36.40] — 2026-08-15 — Remove pagination — show every listing on one page
 
 - By request: "more listings per page just put them all on one page, endless scroll vibe." Two separate query paths fed listings pages, so both needed fixing:

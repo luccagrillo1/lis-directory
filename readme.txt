@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.36.40
+Stable tag: 0.37.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.37.0 =
+* Adopted the site-wide design-token system in this plugin's CSS (this plugin predated Phase 0 of the brand rollout and was never inventoried). Every hardcoded color across listings.css, vendor-card.css, vendor-heading.css, and vendor-ticker-bizcards.css now resolves through a namespaced `--lisdir-*` variable layer pointing at the real `--lis-*` brand tokens, each with the actual brand value as its fallback (never the old pre-migration color) so the plugin renders correctly even where the token stylesheet hasn't loaded. A handful of colors (the amber "Featured/Offer/rating/pending" family, the magenta "Popular" badge) have no equivalent in the given token palette — left as clearly-flagged, deliberately un-tokenized values pending a design decision, rather than force-fit into an unrelated token. See CHANGELOG.md for the full inventory and mapping rationale.
 
 = 0.36.40 =
 * By request: no more numbered pagination on listings pages — every published listing now shows on one page, scroll instead of click through pages. Applies to the main directory archive/category pages and the [lis_listing_grid] "All Listings" pages (previously hard-capped at 12 with no way to see more).
