@@ -4,10 +4,15 @@
    stylesheet hasn't loaded (wp-admin, block editor, etc.). */
 :root {
 	--lisdir-canvas: var(--lis-canvas, #FBFAF6);
-	--lisdir-clay-600: var(--lis-clay-600, #A94F2C);
+	--lisdir-clay: var(--lis-clay-600, #A94F2C);
+	--lisdir-clay-tint: var(--lis-clay-100, #F6E8DF);
+	--lisdir-clay-border: var(--lis-clay-200, #E8CDBC);
+	--lisdir-clay-hover: var(--lis-clay-700, #8C3E20);
 	--lisdir-error: var(--lis-error, #8E1D33);
 	--lisdir-error-bg: color-mix(in srgb, var(--lisdir-error) 12%, var(--lisdir-canvas));
 	--lisdir-error-border: color-mix(in srgb, var(--lisdir-error) 32%, var(--lisdir-canvas));
+	--lisdir-info: var(--lis-info, #2A5B78);
+	--lisdir-info-bg: color-mix(in srgb, var(--lisdir-info) 12%, var(--lisdir-canvas));
 	--lisdir-ink-600: var(--lis-ink-600, #5C6159);
 	--lisdir-ink-900: var(--lis-ink-900, #1A1D19);
 	--lisdir-line: var(--lis-line, #DEDFD8);
@@ -17,22 +22,10 @@
 	--lisdir-pine-900: var(--lis-pine-900, #16281F);
 	--lisdir-surface: var(--lis-surface, #FFFFFF);
 
-	/* No design token covers these hues (amber "featured/premium/rating/
-	   pending" family, magenta "Popular" badge) — flagged for a design
-	   decision rather than force-fit into an unrelated token. Left as
-	   literal values, deliberately NOT wired to a --lis-* token. */
-	--lisdir-amber: #8a5a00;
-	--lisdir-amber-bg: #fdf0d5;
-	--lisdir-amber-border: #f3dba8;
-	--lisdir-amber-hover: #6e4700;
-	--lisdir-amber-pending-bg: #fff4e0;
-	--lisdir-amber-pending-text: #a1701f;
-	--lisdir-amber-star: #d99a2b;
-	--lisdir-amber-warn-bg: #fdf6e3;
-	--lisdir-amber-warn-border: #f0d58a;
-	--lisdir-amber-warn-text: #6b5410;
-	--lisdir-magenta: #a13a7a;
-	--lisdir-magenta-bg: #fbe9f4;
+	/* v0.38.0: the one hue nothing else substitutes for — star ratings only,
+	   never text (below 4.5:1 on Canvas). See LIS_Listings_v0.38.0_Spec.md. */
+	--lisdir-gold: var(--lis-gold-600, #96701E);
+	--lisdir-gold-tint: var(--lis-gold-100, #F5EBD2);
 }
 
 /* ---------- Search / filter widget ---------- */
@@ -548,7 +541,7 @@
 
 .lis-listing-price {
 	font-weight: 600;
-	color: var(--lisdir-clay-600);
+	color: var(--lisdir-clay);
 	font-size: 0.9em;
 }
 
@@ -963,13 +956,13 @@
 }
 
 .lis-listing-badge--featured {
-	color: var(--lisdir-amber);
-	background: var(--lisdir-amber-bg);
+	color: var(--lisdir-clay);
+	background: var(--lisdir-clay-tint);
 }
 
 .lis-listing-badge--popular {
-	color: var(--lisdir-magenta);
-	background: var(--lisdir-magenta-bg);
+	color: var(--lisdir-pine-700);
+	background: var(--lisdir-pine-100);
 }
 
 .lis-listing-badge--verified {
@@ -1016,8 +1009,8 @@
 	margin: 0 0 24px;
 	padding: 14px 18px;
 	border-radius: 12px;
-	background: var(--lisdir-amber-bg);
-	border: 1px solid var(--lisdir-amber-border);
+	background: var(--lisdir-clay-tint);
+	border: 1px solid var(--lisdir-clay-border);
 }
 
 .lis-listing-offer-eyebrow {
@@ -1025,21 +1018,21 @@
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
-	color: var(--lisdir-amber);
+	color: var(--lisdir-clay);
 }
 
 .lis-listing-offer-button {
 	display: inline-block;
 	padding: 10px 20px;
 	border-radius: 8px;
-	background: var(--lisdir-amber);
+	background: var(--lisdir-clay);
 	color: var(--lisdir-surface);
 	font-weight: 600;
 	text-decoration: none;
 }
 
 .lis-listing-offer-button:hover {
-	background: var(--lisdir-amber-hover);
+	background: var(--lisdir-clay-hover);
 	color: var(--lisdir-surface);
 }
 
@@ -1107,7 +1100,7 @@
 /* ---------- Reviews ---------- */
 
 .lis-listing-review-stars {
-	color: var(--lisdir-amber-star);
+	color: var(--lisdir-gold);
 	display: block;
 	margin-bottom: 4px;
 	letter-spacing: 1px;
@@ -2137,10 +2130,10 @@
 
 .lis-listing-showcase-occupied {
 	padding: 14px 16px;
-	border: 1px solid var(--lisdir-amber-warn-border);
+	border: 1px solid var(--lisdir-clay-border);
 	border-radius: 10px;
-	background: var(--lisdir-amber-warn-bg);
-	color: var(--lisdir-amber-warn-text);
+	background: var(--lisdir-clay-tint);
+	color: var(--lisdir-ink-900);
 }
 
 .lis-listing-showcase-occupied[hidden],
@@ -2310,8 +2303,8 @@
 }
 
 .lis-listing-dashboard-status--pending {
-	background: var(--lisdir-amber-pending-bg);
-	color: var(--lisdir-amber-pending-text);
+	background: var(--lisdir-info-bg);
+	color: var(--lisdir-info);
 }
 
 .lis-listing-dashboard-status--draft {

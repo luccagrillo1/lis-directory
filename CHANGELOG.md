@@ -1,3 +1,20 @@
+## [0.38.0] — 2026-08-22 — Resolve the two colors v0.37.0 flagged (CSS only)
+
+v0.37.0 correctly reported two hue families as "no token fits" rather than force-mapping them. Per `LIS_Listings_v0.38.0_Spec.md`, here are the resolved decisions — one new token plus six component remappings, all onto tokens that already exist:
+
+- **New token — Gold** (`--lisdir-gold: var(--lis-gold-600, #96701E)`, `--lisdir-gold-tint: var(--lis-gold-100, #F5EBD2)`): the one case where hue itself carries meaning and nothing else substitutes. Star ratings only, never text (below the 4.5:1 text-contrast bar on Canvas). `.lis-listing-review-stars` → Gold.
+- **Featured badge** (`.lis-listing-badge--featured`) → Clay (text) on Clay-tint (bg). Directorist's own Featured badge already reads as Clay from an earlier phase; a different color here would contradict that.
+- **Offer banner** (`.lis-listing-offer-banner` / `-eyebrow` / `-button` / `-button:hover`) → Clay family throughout: Clay-tint background, Clay-200 border, Clay text/button fill, Clay-700 on hover (same "darken to the deepest available shade on hover" pattern already used for Pine buttons in v0.37.0). A promotion is transaction-adjacent, which is what Clay means.
+- **"Category occupied" warning** (`.lis-listing-showcase-occupied`) → Ink 900 text on Clay-tint background/Clay-200 border — amber would have collided visually with the now-Clay Featured/Offer treatment; Ink-on-Clay-tint doesn't.
+- **Dashboard "Pending" status** (`.lis-listing-dashboard-status--pending`) → Info (text) on a 12%-mix Info tint (background) — same `color-mix()`-derived-tint technique v0.37.0 already used for the Error status colors, since Info likewise has no dedicated light-tint counterpart in the given palette. Pending review is exactly what Info exists for.
+- **"Popular" badge** (`.lis-listing-badge--popular`) → Pine 700 on Pine 100. Deliberately distinct from Featured (Clay): one is a paid placement, one is an organic status, and they should not read the same.
+
+New `--lisdir-clay-tint` (`--lis-clay-100`), `--lisdir-clay-border` (`--lis-clay-200`), and `--lisdir-clay-hover` (`--lis-clay-700`) also added — all pre-existing tokens from the original palette that v0.37.0 simply had no use for yet, not new hues. The pre-existing `--lisdir-clay-600` (used by `.lis-listing-price`) was renamed to `--lisdir-clay` to match this spec's naming and avoid two variables holding the same value.
+
+Left untouched, as instructed: `#000626` / `#64748b` / `#c73a3a` (not this repo's — Directorist's, handled elsewhere), `assets/img/lis-logomark-green.svg`, and the vendored `plugin-update-checker` CSS.
+
+Verified via `grep -rE '#[0-9a-fA-F]{3,8}' assets/` (only `:root`-block fallback literals remain, now including `#96701E`/`#F5EBD2`) and `grep -rE 'rgba?\([0-9]' assets/` (only brand-agnostic black box-shadows remain).
+
 ## [0.37.0] — 2026-08-17 — Adopt the site-wide design-token system (CSS only)
 
 Followed the pattern from `lis-events` v1.3.1: own variables namespaced `--lisdir-*`
