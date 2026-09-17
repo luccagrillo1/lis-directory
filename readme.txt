@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.38.0
+Stable tag: 0.39.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -155,6 +155,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.39.0 =
+* New: generate a private "claim link" for a listing that's still a draft (e.g. one you built on a business's behalf before they've ever touched the site) from the Claim meta box. The recipient opens it, logs in, reviews/edits the draft, then picks a plan and pays — which publishes the listing and transfers ownership to them, same as the existing public "Claim it" flow on a published listing.
+* Fixed a latent no-op in the claim box's Monthly/Annually price-sync script (the displayed price never updated on toggle, though the correct value still submitted) while extracting it into shared code for the new link.
 
 = 0.38.0 =
 * Resolved the two color families v0.37.0 flagged as having no matching design token. Added one new Gold token (star ratings only). Remapped Featured badge/Offer banner → Clay, "Category occupied" warning → Ink on Clay-tint, Dashboard "Pending" → Info, "Popular" badge → Pine — all onto tokens that already existed in the palette. See CHANGELOG.md for the full per-component reasoning.

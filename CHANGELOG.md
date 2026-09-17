@@ -1,3 +1,42 @@
+## [0.39.0] — 2026-09-17 — Private claim link for a draft listing
+
+New: an admin can build a `lis_listing` as a DRAFT — for a business that
+hasn't touched the site yet — and generate a private "claim link" for it
+from the existing **Claim** meta box (`includes/listings-claim.php`, "Claim
+it by subscription" from earlier releases). The recipient opens the link,
+logs in (or creates an account), reviews and **edits** the draft (the real
+front-end edit form, `[lis_listing_edit]`, not a read-only preview), then
+picks a plan from the same tier/billing picker the existing public "Claim
+it" box uses. Paying transfers ownership (`post_author`) to them and
+publishes the listing — both already-existing behaviors of
+`lis_directory_handle_claim_order()` / `lis_directory_handle_featured_listing_order()`
+(`includes/listings-pricing.php`), completely unchanged; the new link only
+adds a way to *reach* that same tier picker for a listing with no public
+permalink yet.
+
+- New `_lis_listing_claim_token` (40-char random hex) + "Generate/Regenerate
+  claim link" action in the Claim meta box. Regenerating immediately
+  invalidates the old URL — the only revocation method for now.
+- New standalone page at `?lis_claim_token=…` (any URL, via `template_redirect`
+  — no rewrite rules), gated: invalid/already-claimed token → generic "no
+  longer valid"; not logged in → log-in prompt; logged in → the real edit
+  form pre-filled with the draft, then the tier picker below it. Sent with
+  `X-Robots-Tag: noindex` since it's a bearer link, not a page meant to be
+  found.
+- `includes/listings-edit.php`'s ownership gate (render **and** save) now
+  also accepts a listing-specific claim token in place of being the
+  post's author — scoped to exactly one listing, only while it's still
+  claimable, via the shared `lis_directory_claim_token_grants_edit_access()`.
+- The existing public "Claim it" box's tier/billing picker was extracted
+  into `lis_directory_render_claim_plan_form()` so both entry points share
+  one implementation. Incidental fix while extracting it: the billing
+  toggle's price-sync script was reading `document.currentScript.closest('form')`,
+  but the `<script>` tag is a sibling *after* `</form>`, not a descendant of
+  it — `closest()` can't reach a preceding sibling, so the displayed price
+  never actually updated when switching Monthly/Annually (the correct
+  billing value was still submitted regardless). Now reads
+  `previousElementSibling` instead.
+
 ## [0.38.0] — 2026-08-22 — Resolve the two colors v0.37.0 flagged (CSS only)
 
 v0.37.0 correctly reported two hue families as "no token fits" rather than force-mapping them. Per `LIS_Listings_v0.38.0_Spec.md`, here are the resolved decisions — one new token plus six component remappings, all onto tokens that already exist:

@@ -12,6 +12,21 @@
  * payment) reuses the same plumbing as the submission wizard's paid tiers
  * (includes/listings-pricing.php); this file only adds the claimable flag, the
  * claim UI, the "this is a claim" order tag, and the ownership transfer.
+ *
+ * Also handles a second entry point into the SAME claim mechanism: a private
+ * "claim link" (`_lis_listing_claim_token`) an admin generates for a listing
+ * that's still a DRAFT — e.g. one built on a business's behalf before they've
+ * ever touched the site. A draft has no public permalink, so the "Claim it"
+ * box above (which lives on the published single-listing page) can't reach
+ * it; the token link is a standalone page instead
+ * (lis_directory_maybe_render_claim_token_page(), on template_redirect) that
+ * works for a draft. It reuses the exact same tier picker
+ * (lis_directory_render_claim_plan_form(), shared with the box above) and the
+ * exact same claim-checkout/ownership-transfer path below — the token only
+ * changes how the recipient REACHES the picker, not what happens after they
+ * submit it. It also grants the recipient edit access to that one listing
+ * (see lis_directory_claim_token_grants_edit_access(), consumed by
+ * includes/listings-edit.php) so they can fix the draft before buying it.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -23,6 +38,8 @@ add_action( 'add_meta_boxes', 'lis_directory_add_claim_meta_box' );
 add_action( 'save_post_lis_listing', 'lis_directory_save_claim_meta_box' );
 add_action( 'admin_post_lis_directory_claim_listing', 'lis_directory_handle_claim_listing' );
 add_action( 'admin_post_nopriv_lis_directory_claim_listing', 'lis_directory_handle_claim_listing' );
+add_action( 'admin_post_lis_directory_generate_claim_token', 'lis_directory_handle_generate_claim_token' );
+add_action( 'template_redirect', 'lis_directory_maybe_render_claim_token_page' );
 add_filter( 'woocommerce_add_cart_item_data', 'lis_directory_add_claim_to_cart_item', 20, 2 );
 add_action( 'woocommerce_checkout_create_order_line_item', 'lis_directory_persist_claim_to_order_item', 20, 4 );
 add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_claim_order' );
@@ -52,10 +69,33 @@ function lis_directory_render_claim_meta_box( $post ) {
 	$claimable  = (bool) get_post_meta( $post->ID, '_lis_listing_claimable', true );
 	$claimed_by = (int) get_post_meta( $post->ID, '_lis_listing_claimed_by', true );
 	echo '<p><label><input type="checkbox" name="lis_listing_claimable" value="1" ' . checked( $claimable, true, false ) . ' /> Allow this listing to be claimed by subscription</label></p>';
+
 	if ( $claimed_by ) {
 		$u = get_userdata( $claimed_by );
 		echo '<p><em>Claimed by ' . esc_html( $u ? $u->user_login : ( '#' . $claimed_by ) ) . '.</em></p>';
+		return; // Already claimed — nothing left to generate/share.
 	}
+
+	$token = get_post_meta( $post->ID, '_lis_listing_claim_token', true );
+	echo '<hr />';
+	echo '<p><strong>Private claim link</strong><br /><span class="description">Works even while this listing is a draft — send it directly to the business so they can review, edit, and buy it. Anyone with the link can open it, so treat it like a password: regenerating replaces the old one.</span></p>';
+
+	if ( $token ) {
+		$url = lis_directory_get_claim_token_url( $token );
+		echo '<p><input type="text" readonly="readonly" onclick="this.select();" value="' . esc_attr( $url ) . '" style="width:100%;" id="lis-claim-link-input" /></p>';
+		echo '<p><button type="button" class="button" onclick="var i=document.getElementById(\'lis-claim-link-input\');i.select();document.execCommand(\'copy\');">Copy link</button></p>';
+	}
+
+	$generate_url = wp_nonce_url(
+		add_query_arg( array(
+			'action'     => 'lis_directory_generate_claim_token',
+			'listing_id' => $post->ID,
+		), admin_url( 'admin-post.php' ) ),
+		'lis_directory_generate_claim_token_' . $post->ID,
+		'lis_claim_token_nonce'
+	);
+	echo '<p><a class="button" href="' . esc_url( $generate_url ) . '">' . ( $token ? 'Regenerate link (invalidates the old one)' : 'Generate claim link' ) . '</a></p>';
+	echo '<p class="description">Generating a link automatically marks this listing as claimable, even if you haven\'t saved the checkbox above yet.</p>';
 }
 
 function lis_directory_save_claim_meta_box( $post_id ) {
@@ -69,6 +109,87 @@ function lis_directory_save_claim_meta_box( $post_id ) {
 		return;
 	}
 	update_post_meta( $post_id, '_lis_listing_claimable', ! empty( $_POST['lis_listing_claimable'] ) ? 1 : 0 );
+}
+
+/* ---------- Private claim link (works on a draft) ---------- */
+
+/**
+ * The shareable URL for a claim token — a plain query arg on the home page,
+ * not a rewrite rule (this plugin doesn't register any elsewhere either;
+ * lis_directory_maybe_render_claim_token_page() below intercepts it on
+ * template_redirect, same hook lis_directory_track_listing_view() in
+ * listings-badges.php already uses).
+ */
+function lis_directory_get_claim_token_url( $token ) {
+	return add_query_arg( 'lis_claim_token', $token, home_url( '/' ) );
+}
+
+/**
+ * The `lis_listing` a claim token belongs to, or null. `post_status =>
+ * 'any'` so a token still resolves right after the listing publishes (the
+ * recipient's own tab, mid-purchase-flow) — lis_directory_is_listing_claimable()
+ * is what actually gates whether it's still usable, checked separately by
+ * every caller below.
+ */
+function lis_directory_get_listing_by_claim_token( $token ) {
+	$token = is_string( $token ) ? sanitize_text_field( $token ) : '';
+	if ( '' === $token ) {
+		return null;
+	}
+	$ids = get_posts( array(
+		'post_type'      => 'lis_listing',
+		'post_status'    => 'any',
+		'posts_per_page' => 1,
+		'fields'         => 'ids',
+		'meta_query'     => array(
+			array( 'key' => '_lis_listing_claim_token', 'value' => $token ),
+		),
+	) );
+	return $ids ? get_post( $ids[0] ) : null;
+}
+
+/**
+ * Whether $token grants the current request edit access to $listing_id —
+ * consumed by includes/listings-edit.php so a claim-link recipient can fix
+ * up the draft before buying it. True only when the token belongs to THIS
+ * exact listing and it's still claimable (not already claimed, not
+ * revoked/regenerated) — the same gate that decides whether the token can
+ * still be used to buy it, so editing and claiming turn off together.
+ */
+function lis_directory_claim_token_grants_edit_access( $listing_id, $token ) {
+	if ( ! $listing_id || ! $token ) {
+		return false;
+	}
+	$listing = lis_directory_get_listing_by_claim_token( $token );
+	if ( ! $listing || (int) $listing->ID !== (int) $listing_id ) {
+		return false;
+	}
+	return lis_directory_is_listing_claimable( $listing_id );
+}
+
+/**
+ * admin-post handler for the meta box's "Generate/Regenerate claim link"
+ * button (a plain nonce-protected GET link, not a nested <form> — the meta
+ * box already lives inside the post-edit screen's own <form>, and forms
+ * can't nest). Also flips the listing claimable, so generating a link is
+ * enough on its own without separately saving the checkbox first.
+ */
+function lis_directory_handle_generate_claim_token() {
+	$listing_id = isset( $_GET['listing_id'] ) ? absint( $_GET['listing_id'] ) : 0;
+	if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) ) {
+		wp_die( 'Invalid listing.' );
+	}
+	if ( ! current_user_can( 'edit_post', $listing_id ) ) {
+		wp_die( 'You do not have permission to do this.' );
+	}
+	check_admin_referer( 'lis_directory_generate_claim_token_' . $listing_id, 'lis_claim_token_nonce' );
+
+	update_post_meta( $listing_id, '_lis_listing_claim_token', bin2hex( random_bytes( 20 ) ) );
+	update_post_meta( $listing_id, '_lis_listing_claim_token_created', current_time( 'mysql' ) );
+	update_post_meta( $listing_id, '_lis_listing_claimable', 1 );
+
+	wp_safe_redirect( admin_url( 'post.php?post=' . $listing_id . '&action=edit' ) );
+	exit;
 }
 
 /* ---------- Front end: the claim box ---------- */
@@ -111,6 +232,34 @@ function lis_directory_render_claim_box( $listing_id ) {
 		return ob_get_clean();
 	}
 
+	$plan_form = lis_directory_render_claim_plan_form( $listing_id );
+	if ( '' === $plan_form ) {
+		return ''; // No purchasable plans configured yet — nothing to claim with.
+	}
+	?>
+	<div class="lis-listing-claim-box" id="lis-claim">
+		<h3>Is this your business? Claim it.</h3>
+		<p>Claim this listing and it becomes yours to manage — a subscription keeps it live.</p>
+		<?php echo $plan_form; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already-escaped HTML built by lis_directory_render_claim_plan_form(). ?>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * The tier/billing picker + "Claim & subscribe" form, shared by the public
+ * claim box above (on an already-published listing) and the private
+ * draft-claim page (lis_directory_maybe_render_claim_token_page() below) —
+ * the token only changes how the recipient reaches this form, not what it
+ * does. Returns '' when no tier product is configured/purchasable yet.
+ *
+ * @param int    $listing_id
+ * @param string $token Optional — carried through as a hidden field so
+ *                      lis_directory_handle_claim_listing() can send the
+ *                      buyer back to the claim-token page (not a draft's
+ *                      dead-end permalink) if anything goes wrong.
+ */
+function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 	$fmt = function ( $price ) {
 		if ( null === $price || '' === $price ) {
 			return '—';
@@ -128,53 +277,57 @@ function lis_directory_render_claim_box( $listing_id ) {
 		$tiers['featured'] = array( 'label' => 'Featured', 'pid' => $feat, 'blurb' => 'Claim it with a Featured badge.' );
 	}
 	if ( empty( $tiers ) ) {
-		return ''; // No purchasable plans configured yet — nothing to claim with.
+		return '';
 	}
-	?>
-	<div class="lis-listing-claim-box" id="lis-claim">
-		<h3>Is this your business? Claim it.</h3>
-		<p>Claim this listing and it becomes yours to manage — a subscription keeps it live.</p>
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="lis-listing-claim-form">
-			<input type="hidden" name="action" value="lis_directory_claim_listing" />
-			<input type="hidden" name="listing_id" value="<?php echo (int) $listing_id; ?>" />
-			<?php wp_nonce_field( 'lis_directory_claim_listing_' . (int) $listing_id, 'lis_claim_nonce' ); ?>
 
-			<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Billing">
-				<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
-				<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
-			</div>
-			<div class="lis-listing-plans">
-				<?php foreach ( $tiers as $key => $t ) :
-					$m = lis_directory_resolve_plan_variation( $t['pid'], 'month' );
-					$y = lis_directory_resolve_plan_variation( $t['pid'], 'year' );
-					?>
-					<label class="lis-listing-plan-card">
-						<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" required />
-						<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
-						<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt( $m['price'] ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt( $y['price'] ) . '/yr' ); ?>"><?php echo esc_html( $fmt( $m['price'] ) ); ?>/mo</span>
-						<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
-					</label>
-				<?php endforeach; ?>
-			</div>
-			<p><button type="submit" class="lis-listing-claim-submit">Claim &amp; subscribe</button></p>
-		</form>
-		<script>
-		( function () {
-			var form = document.currentScript.closest( 'form' );
-			if ( ! form ) { return; }
-			function sync() {
-				var billing = ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month';
-				form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
-					el.textContent = 'year' === billing ? el.dataset.priceYear : el.dataset.priceMonth;
-				} );
-			}
-			form.querySelectorAll( 'input[name="lis_listing_billing"]' ).forEach( function ( r ) {
-				r.addEventListener( 'change', sync );
+	ob_start();
+	?>
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="lis-listing-claim-form">
+		<input type="hidden" name="action" value="lis_directory_claim_listing" />
+		<input type="hidden" name="listing_id" value="<?php echo (int) $listing_id; ?>" />
+		<?php if ( $token ) : ?>
+			<input type="hidden" name="lis_claim_token" value="<?php echo esc_attr( $token ); ?>" />
+		<?php endif; ?>
+		<?php wp_nonce_field( 'lis_directory_claim_listing_' . (int) $listing_id, 'lis_claim_nonce' ); ?>
+
+		<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Billing">
+			<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
+			<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
+		</div>
+		<div class="lis-listing-plans">
+			<?php foreach ( $tiers as $key => $t ) :
+				$m = lis_directory_resolve_plan_variation( $t['pid'], 'month' );
+				$y = lis_directory_resolve_plan_variation( $t['pid'], 'year' );
+				?>
+				<label class="lis-listing-plan-card">
+					<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" required />
+					<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
+					<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt( $m['price'] ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt( $y['price'] ) . '/yr' ); ?>"><?php echo esc_html( $fmt( $m['price'] ) ); ?>/mo</span>
+					<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
+				</label>
+			<?php endforeach; ?>
+		</div>
+		<p><button type="submit" class="lis-listing-claim-submit">Claim &amp; subscribe</button></p>
+	</form>
+	<script>
+	( function () {
+		// The script tag is a SIBLING right after </form> above, not a
+		// descendant of it, so .closest('form') on the script itself would
+		// never match — walk back to the previous element instead.
+		var form = document.currentScript.previousElementSibling;
+		if ( ! form || 'FORM' !== form.tagName ) { return; }
+		function sync() {
+			var billing = ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month';
+			form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
+				el.textContent = 'year' === billing ? el.dataset.priceYear : el.dataset.priceMonth;
 			} );
-			sync();
-		}() );
-		</script>
-	</div>
+		}
+		form.querySelectorAll( 'input[name="lis_listing_billing"]' ).forEach( function ( r ) {
+			r.addEventListener( 'change', sync );
+		} );
+		sync();
+	}() );
+	</script>
 	<?php
 	return ob_get_clean();
 }
@@ -183,7 +336,10 @@ function lis_directory_render_claim_box( $listing_id ) {
 
 function lis_directory_handle_claim_listing() {
 	$listing_id = isset( $_POST['listing_id'] ) ? (int) $_POST['listing_id'] : 0;
-	$back       = $listing_id ? get_permalink( $listing_id ) : home_url( '/' );
+	$token      = isset( $_POST['lis_claim_token'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_claim_token'] ) ) : '';
+	// A draft's own permalink is a dead end for anyone but its author — send
+	// a token-carrying submission back to the claim page instead.
+	$back       = $token ? lis_directory_get_claim_token_url( $token ) : ( $listing_id ? get_permalink( $listing_id ) : home_url( '/' ) );
 
 	if ( ! is_user_logged_in() ) {
 		wp_safe_redirect( wp_login_url( $back ) );
@@ -253,7 +409,78 @@ function lis_directory_handle_claim_order( $order_id ) {
 		}
 		wp_update_post( array( 'ID' => $listing_id, 'post_author' => $buyer ) );
 		delete_post_meta( $listing_id, '_lis_listing_claimable' );
+		delete_post_meta( $listing_id, '_lis_listing_claim_token' ); // Retire the private link, if this claim came through one.
 		update_post_meta( $listing_id, '_lis_listing_claimed_by', $buyer );
 		update_post_meta( $listing_id, '_lis_listing_claimed_at', current_time( 'mysql' ) );
 	}
+}
+
+/* ---------- The standalone private claim-link page ---------- */
+
+/**
+ * Intercepts `?lis_claim_token=…` on ANY front-end request (a plain query
+ * arg, not a rewrite rule — matches lis_directory_track_listing_view()'s
+ * use of the same `template_redirect` hook in listings-badges.php) and
+ * renders a standalone "review, edit, and claim" page for that token's
+ * listing — the one entry point that can reach a DRAFT listing, since a
+ * draft has no public permalink for the usual claim box
+ * (lis_directory_render_claim_box()) to live on.
+ *
+ * Deliberately hand-builds the page (get_header()/get_footer() around plain
+ * echoed HTML) rather than forcing the draft through the normal
+ * single-listing template/main-query — same "hand-roll the output" approach
+ * the claim box and the WooCommerce thank-you page already use elsewhere in
+ * this plugin, and it sidesteps fighting `WP_Query`'s own publish-status
+ * filtering for a post that's deliberately allowed through here via the
+ * token rather than the normal capability check.
+ */
+function lis_directory_maybe_render_claim_token_page() {
+	if ( empty( $_GET['lis_claim_token'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only route lookup; nothing is written from a GET here.
+		return;
+	}
+
+	$token   = sanitize_text_field( wp_unslash( $_GET['lis_claim_token'] ) );
+	$listing = lis_directory_get_listing_by_claim_token( $token );
+
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	nocache_headers();
+	// A leaked/crawled token URL should never end up indexed.
+	header( 'X-Robots-Tag: noindex, nofollow', true );
+
+	get_header();
+	echo '<div class="lis-listing-claim-page">';
+
+	if ( ! $listing ) {
+		// Never distinguishes "no such token" from "already used" below —
+		// both just say the link doesn't work anymore.
+		echo '<p class="lis-listing-claim-page-invalid">This link is no longer valid.</p>';
+	} elseif ( ! lis_directory_is_listing_claimable( $listing->ID ) ) {
+		$claimed_by = (int) get_post_meta( $listing->ID, '_lis_listing_claimed_by', true );
+		if ( $claimed_by && 'publish' === get_post_status( $listing->ID ) ) {
+			echo '<p>This listing has already been claimed. <a href="' . esc_url( get_permalink( $listing->ID ) ) . '">View it &rarr;</a></p>';
+		} else {
+			echo '<p class="lis-listing-claim-page-invalid">This link is no longer valid.</p>';
+		}
+	} elseif ( ! is_user_logged_in() ) {
+		$redirect_back = lis_directory_get_claim_token_url( $token );
+		echo '<h1>A listing has been started for you</h1>';
+		echo '<p>Log in to review, edit, and claim <strong>' . esc_html( get_the_title( $listing->ID ) ) . '</strong>.</p>';
+		echo '<p><a class="lis-listing-claim-btn" href="' . esc_url( wp_login_url( $redirect_back ) ) . '">Log in</a></p>';
+	} else {
+		echo '<h1>Review and claim ' . esc_html( get_the_title( $listing->ID ) ) . '</h1>';
+		echo '<p>Take a look below, fix anything that needs it, then choose a plan to make it yours.</p>';
+		if ( function_exists( 'lis_directory_render_listing_edit_form' ) ) {
+			echo lis_directory_render_listing_edit_form( $listing->ID, $token ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already-escaped HTML.
+		}
+		$plan_form = lis_directory_render_claim_plan_form( $listing->ID, $token );
+		if ( $plan_form ) {
+			echo '<hr class="lis-listing-claim-page-divider" />';
+			echo '<h2>Choose a plan</h2>';
+			echo $plan_form; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already-escaped HTML.
+		}
+	}
+
+	echo '</div>';
+	get_footer();
+	exit;
 }

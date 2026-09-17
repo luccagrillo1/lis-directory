@@ -17,6 +17,16 @@
  * wp-admin meta box), so adding them only to the edit form would be an
  * inconsistent half-step. Flagged inline in the form when relevant, not
  * silently omitted.
+ *
+ * The actual form-building lives in lis_directory_render_listing_edit_form(),
+ * which takes a listing id (+ optional claim token) directly rather than
+ * reading `$_GET['listing_id']` itself — the [lis_listing_edit] shortcode
+ * below is a thin wrapper around it, and
+ * includes/listings-claim.php's private claim-link page
+ * (lis_directory_maybe_render_claim_token_page()) is the other caller, for
+ * a recipient who doesn't own the listing yet (ownership only transfers on
+ * payment) but holds a valid claim token for that one listing — see
+ * lis_directory_claim_token_grants_edit_access() there.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -48,6 +58,19 @@ function lis_directory_get_listing_edit_url( $listing_id ) {
 }
 
 function lis_directory_render_listing_edit_form_shortcode() {
+	$listing_id = isset( $_GET['listing_id'] ) ? absint( $_GET['listing_id'] ) : 0;
+	return lis_directory_render_listing_edit_form( $listing_id );
+}
+
+/**
+ * @param int    $listing_id The listing to edit.
+ * @param string $token      Optional claim token — set only when called from
+ *                           the private claim-link page for a listing the
+ *                           current user doesn't own yet. See
+ *                           lis_directory_claim_token_grants_edit_access()
+ *                           in includes/listings-claim.php.
+ */
+function lis_directory_render_listing_edit_form( $listing_id, $token = '' ) {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 	wp_enqueue_script( 'lis-directory-listing-photos', LIS_DIRECTORY_URL . 'assets/js/listing-photos.js', array(), LIS_DIRECTORY_VERSION, true );
 	// Deliberately NOT the one-question-at-a-time wizard (listing-form-wizard.js)
@@ -69,10 +92,13 @@ function lis_directory_render_listing_edit_form_shortcode() {
 		return ob_get_clean();
 	}
 
-	$listing_id = isset( $_GET['listing_id'] ) ? absint( $_GET['listing_id'] ) : 0;
+	$listing_id = absint( $listing_id );
 	$listing    = $listing_id ? get_post( $listing_id ) : null;
+	$is_owner   = $listing && (int) $listing->post_author === get_current_user_id();
+	$has_token  = $listing && $token && function_exists( 'lis_directory_claim_token_grants_edit_access' )
+		&& lis_directory_claim_token_grants_edit_access( $listing_id, $token );
 
-	if ( ! $listing || 'lis_listing' !== $listing->post_type || (int) $listing->post_author !== get_current_user_id() ) {
+	if ( ! $listing || 'lis_listing' !== $listing->post_type || ( ! $is_owner && ! $has_token ) ) {
 		ob_start();
 		?>
 		<p class="lis-listing-submit-errors">You can only edit your own listings.</p>
@@ -80,7 +106,14 @@ function lis_directory_render_listing_edit_form_shortcode() {
 		return ob_get_clean();
 	}
 
-	$current_url    = remove_query_arg( array( 'lis_listing_updated', 'lis_listing_error' ) );
+	// A claim-token editor always redirects back to the claim page (its
+	// canonical URL is the token, not this request's own query string —
+	// which for the claim page IS this same URL anyway, since that page's
+	// own renderer builds it via the same helper). An owner editing through
+	// the normal [lis_listing_edit] page keeps the previous behavior.
+	$current_url    = $token && function_exists( 'lis_directory_get_claim_token_url' )
+		? lis_directory_get_claim_token_url( $token )
+		: remove_query_arg( array( 'lis_listing_updated', 'lis_listing_error' ) );
 	$current_user   = wp_get_current_user();
 	$cat_terms      = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false ) );
 	$feature_terms  = lis_directory_get_public_feature_terms();
@@ -132,6 +165,9 @@ function lis_directory_render_listing_edit_form_shortcode() {
 		<input type="hidden" name="action" value="lis_directory_update_listing" />
 		<input type="hidden" name="listing_id" value="<?php echo (int) $listing_id; ?>" />
 		<input type="hidden" name="lis_listing_redirect_to" value="<?php echo esc_url( $current_url ); ?>" />
+		<?php if ( $token ) : ?>
+			<input type="hidden" name="lis_claim_token" value="<?php echo esc_attr( $token ); ?>" />
+		<?php endif; ?>
 		<?php wp_nonce_field( 'lis_listing_update_' . $listing_id, 'lis_listing_update_nonce' ); ?>
 
 		<div class="lis-listing-panel" data-panel-section="Basics" data-panel-question="What's your business called?">
@@ -357,8 +393,13 @@ function lis_directory_handle_listing_update() {
 		wp_die( 'Security check failed. Please go back and try again.' );
 	}
 
-	$listing = get_post( $listing_id );
-	if ( ! $listing || 'lis_listing' !== $listing->post_type || (int) $listing->post_author !== get_current_user_id() ) {
+	$listing   = get_post( $listing_id );
+	$token     = isset( $_POST['lis_claim_token'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_claim_token'] ) ) : '';
+	$is_owner  = $listing && (int) $listing->post_author === get_current_user_id();
+	$has_token = $listing && $token && function_exists( 'lis_directory_claim_token_grants_edit_access' )
+		&& lis_directory_claim_token_grants_edit_access( $listing_id, $token );
+
+	if ( ! $listing || 'lis_listing' !== $listing->post_type || ( ! $is_owner && ! $has_token ) ) {
 		wp_die( 'You can only edit your own listings.' );
 	}
 

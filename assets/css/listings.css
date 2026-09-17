@@ -2077,6 +2077,37 @@
 	background: var(--lisdir-pine-900);
 }
 
+/* Standalone "review, edit, and claim" page for a private claim-link token
+   (lis_directory_maybe_render_claim_token_page()) — it isn't nested inside
+   the single-listing template, so it needs its own basic page chrome. */
+.lis-listing-claim-page {
+	max-width: 760px;
+	margin: 48px auto;
+	padding: 0 20px;
+}
+
+.lis-listing-claim-page h1 {
+	margin: 0 0 8px;
+}
+
+.lis-listing-claim-page h2 {
+	margin: 0 0 16px;
+}
+
+.lis-listing-claim-page-invalid {
+	padding: 22px 24px;
+	border: 2px solid var(--lisdir-line);
+	border-radius: 12px;
+	background: var(--lisdir-canvas);
+	color: var(--lisdir-ink-600);
+}
+
+.lis-listing-claim-page-divider {
+	margin: 36px 0 24px;
+	border: none;
+	border-top: 1px solid var(--lisdir-line);
+}
+
 /* Extra fields revealed when "Vendor Showcase" is the chosen plan. */
 .lis-listing-showcase-fields {
 	margin-top: 22px;
