@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.39.0
+Stable tag: 0.40.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -119,6 +119,17 @@ variations is a wp-admin task, not something this plugin does for you).
   above the grid by default when a `type` is set (scoped to that directory);
   `search="no"` hides it, `search="yes"` forces it on for an all-types grid.
 
+* `[lis_job_submit]` — the job board's post/edit form (Job Board is separate
+  from the business directory: own post type `lis_job` at `/jobs/`, own
+  categories at `/job-category/`). Add `?job_id=123` to edit an existing job.
+* `[lis_job_dashboard]` — an employer's own job postings: pay/renew, mark
+  filled, edit, delete.
+* `[lis_job_board count="-1" category="slug" type="full-time" search="no"]` —
+  the filterable job list on any page. The main board is `/jobs/`.
+
+Set up the job board under LIS Jobs → Job Settings: create the Job Posting
+product, set the posting length, and create the "Post a job" / "My jobs" pages.
+
 == Setup: WooCommerce Subscriptions ==
 
 **This site's WooCommerce Subscriptions install does not use the classic
@@ -156,6 +167,9 @@ needs to change — only the setup steps below.
 
 == Changelog ==
 
+= 0.40.0 =
+* New: Job Board, completely separate from the business directory. Its own post type (`lis_job`, public at /jobs/), its own categories (/job-category/), its own stylesheet, templates, shortcodes and WooCommerce product — no shared URLs, templates or checkout meta with `lis_listing`. Employers post and edit jobs with a front-end form (title, company, logo, category, type, on-site/hybrid/remote, location, pay range, how to apply, optional deadline), pay a one-time Job Posting fee at checkout (or, until that product is published, jobs wait for admin approval and the admin is emailed), and manage them from a dashboard: renew/extend, mark filled, edit, delete. Postings expire after a configurable window (default 30 days) via a daily sweep. Public board has keyword/category/type/workplace filters, and each live job outputs schema.org JobPosting markup for Google for Jobs.
+* The older "Job Listing" *type* on business listings is untouched.
 = 0.39.0 =
 * New: generate a private "claim link" for a listing that's still a draft (e.g. one you built on a business's behalf before they've ever touched the site) from the Claim meta box. The recipient opens it, logs in, reviews/edits the draft, then picks a plan and pays — which publishes the listing and transfers ownership to them, same as the existing public "Claim it" flow on a published listing.
 * Fixed a latent no-op in the claim box's Monthly/Annually price-sync script (the displayed price never updated on toggle, though the correct value still submitted) while extracting it into shared code for the new link.

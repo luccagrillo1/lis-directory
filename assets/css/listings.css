@@ -2081,8 +2081,12 @@
    (lis_directory_maybe_render_claim_token_page()) — it isn't nested inside
    the single-listing template, so it needs its own basic page chrome. */
 .lis-listing-claim-page {
+	/* Theme content wrapper can be a flex row (see .lis-listing-archive). */
+	width: 100%;
+	flex: 1 1 auto;
 	max-width: 760px;
 	margin: 48px auto;
+	box-sizing: border-box;
 	padding: 0 20px;
 }
 

@@ -1,3 +1,20 @@
+## [0.40.0] — 2026-09-20 — Job Board (separate from the business directory)
+
+New, deliberately standalone system for job postings. Nothing here reuses the
+business directory's URLs, templates, taxonomy, stylesheet or checkout meta.
+
+- **Post type / URLs:** `lis_job` at `/jobs/` (archive) and `/jobs/<slug>/`; taxonomy `lis_job_category` at `/job-category/<slug>/`. Starter categories are seeded once (deletable).
+- **Files:** `includes/jobs-cpt.php` (CPT, fields, admin meta box + columns, expiry), `jobs-template.php` (routing, filters, board, cards, JobPosting JSON-LD), `jobs-submission.php` (`[lis_job_submit]`, save handler, `[lis_job_dashboard]`), `jobs-pricing.php` (settings page, product, checkout, payment); `templates/archive-job.php`, `templates/single-job.php`; `assets/css/jobs.css` (own `--lisjob-*` tokens, hex only in `:root`).
+- **Employer flow:** logged-in user fills the form → job saved as a draft flagged awaiting-payment → WooCommerce checkout for the one-time **Job Posting** product → on `processing`/`completed` the job publishes and its expiry is set (or extended, for a renewal). Each order line is stamped `_lis_job_applied` so `processing` followed by `completed` never double-counts. Until the product is published/purchasable, new jobs go to `pending` and the site admin is emailed. Users who can edit others' posts publish directly.
+- **Lifecycle:** daily cron drops expired jobs to draft (`_lis_job_expired`); dashboard offers Renew/Extend; "Mark filled" hides a job from the board and removes its structured data without unpublishing it.
+- **Search/board:** keyword, category, type, and workplace filters on `/jobs/`, category archives, and `[lis_job_board]`. Every open job on one page (same choice as the business directory).
+- **SEO:** live jobs print `JobPosting` JSON-LD (employment type, location or `TELECOMMUTE`, salary, `validThrough`); filled/expired/preview jobs get `noindex` instead. Country defaults to US (`lis_directory_job_country` filter).
+- **Settings:** LIS Jobs → Job Settings: Job Posting product id (with a one-click "Create Job Posting product", made as a draft at $25 to edit and publish), posting length in days (0 = never expires), and one-click creation of the "Post a Job Opening" / "My Job Postings" pages.
+- **Security:** nonces on every write, ownership checks (author or `edit_post`), buying the product requires a job the buyer owns, filters validated against fixed option lists, logo upload restricted to real PNG/JPG under 2MB, JSON-LD description run through `wp_kses_post`.
+- Category is set only by the front-end handler; in wp-admin WordPress's own Job Categories box is the single writer, and the admin meta box only overwrites a job's expiry when the admin actually changes it (the first publish stamps a default expiry before the meta box saves).
+
+Verification: `php -l` on every plugin file; a throwaway local WordPress (SQLite) exercised the archive/single/category/filter pages over HTTP, the full employer flow (validation errors with form re-fill, creation with logo upload, edit, non-owner denial, mark-filled/reopen/delete with nonce enforcement), expiry and renewal logic, and the payment handler against stubbed WooCommerce objects (publish, expiry set/extended, idempotent replay, wrong-product items ignored). Also ran the v0.39.0 private claim-link flow there for the first time (logged-out/logged-in/invalid/claimed states, token-scoped edit access, saves rejected without or with a wrong token).
+
 ## [0.39.0] — 2026-09-17 — Private claim link for a draft listing
 
 New: an admin can build a `lis_listing` as a DRAFT — for a business that

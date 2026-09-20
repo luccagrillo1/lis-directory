@@ -1,0 +1,494 @@
+/* Job board styles. Own `--lisjob-*` variables (namespaced to this file, same
+   pattern as listings.css's `--lisdir-*`), each pointing at the site-wide
+   `--lis-*` brand token with the real brand value as its fallback — so hex
+   literals only ever appear in this :root block. */
+:root {
+	--lisjob-canvas: var(--lis-canvas, #FBFAF6);
+	--lisjob-surface: var(--lis-surface, #FFFFFF);
+	--lisjob-line: var(--lis-line, #DEDFD8);
+	--lisjob-ink-600: var(--lis-ink-600, #5C6159);
+	--lisjob-ink-900: var(--lis-ink-900, #1A1D19);
+	--lisjob-pine-100: var(--lis-pine-100, #E4EBE4);
+	--lisjob-pine-200: var(--lis-pine-200, #C3D3C8);
+	--lisjob-pine-700: var(--lis-pine-700, #2C5240);
+	--lisjob-pine-900: var(--lis-pine-900, #16281F);
+	--lisjob-clay: var(--lis-clay-600, #A94F2C);
+	--lisjob-clay-tint: var(--lis-clay-100, #F6E8DF);
+	--lisjob-clay-border: var(--lis-clay-200, #E8CDBC);
+	--lisjob-error: var(--lis-error, #8E1D33);
+	--lisjob-error-bg: color-mix(in srgb, var(--lisjob-error) 12%, var(--lisjob-canvas));
+	--lisjob-error-border: color-mix(in srgb, var(--lisjob-error) 32%, var(--lisjob-canvas));
+	--lisjob-info: var(--lis-info, #2A5B78);
+	--lisjob-info-bg: color-mix(in srgb, var(--lisjob-info) 12%, var(--lisjob-canvas));
+}
+
+/* The theme's content wrapper can be a flex row, so fill the column rather
+   than shrink to content width. */
+.lis-job-board,
+.lis-job-single,
+.lis-job-formwrap,
+.lis-job-dashboard {
+	width: 100%;
+	flex: 1 1 auto;
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 24px 24px 48px;
+	box-sizing: border-box;
+}
+
+.lis-job-archive-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin-bottom: 16px;
+}
+
+.lis-job-archive-title {
+	margin: 0;
+}
+
+/* Buttons */
+.lis-job-btn {
+	display: inline-block;
+	padding: 10px 20px;
+	border: 1px solid var(--lisjob-pine-700);
+	border-radius: 8px;
+	background: var(--lisjob-surface);
+	color: var(--lisjob-pine-900);
+	font-weight: 600;
+	font-size: 1em;
+	line-height: 1.3;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.lis-job-btn:hover {
+	background: var(--lisjob-pine-100);
+}
+
+.lis-job-btn--primary {
+	background: var(--lisjob-pine-700);
+	color: var(--lisjob-surface);
+}
+
+.lis-job-btn--primary:hover {
+	background: var(--lisjob-pine-900);
+	color: var(--lisjob-surface);
+}
+
+/* Filters */
+.lis-job-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 0 0 24px;
+}
+
+.lis-job-filters input[type="search"] {
+	flex: 2 1 220px;
+}
+
+.lis-job-filters select {
+	flex: 1 1 150px;
+}
+
+.lis-job-filters input,
+.lis-job-filters select,
+.lis-job-form input[type="text"],
+.lis-job-form input[type="url"],
+.lis-job-form input[type="email"],
+.lis-job-form input[type="number"],
+.lis-job-form input[type="date"],
+.lis-job-form select {
+	padding: 10px 12px;
+	border: 1px solid var(--lisjob-line);
+	border-radius: 8px;
+	background: var(--lisjob-surface);
+	color: var(--lisjob-ink-900);
+	font-size: 1em;
+	box-sizing: border-box;
+}
+
+.lis-job-board-cta {
+	margin: 0 0 20px;
+}
+
+/* Cards */
+.lis-job-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.lis-job-card {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 16px 18px;
+	border: 1px solid var(--lisjob-line);
+	border-radius: 12px;
+	background: var(--lisjob-surface);
+	color: var(--lisjob-ink-900);
+	text-decoration: none;
+}
+
+.lis-job-card:hover {
+	border-color: var(--lisjob-pine-700);
+}
+
+.lis-job-card-logo {
+	flex: 0 0 56px;
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 10px;
+	background: var(--lisjob-pine-100);
+	overflow: hidden;
+}
+
+.lis-job-card-logo img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.lis-job-card-logo-fallback {
+	color: var(--lisjob-pine-700);
+	font-weight: 700;
+	font-size: 1.4em;
+}
+
+.lis-job-card-body {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.lis-job-card-title {
+	font-weight: 700;
+	font-size: 1.1em;
+}
+
+.lis-job-card-company {
+	color: var(--lisjob-ink-600);
+}
+
+.lis-job-card-date {
+	flex: 0 0 auto;
+	color: var(--lisjob-ink-600);
+	font-size: 0.9em;
+	white-space: nowrap;
+}
+
+.lis-job-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 4px;
+}
+
+.lis-job-chip {
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--lisjob-pine-100);
+	color: var(--lisjob-pine-900);
+	font-size: 0.85em;
+	font-weight: 600;
+}
+
+.lis-job-chip--pay {
+	background: var(--lisjob-clay-tint);
+	color: var(--lisjob-clay);
+}
+
+.lis-job-chip--cat {
+	background: var(--lisjob-canvas);
+	border: 1px solid var(--lisjob-line);
+	color: var(--lisjob-ink-600);
+}
+
+.lis-job-empty {
+	padding: 28px;
+	border: 1px dashed var(--lisjob-line);
+	border-radius: 12px;
+	color: var(--lisjob-ink-600);
+	text-align: center;
+}
+
+/* Notices */
+.lis-job-notice {
+	margin: 0 0 20px;
+	padding: 14px 18px;
+	border: 1px solid var(--lisjob-info);
+	border-radius: 10px;
+	background: var(--lisjob-info-bg);
+	color: var(--lisjob-ink-900);
+}
+
+.lis-job-notice--success {
+	border-color: var(--lisjob-pine-700);
+	background: var(--lisjob-pine-100);
+}
+
+.lis-job-notice--error {
+	border-color: var(--lisjob-error-border);
+	background: var(--lisjob-error-bg);
+}
+
+.lis-job-notice ul,
+.lis-job-notice p {
+	margin: 0;
+}
+
+.lis-job-notice ul {
+	padding-left: 20px;
+}
+
+/* Single job */
+.lis-job-back {
+	margin: 0 0 16px;
+}
+
+.lis-job-single-head {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	flex-wrap: wrap;
+	padding: 24px;
+	border: 1px solid var(--lisjob-line);
+	border-radius: 14px;
+	background: var(--lisjob-surface);
+}
+
+.lis-job-single-head > div:not(.lis-job-single-apply) {
+	flex: 1 1 280px;
+}
+
+.lis-job-single-logo {
+	flex: 0 0 88px;
+	width: 88px;
+	height: 88px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	background: var(--lisjob-pine-100);
+	overflow: hidden;
+}
+
+.lis-job-single-logo img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.lis-job-single-title {
+	margin: 0 0 4px;
+}
+
+.lis-job-single-company {
+	margin: 0 0 8px;
+	color: var(--lisjob-ink-600);
+}
+
+.lis-job-single-apply {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.lis-job-single-apply--bottom {
+	margin-top: 28px;
+}
+
+.lis-job-single-body {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	gap: 32px;
+	margin-top: 28px;
+}
+
+.lis-job-single-side {
+	align-self: start;
+	padding: 20px;
+	border: 1px solid var(--lisjob-line);
+	border-radius: 12px;
+	background: var(--lisjob-canvas);
+}
+
+.lis-job-single-side h2,
+.lis-job-single-content h2 {
+	margin-top: 0;
+	font-size: 1.2em;
+}
+
+.lis-job-details {
+	margin: 0;
+}
+
+.lis-job-details dt {
+	margin-top: 12px;
+	color: var(--lisjob-ink-600);
+	font-size: 0.85em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.lis-job-details dd {
+	margin: 2px 0 0;
+}
+
+@media (max-width: 760px) {
+	.lis-job-single-body {
+		grid-template-columns: 1fr;
+	}
+
+	.lis-job-card {
+		flex-wrap: wrap;
+	}
+
+	.lis-job-card-date {
+		flex-basis: 100%;
+	}
+}
+
+/* Post / edit form */
+.lis-job-form fieldset {
+	margin: 0 0 24px;
+	padding: 20px 22px;
+	border: 1px solid var(--lisjob-line);
+	border-radius: 12px;
+	background: var(--lisjob-surface);
+}
+
+.lis-job-form legend {
+	padding: 0 8px;
+	font-weight: 700;
+}
+
+.lis-job-form label {
+	display: block;
+	margin-bottom: 4px;
+	font-weight: 600;
+}
+
+.lis-job-form input[type="text"],
+.lis-job-form input[type="url"],
+.lis-job-form input[type="email"],
+.lis-job-form select {
+	width: 100%;
+}
+
+.lis-job-form-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
+}
+
+.lis-job-form-row > * {
+	flex: 1 1 160px;
+}
+
+.lis-job-form-editor {
+	margin-top: 16px;
+}
+
+.lis-job-optional,
+.lis-job-hint {
+	color: var(--lisjob-ink-600);
+	font-weight: 400;
+	font-size: 0.9em;
+}
+
+.lis-job-form-logo img {
+	display: block;
+	max-width: 88px;
+	height: auto;
+	margin-bottom: 6px;
+}
+
+.lis-job-price-note {
+	margin: 0 0 16px;
+	color: var(--lisjob-ink-600);
+}
+
+/* Employer dashboard */
+.lis-job-dash-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.lis-job-dash-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+	padding: 14px 18px;
+	border: 1px solid var(--lisjob-line);
+	border-radius: 12px;
+	background: var(--lisjob-surface);
+}
+
+.lis-job-dash-title {
+	font-weight: 700;
+}
+
+.lis-job-dash-meta {
+	display: block;
+	color: var(--lisjob-ink-600);
+	font-size: 0.9em;
+}
+
+.lis-job-dash-actions {
+	display: flex;
+	gap: 14px;
+	flex-wrap: wrap;
+}
+
+.lis-job-dash-pay {
+	font-weight: 700;
+	color: var(--lisjob-clay);
+}
+
+.lis-job-dash-delete {
+	color: var(--lisjob-error);
+}
+
+.lis-job-status {
+	display: inline-block;
+	margin-left: 6px;
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--lisjob-canvas);
+	border: 1px solid var(--lisjob-line);
+	color: var(--lisjob-ink-600);
+	font-size: 0.8em;
+	font-weight: 600;
+}
+
+.lis-job-status--live {
+	background: var(--lisjob-pine-100);
+	border-color: var(--lisjob-pine-200);
+	color: var(--lisjob-pine-900);
+}
+
+.lis-job-status--awaiting-payment,
+.lis-job-status--pending-review {
+	background: var(--lisjob-info-bg);
+	border-color: var(--lisjob-info);
+	color: var(--lisjob-info);
+}
+
+.lis-job-status--expired {
+	background: var(--lisjob-error-bg);
+	border-color: var(--lisjob-error-border);
+	color: var(--lisjob-error);
+}
