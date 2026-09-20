@@ -302,20 +302,29 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 	// the listing has one; if that slot is already taken it's shown but locked.
 	$vs_pid     = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
 	$vs_product = ( $vs_pid && function_exists( 'wc_get_product' ) ) ? wc_get_product( $vs_pid ) : null;
-	$cats       = get_the_terms( $listing_id, 'lis_listing_category' );
-	$cat_id     = ( $cats && ! is_wp_error( $cats ) ) ? (int) $cats[0]->term_id : 0;
+	$cat_id     = function_exists( 'lis_directory_get_listing_showcase_term' ) ? lis_directory_get_listing_showcase_term( $listing_id ) : 0;
 	if ( $vs_product && 'publish' === $vs_product->get_status() && $cat_id ) {
-		$vm_id = lis_directory_get_showcase_variation( 0, 'month' );
-		$vy_id = lis_directory_get_showcase_variation( 0, 'year' );
-		$vm    = $vm_id && wc_get_product( $vm_id ) ? wc_get_product( $vm_id )->get_price() : null;
-		$vy    = $vy_id && wc_get_product( $vy_id ) ? wc_get_product( $vy_id )->get_price() : null;
-		$taken = function_exists( 'lis_directory_is_listing_category_showcase_taken' ) && lis_directory_is_listing_category_showcase_taken( $cat_id );
+		$vm_id  = lis_directory_get_showcase_variation( 0, 'month' );
+		$vy_id  = lis_directory_get_showcase_variation( 0, 'year' );
+		$vm     = $vm_id && wc_get_product( $vm_id ) ? wc_get_product( $vm_id )->get_price() : null;
+		$vy     = $vy_id && wc_get_product( $vy_id ) ? wc_get_product( $vy_id )->get_price() : null;
+		$holder = function_exists( 'lis_directory_get_category_showcase_holder' ) ? lis_directory_get_category_showcase_holder( $cat_id ) : null;
+		$term   = get_term( $cat_id, 'lis_listing_category' );
+		$cname  = ( $term && ! is_wp_error( $term ) ) ? $term->name : 'This category';
+		$mine   = $holder && (int) get_post_meta( $holder->ID, '_lis_pv_listing_id', true ) === (int) $listing_id;
+		if ( $mine ) {
+			$blurb = 'Already active on this listing.';
+		} elseif ( $holder ) {
+			$blurb = sprintf( 'The %s showcase slot is currently held by %s.', $cname, $holder->post_title );
+		} else {
+			$blurb = 'The exclusive one-per-category slot for ' . $cname . ' — your logo in the showcase. Uses the tagline, logo and business card saved on this listing, so save any changes above first.';
+		}
 		$upgrades['showcase'] = array(
 			'label'    => 'Vendor Showcase',
-			'blurb'    => $taken ? 'This category\'s showcase slot is currently taken.' : 'The exclusive one-per-category slot — your logo in the showcase. Uses the tagline, logo and business card saved on this listing, so save any changes above first.',
+			'blurb'    => $blurb,
 			'm'        => $vm,
 			'y'        => $vy,
-			'disabled' => $taken,
+			'disabled' => (bool) $holder,
 		);
 	}
 
@@ -427,8 +436,7 @@ function lis_directory_handle_claim_listing() {
 	// listing — the same thing the Add Listing wizard does at submit time.
 	$term_id = 0;
 	if ( in_array( 'showcase', $upgrades, true ) ) {
-		$cats    = get_the_terms( $listing_id, 'lis_listing_category' );
-		$term_id = ( $cats && ! is_wp_error( $cats ) ) ? (int) $cats[0]->term_id : 0;
+		$term_id = function_exists( 'lis_directory_get_listing_showcase_term' ) ? lis_directory_get_listing_showcase_term( $listing_id ) : 0;
 		if ( ! $term_id ) {
 			wp_safe_redirect( add_query_arg( 'lis_claim', 'showcase_nocat', $back ) );
 			exit;

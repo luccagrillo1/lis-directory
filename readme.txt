@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.40.1
+Stable tag: 0.41.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.41.0 =
+* New: Vendor Showcase → Showcase Slots admin page — every held slot (vendor, listing, term end, order) with a one-click Release, the pending entries waiting on payment with Approve/Reject, and a category lookup that says whether a slot is Open or Taken and by whom.
+* Fixed: a category could show "showcase slot currently taken" when nobody held it. The slot check counted a vendor filed under any child category as holding the parent, and a listing filed under several categories was judged on whichever came first rather than its most specific one. Slots are now exact-category, and the message names the category and who holds it (or "Already active on this listing").
+* New: Features are now checkboxes on the listing's wp-admin edit screen (with an add-new field; new ones go live immediately) instead of WordPress's type-a-tag box. Pending suggestions show flagged and can be attached/detached.
 
 = 0.40.1 =
 * Claim flow (the "Claim it" box and the private claim link): the plan picker now matches the Add Listing wizard — Standard is the always-included baseline, Featured and Vendor Showcase are checkboxes that each add their price, with a live total. Vendor Showcase is now offered (it wasn't before), and choosing it creates the pending showcase entry that payment activates. Errors from the claim step (slot taken, no plan available) are now shown instead of silently ignored.

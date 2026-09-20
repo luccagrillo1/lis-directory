@@ -33,6 +33,11 @@ function lis_directory_get_active_vendor_for_category( $term_id, $exclude_post_i
 				'taxonomy' => 'lis_vendor_category',
 				'field'    => 'term_id',
 				'terms'    => (int) $term_id,
+				// A slot belongs to exactly this category. The default (true)
+				// would also count a vendor filed under any CHILD category, so
+				// a broad parent category would read as "taken" because of an
+				// unrelated sub-category's vendor.
+				'include_children' => false,
 			),
 		),
 		'meta_query'     => array(

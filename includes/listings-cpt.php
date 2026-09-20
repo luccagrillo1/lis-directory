@@ -80,6 +80,10 @@ function lis_directory_register_listing_feature_taxonomy() {
 		'show_admin_column' => false,
 		'show_in_rest'      => true,
 		'query_var'         => true,
+		// Replaced by the checkbox box in includes/listings-features.php
+		// (lis_directory_render_features_meta_box()) — WordPress's default
+		// type-a-tag box would be a second, conflicting writer.
+		'meta_box_cb'       => false,
 		'rewrite'           => array( 'slug' => 'listing-feature' ),
 	) );
 }

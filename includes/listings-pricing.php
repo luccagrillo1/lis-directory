@@ -122,8 +122,7 @@ function lis_directory_get_listing_upgrades_url( $listing_id, $tiers, $billing =
 		}
 
 		if ( 'showcase' === $tier && function_exists( 'lis_directory_is_listing_category_showcase_taken' ) ) {
-			$cats    = get_the_terms( $listing_id, 'lis_listing_category' );
-			$term_id = ( $cats && ! is_wp_error( $cats ) && ! empty( $cats ) ) ? (int) $cats[0]->term_id : 0;
+			$term_id = function_exists( 'lis_directory_get_listing_showcase_term' ) ? lis_directory_get_listing_showcase_term( $listing_id ) : 0;
 			if ( $term_id && lis_directory_is_listing_category_showcase_taken( $term_id ) ) {
 				return '';
 			}
