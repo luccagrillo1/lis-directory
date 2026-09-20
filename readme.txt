@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.40.0
+Stable tag: 0.40.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.40.1 =
+* Claim flow (the "Claim it" box and the private claim link): the plan picker now matches the Add Listing wizard — Standard is the always-included baseline, Featured and Vendor Showcase are checkboxes that each add their price, with a live total. Vendor Showcase is now offered (it wasn't before), and choosing it creates the pending showcase entry that payment activates. Errors from the claim step (slot taken, no plan available) are now shown instead of silently ignored.
+* Checkout no longer carries a leftover old Directorist listing plan (e.g. the one-time $60 "Standard - Local Business") into a claim or upgrade purchase; it's removed from the cart with a notice. Only that plan type is touched — other cart items are left alone.
 
 = 0.40.0 =
 * New: Job Board, completely separate from the business directory. Its own post type (`lis_job`, public at /jobs/), its own categories (/job-category/), its own stylesheet, templates, shortcodes and WooCommerce product — no shared URLs, templates or checkout meta with `lis_listing`. Employers post and edit jobs with a front-end form (title, company, logo, category, type, on-site/hybrid/remote, location, pay range, how to apply, optional deadline), pay a one-time Job Posting fee at checkout (or, until that product is published, jobs wait for admin approval and the admin is emailed), and manage them from a dashboard: renew/extend, mark filled, edit, delete. Postings expire after a configurable window (default 30 days) via a daily sweep. Public board has keyword/category/type/workplace filters, and each live job outputs schema.org JobPosting markup for Google for Jobs.

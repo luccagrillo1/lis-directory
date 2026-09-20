@@ -63,6 +63,9 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	add_action( 'admin_post_lis_directory_generate_featured_listing', 'lis_directory_handle_generate_featured_listing' );
 	add_action( 'admin_post_lis_directory_bundle_checkout', 'lis_directory_handle_bundle_checkout' );
 	add_action( 'admin_post_nopriv_lis_directory_bundle_checkout', 'lis_directory_handle_bundle_checkout' );
+	// Standard-only checkouts go through WooCommerce's own ?add-to-cart= URL
+	// (no admin-post handler), so clear leftovers from an add-to-cart hook too.
+	add_action( 'woocommerce_add_to_cart', 'lis_directory_purge_foreign_plan_items_on_add', 10, 6 );
 
 	if ( class_exists( 'WC_Subscriptions' ) ) {
 		add_action( 'woocommerce_subscription_status_cancelled', 'lis_directory_handle_featured_listing_subscription_ended' );
@@ -186,6 +189,7 @@ function lis_directory_handle_bundle_checkout() {
 	if ( ! WC()->cart ) {
 		wc_load_cart();
 	}
+	lis_directory_purge_foreign_plan_cart_items();
 
 	$std_pid   = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
 	$needs_std = $std_pid && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
@@ -237,6 +241,59 @@ function lis_directory_handle_bundle_checkout() {
 
 	wp_safe_redirect( wc_get_checkout_url() );
 	exit;
+}
+
+/**
+ * A cart line that's a leftover from the OLD Directorist listing-plan flow
+ * (e.g. "Standard - Local Business", a one-time $60 plan) rather than one of
+ * this plugin's own tiers. WooCommerce keeps a logged-in user's cart between
+ * visits, so one abandoned Directorist plan purchase rides along into every
+ * later checkout and quietly adds its price to the total.
+ *
+ * Deliberately narrow — it matches Directorist's plan product type
+ * (`listing_pricing_plans`) or that exact "… - Local Business" plan name, and
+ * never touches anything else in the cart (events, other products). The
+ * `lis_directory_is_foreign_plan_cart_item` filter lets it be extended.
+ */
+function lis_directory_is_foreign_plan_cart_item( $item ) {
+	$product = isset( $item['data'] ) && is_object( $item['data'] ) ? $item['data'] : null;
+	if ( ! $product || ! empty( $item['lis_listing_id'] ) || ! empty( $item['lis_job_id'] ) ) {
+		return false;
+	}
+	$pid = isset( $item['product_id'] ) ? (int) $item['product_id'] : 0;
+	if ( $pid && function_exists( 'lis_directory_listing_tier_for_product' ) && lis_directory_listing_tier_for_product( $pid ) ) {
+		return false;
+	}
+	if ( $pid && function_exists( 'lis_directory_get_job_product_id' ) && lis_directory_get_job_product_id() === $pid ) {
+		return false;
+	}
+	$parent  = $pid ? wc_get_product( $pid ) : null;
+	$foreign = 'listing_pricing_plans' === $product->get_type()
+		|| ( $parent && 'listing_pricing_plans' === $parent->get_type() )
+		|| (bool) preg_match( '/\s[-–]\s*Local Business$/i', wp_strip_all_tags( $product->get_name() ) );
+	return (bool) apply_filters( 'lis_directory_is_foreign_plan_cart_item', $foreign, $item );
+}
+
+function lis_directory_purge_foreign_plan_cart_items() {
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return;
+	}
+	$removed = false;
+	foreach ( WC()->cart->get_cart() as $key => $item ) {
+		if ( lis_directory_is_foreign_plan_cart_item( $item ) ) {
+			WC()->cart->remove_cart_item( $key );
+			$removed = true;
+		}
+	}
+	if ( $removed && function_exists( 'wc_add_notice' ) ) {
+		wc_add_notice( 'We removed an old listing plan that was left in your cart, so you\'re only charged for what you picked here.', 'notice' );
+	}
+}
+
+function lis_directory_purge_foreign_plan_items_on_add( $cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data ) {
+	if ( ! empty( $cart_item_data['lis_listing_id'] ) ) {
+		lis_directory_purge_foreign_plan_cart_items();
+	}
 }
 
 /**

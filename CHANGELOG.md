@@ -1,3 +1,14 @@
+## [0.40.1] — 2026-09-20 — Claim checkout: Vendor Showcase option, Standard-only means Standard-only
+
+Reported from the live claim page ("Choose a plan" → checkout): Vendor Showcase wasn't offered, and checkout showed a $60 "Standard - Local Business" line on top of the $9 Standard.
+
+- **Picker rewritten to the wizard's model** (`lis_directory_render_claim_plan_form()`): Standard shown locked as *Included* at its own price; **Featured** and **Vendor Showcase** as independent checkboxes with `+price`; live running total; Monthly/Annual toggle. Old single-select radios are gone, but `lis_directory_handle_claim_listing()` still honors a stale `lis_listing_plan` post from a page rendered before the update.
+- **Vendor Showcase on a claim:** needs a pending `lis_preferred_vendor` for the payment hook to activate (it only activates one that exists), which the Add Listing wizard makes at submit time and the claim path never did — buying it would have charged $100 and activated nothing. New `lis_directory_ensure_pending_showcase_vendor()` builds it from the listing's saved tagline/logo/card/email and is idempotent (retrying checkout doesn't stack duplicates). Offered only when the listing has a category; shown locked when that category's slot is already taken, and re-checked server-side.
+- **The $60 line:** it wasn't added by this plugin — the line carried no `lis_listing_id` tag, unlike the two real tier lines, i.e. a leftover Directorist plan product sitting in the buyer's persisted WooCommerce cart. `lis_directory_purge_foreign_plan_cart_items()` now removes cart lines whose product (or parent) is Directorist's `listing_pricing_plans` type or is named "… - Local Business", on both checkout entry points (the bundle handler and a Standard-only `?add-to-cart=` via the `woocommerce_add_to_cart` hook), and tells the buyer. Nothing else in the cart is touched (extendable via the `lis_directory_is_foreign_plan_cart_item` filter). **If a $60 line still appears, its product is neither of those — tell me its product type/ID.**
+- `?lis_claim=…` error flags the handler always set are now displayed (`lis_directory_claim_notice_html()`).
+
+Verified in the local WordPress harness with stubbed WooCommerce: picker markup and totals data, Standard-only / +Featured / +Showcase / both / legacy-radio submissions and their checkout URLs, vendor entry created once (pending, linked to the listing, branding copied), taken-slot rejection + locked card, nonce enforcement, and the cart purge (Directorist plan + "Local Business" variation removed; an unrelated product and our own tier line kept).
+
 ## [0.40.0] — 2026-09-20 — Job Board (separate from the business directory)
 
 New, deliberately standalone system for job postings. Nothing here reuses the
