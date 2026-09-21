@@ -385,10 +385,13 @@ function lis_directory_checkout_remove_link( $name, $cart_item, $cart_item_key )
  * it per subscription). Flagged by an option so a price edited in WooCommerce
  * later is never overwritten.
  */
-add_action( 'woocommerce_init', 'lis_directory_migrate_featured_flat_price' );
+// NOT `woocommerce_init`: that fires at init priority 0, before WooCommerce has
+// registered the product post type/taxonomies, so wc_get_product() can't yet
+// resolve a variable product and the migration silently did nothing.
+add_action( 'init', 'lis_directory_migrate_featured_flat_price', 30 );
 
 function lis_directory_migrate_featured_flat_price() {
-	if ( get_option( 'lis_directory_featured_flat_24_240' ) ) {
+	if ( get_option( 'lis_directory_featured_flat_24_240' ) || ! class_exists( 'WooCommerce' ) ) {
 		return;
 	}
 	$pid = (int) get_option( 'lis_directory_featured_listing_product_id' );

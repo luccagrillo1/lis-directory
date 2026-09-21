@@ -1,3 +1,11 @@
+## [0.45.1] — 2026-09-21 — Fix: the Featured $24/$240 migration never ran
+
+Reported from the live claim page: Featured still read $19/mo after updating to 0.45.0.
+
+- **Cause:** the migration was hooked on `woocommerce_init`, which fires at `init` priority 0 — before WooCommerce registers the `product` post type and its taxonomies — so `wc_get_product()` couldn't resolve the variable product yet and the function returned early, every request, without ever setting its flag. Now hooked on `init` at priority 30.
+- **Why it wasn't caught:** the 0.45.0 test called `lis_directory_migrate_featured_flat_price()` directly, in a request where WooCommerce had long finished loading, so it never exercised the hook timing. This time it's tested the way it runs: reset the variations to 19/190, start a *fresh* request, and check the prices and flag after WordPress boots on its own.
+- Verified on real WooCommerce 11.1: with the old hook the fresh request left 19/190 and no flag (reproduced the bug); with the fix it lands on 24/24 and 240/240 with the flag set, and a later request doesn't overwrite an edited price.
+
 ## [0.45.0] — 2026-09-21 — Featured flat $24/$240; claim-page header fix
 
 - **Featured is flat $24/mo, $240/yr and includes Standard** (requested "to match" Showcase's flat pricing). Previously $19/$190 stacked on Standard's $9/$90 ($28).

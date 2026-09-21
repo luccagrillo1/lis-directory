@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.45.0
+Stable tag: 0.45.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.45.1 =
+* Fixed: 0.45.0's one-time change of the Featured product to $24/month and $240/year never took effect, so the plan cards still showed Featured at $19. It now applies on the next page load after updating.
 
 = 0.45.0 =
 * Featured is now a flat $24/month or $240/year that includes Standard (it was a $19/$190 add-on stacked on Standard's $9/$90, $28 total). On update the plugin sets the Featured product's Monthly and Annually prices to $24 and $240 once — existing subscribers keep the price they signed up at. Checkout for Featured is a single line, like Vendor Showcase, and Standard is granted with it (and taken back if Featured ends, unless Standard was paid for separately). Tiers are now Standard $9/$90 · Featured $24/$240 · Vendor Showcase $100/$1,000.
