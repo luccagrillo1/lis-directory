@@ -3,21 +3,21 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.42.0
+ * Version:           0.43.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
  * License:           GPL v2 or later
  * Text Domain:       lis-directory
  *
- * LIS Directory — v0.42.0 (Plans are now single-select tiers that each include the ones below: Standard < Featured < Vendor Showcase, with Showcase carrying the Featured benefits)
+ * LIS Directory — v0.43.0 (New one-click $1 Payment Test under Vendor Showcase: a private one-time test product that deletes itself after the payment goes through)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.42.0' );
+define( 'LIS_DIRECTORY_VERSION', '0.43.0' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
@@ -53,6 +53,7 @@ require_once LIS_DIRECTORY_PATH . 'includes/jobs-template.php';
 require_once LIS_DIRECTORY_PATH . 'includes/jobs-submission.php';
 require_once LIS_DIRECTORY_PATH . 'includes/jobs-pricing.php';
 require_once LIS_DIRECTORY_PATH . 'includes/showcase-slots.php';
+require_once LIS_DIRECTORY_PATH . 'includes/payment-test.php';
 
 register_activation_hook( __FILE__, function () {
 	lis_directory_register_cpt();

@@ -1,3 +1,14 @@
+## [0.43.0] — 2026-09-21 — $1 Payment Test
+
+Requested: a one-time $1 test purchase that's deleted afterward, to run a real card through checkout.
+
+- **`includes/payment-test.php`, Vendor Showcase → Payment Test** (manage_options / manage_woocommerce). "Start $1 test" creates a **private**, catalog-hidden, virtual, tax-free, sold-individually simple product at exactly $1.00 (or reuses the existing one), removes any earlier test line from your cart (leaving the rest), adds it, and redirects to checkout. `woocommerce_is_purchasable` additionally refuses anyone without admin caps, so a leaked URL can't be used.
+- **Auto-delete:** on `processing`/`completed` for an order containing it, the order gets a note, is remembered as "last test", and a single cron event ~60s later force-deletes the product. Deliberately not inline — deleting a product while WooCommerce is still finishing the order that references it (stock, emails) invites warnings. The paid order keeps its own copy of the line item, so it still reads correctly. "Delete test product now" does the same on demand, for an abandoned test.
+- The page shows the last test's order, status, total, payment method and transaction id.
+- **Scope:** gateway + WooCommerce order processing only. It intentionally does not run the listing/claim/job handlers (they key off the real tier products), so it cannot publish, transfer or grant anything.
+
+Verified against real WooCommerce 11.1 (installed in the local SQLite WordPress harness, replacing the earlier stubs): product attributes (private/hidden/virtual/$1/no tax), admin-only purchasability, add-to-cart and a cart total of exactly $1.00, a paid order → note + scheduled cleanup + product still present until the cleanup runs → product force-deleted while the order still reads correctly, the admin page in both states, start/delete handlers with nonce and capability checks. The same real-WooCommerce harness also exercised, for the first time, the Job Posting product creation (draft $25, no duplicate on second click), real cart tagging, a real checkout-created order, and the payment handler (publish, ~30-day expiry, no double extension on processing→completed).
+
 ## [0.42.0] — 2026-09-20 — Single-select tiers that include the ones below
 
 Requested: "only let one plan be selected at a time so each tier above includes the ones below", and Vendor Showcase should include the Featured benefits.
