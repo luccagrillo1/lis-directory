@@ -255,8 +255,8 @@ function lis_directory_render_claim_box( $listing_id ) {
  *
  * Single-select, and each tier includes the ones below it: Standard <
  * Featured < Vendor Showcase. A card's price is the WHOLE monthly/annual
- * total for that tier (Standard is bundled into Featured and Showcase, and
- * Showcase carries the Featured benefits at no extra charge), so what's on the
+ * total for that tier: Featured is Standard + Featured; Vendor Showcase is its
+ * own flat price and already includes Standard and Featured — so what's on the
  * card is what checkout charges.
  *
  * @param int    $listing_id
@@ -320,9 +320,9 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 		} elseif ( $holder ) {
 			$blurb = sprintf( 'The %s showcase slot is currently held by %s.', $cname, $holder->post_title );
 		} else {
-			$blurb = 'Everything in Featured, plus the exclusive one-per-category slot for ' . $cname . ' — your logo in the showcase. Uses the tagline, logo and business card saved on this listing, so save any changes above first.';
+			$blurb = 'Everything in Featured (Standard included), plus the exclusive one-per-category slot for ' . $cname . ' — your logo in the showcase. Uses the tagline, logo and business card saved on this listing, so save any changes above first.';
 		}
-		$tiers['showcase'] = array( 'label' => 'Vendor Showcase', 'blurb' => $blurb, 'm' => $std['m'] + $vm, 'y' => $std['y'] + $vy, 'disabled' => (bool) $holder );
+		$tiers['showcase'] = array( 'label' => 'Vendor Showcase', 'blurb' => $blurb, 'm' => $vm, 'y' => $vy, 'disabled' => (bool) $holder );
 	}
 
 	$first = null;

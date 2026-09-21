@@ -1,3 +1,14 @@
+## [0.44.0] — 2026-09-21 — Vendor Showcase is a flat $100 / $1,000 again
+
+Requested: "put vendor showcase back at a flat $100/m and $1000/yr." In v0.42.0 the Showcase card and checkout were Standard + Showcase ($109), because Standard was always bundled in.
+
+- **Bundle:** `lis_directory_handle_bundle_checkout()` no longer adds a Standard line when Showcase is in the cart — Showcase is the top tier and already includes it. Featured is unchanged (Standard + Featured = $28).
+- **Cards** (claim flow + Add Listing wizard): Showcase shows its own price ($100/mo, $1,000/yr); copy says "Everything in Featured (Standard included)".
+- **Standard is granted, not bought:** `lis_directory_sync_featured_with_showcase()` now also sets `_lis_listing_standard_active` (flag `_lis_listing_standard_via_showcase`) while the showcase vendor is Active, and takes it back when it ends — only if Showcase granted it. Paying for Standard clears the flag. `standard_active` is what stops a later Featured upgrade from re-adding a Standard line, so a Showcase holder buying Featured is not charged Standard.
+- **Not handled:** someone already on a paid Standard subscription who then buys Showcase pays for both; nothing here touches billing, so cancel the Standard subscription by hand.
+
+Verified on real WooCommerce 11.1 (variable Standard/Featured/Showcase products with Monthly/Annually variations, real cart and a real checkout-created order): cards read $9 / $28 / $100 and $90 / $280 / $1,000; Showcase checkout is exactly one line — $100 monthly, $1,000 annual (cart total exactly $1000); Featured still $28 across two lines; the Showcase order publishes the draft, activates the vendor, and grants Standard and Featured; a later Featured upgrade adds no Standard line; Showcase ending takes both back; a paid Standard survives it.
+
 ## [0.43.2] — 2026-09-21 — Back to homepage button on the order-received page
 
 Requested after the first real $1 card test succeeded (Visa debit, order #8664): the thank-you page had no way forward.

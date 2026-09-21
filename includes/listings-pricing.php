@@ -194,7 +194,10 @@ function lis_directory_handle_bundle_checkout() {
 	lis_directory_purge_foreign_plan_cart_items();
 
 	$std_pid   = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
-	$needs_std = $std_pid && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
+	// Vendor Showcase is the top tier and is a flat price that already includes
+	// Standard (and Featured), so it never gets a separate Standard line —
+	// Standard is granted with it instead (lis_directory_sync_featured_with_showcase()).
+	$needs_std = $std_pid && ! in_array( 'showcase', $tiers, true ) && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
 
 	$upgrade_pids = array();
 	foreach ( $tiers as $tier ) {
@@ -273,10 +276,10 @@ function lis_directory_read_plan_upgrades( array $src ) {
 }
 
 /**
- * Vendor Showcase includes the Featured benefits: while a listing's showcase
- * vendor is Active the listing is Featured, and when the vendor stops being
+ * Vendor Showcase includes the Featured AND Standard benefits: while a listing's
+ * showcase vendor is Active the listing is Featured and Standard-active, and when the vendor stops being
  * Active that Featured is taken back — but only if Showcase is what granted
- * it (`_lis_listing_featured_via_showcase`), never a Featured someone paid for
+ * it (`_lis_listing_*_via_showcase`), never one someone paid for
  * or an admin ticked by hand. Hooked on the plugin's single status choke point
  * so payment, manual approval and subscription-end all behave the same.
  */
@@ -287,14 +290,22 @@ function lis_directory_sync_featured_with_showcase( $vendor_id, $new_status ) {
 	if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) ) {
 		return;
 	}
-	if ( 'active' === $new_status ) {
-		if ( ! get_post_meta( $listing_id, '_lis_listing_featured', true ) ) {
-			update_post_meta( $listing_id, '_lis_listing_featured', true );
-			update_post_meta( $listing_id, '_lis_listing_featured_via_showcase', 1 );
+	// Each benefit is granted only if the listing doesn't already have it, and
+	// flagged `_via_showcase` so it's only ever taken back if Showcase gave it.
+	$benefits = array(
+		'_lis_listing_featured'        => '_lis_listing_featured_via_showcase',
+		'_lis_listing_standard_active' => '_lis_listing_standard_via_showcase',
+	);
+	foreach ( $benefits as $meta_key => $flag_key ) {
+		if ( 'active' === $new_status ) {
+			if ( ! get_post_meta( $listing_id, $meta_key, true ) ) {
+				update_post_meta( $listing_id, $meta_key, true );
+				update_post_meta( $listing_id, $flag_key, 1 );
+			}
+		} elseif ( get_post_meta( $listing_id, $flag_key, true ) ) {
+			delete_post_meta( $listing_id, $flag_key );
+			update_post_meta( $listing_id, $meta_key, false );
 		}
-	} elseif ( get_post_meta( $listing_id, '_lis_listing_featured_via_showcase', true ) ) {
-		delete_post_meta( $listing_id, '_lis_listing_featured_via_showcase' );
-		update_post_meta( $listing_id, '_lis_listing_featured', false );
 	}
 }
 
@@ -727,6 +738,7 @@ function lis_directory_handle_featured_listing_order( $order_id ) {
 				}
 			}
 			update_post_meta( $listing_id, '_lis_listing_standard_active', true );
+			delete_post_meta( $listing_id, '_lis_listing_standard_via_showcase' ); // Now genuinely paid for.
 			update_post_meta( $listing_id, '_lis_listing_standard_order_id', $linked_id );
 		}
 

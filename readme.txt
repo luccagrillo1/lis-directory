@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.43.2
+Stable tag: 0.44.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.44.0 =
+* Vendor Showcase is back to a flat $100/month or $1,000/year. It includes Standard and Featured, so checkout has just the one Showcase line — no separate $9 Standard on top. Standard and Featured are granted while the showcase is Active and taken back when it ends (never one that was paid for separately). Standard and Featured tiers are unchanged ($9 and $28/month).
+* Someone already paying for Standard who buys Showcase pays for both; cancel the old Standard subscription in WooCommerce by hand.
 
 = 0.43.2 =
 * The order-received (thank-you) page now ends with a "Back to homepage" button, so it isn't a dead end after paying. Shown for every order.

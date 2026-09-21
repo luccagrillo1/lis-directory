@@ -404,9 +404,9 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			$vs_year_p  = $vs_year_v && wc_get_product( $vs_year_v ) ? wc_get_product( $vs_year_v )->get_price() : null;
 			$plan_tiers['showcase'] = array(
 				'label' => 'Vendor Showcase',
-				'blurb' => 'Everything in Featured, plus the exclusive one-per-category slot — your logo in the showcase.',
-				'm'     => $std_m + $raw_price( $vs_month_p ),
-				'y'     => $std_y + $raw_price( $vs_year_p ),
+				'blurb' => 'Everything in Featured (Standard included), plus the exclusive one-per-category slot — your logo in the showcase.',
+				'm'     => $raw_price( $vs_month_p ),
+				'y'     => $raw_price( $vs_year_p ),
 			);
 		}
 
