@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.43.1
+Stable tag: 0.43.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.43.2 =
+* The order-received (thank-you) page now ends with a "Back to homepage" button, so it isn't a dead end after paying. Shown for every order.
 
 = 0.43.1 =
 * The checkout page's order review now has a × in front of each line, so you can remove an unwanted or leftover item without going back to the cart. (A Standard listing line that's bundled with Featured/Showcase for the same listing has no ×, since it's the required foundation for them — remove the upgrade line instead.)

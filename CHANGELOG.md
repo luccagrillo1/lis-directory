@@ -1,3 +1,10 @@
+## [0.43.2] — 2026-09-21 — Back to homepage button on the order-received page
+
+Requested after the first real $1 card test succeeded (Visa debit, order #8664): the thank-you page had no way forward.
+
+- `lis_directory_thankyou_home_button()` on `woocommerce_thankyou` at priority 100 — after WooCommerce's order details and billing address (which sit at 10) — for every order, listing/job/test alike. The listing and job thank-you blocks keep their own more specific buttons above it. Reuses `.lis-listing-thankyou-btn`, left-aligned to match the page.
+- Verified on real WooCommerce 11.1 in the local harness: rendered once, links to the home URL, and appears after both the order details and the billing address.
+
 ## [0.43.1] — 2026-09-21 — Remove items from the checkout page
 
 Reported: no way to X a line out of the cart while on checkout (the theme's checkout has no remove control; only /cart/ does).

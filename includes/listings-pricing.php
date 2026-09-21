@@ -67,6 +67,8 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	// (no admin-post handler), so clear leftovers from an add-to-cart hook too.
 	add_action( 'woocommerce_add_to_cart', 'lis_directory_purge_foreign_plan_items_on_add', 10, 6 );
 	add_filter( 'woocommerce_cart_item_name', 'lis_directory_checkout_remove_link', 20, 3 );
+	// Priority 100: after WooCommerce's order details and billing address.
+	add_action( 'woocommerce_thankyou', 'lis_directory_thankyou_home_button', 100 );
 
 	if ( class_exists( 'WC_Subscriptions' ) ) {
 		add_action( 'woocommerce_subscription_status_cancelled', 'lis_directory_handle_featured_listing_subscription_ended' );
@@ -311,6 +313,17 @@ function lis_directory_backfill_showcase_featured() {
 		lis_directory_sync_featured_with_showcase( $vendor->ID, 'active' );
 	}
 	update_option( 'lis_directory_showcase_featured_backfill', 1 );
+}
+
+/**
+ * A "Back to homepage" button at the very end of the order-received page, so
+ * the page isn't a dead end after paying. Shown for every order (listing, job
+ * or otherwise); the listing/job thank-you blocks above keep their own more
+ * specific buttons.
+ */
+function lis_directory_thankyou_home_button( $order_id ) {
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	echo '<p class="lis-listing-thankyou-actions" style="margin-top:28px;justify-content:flex-start;"><a class="lis-listing-thankyou-btn" href="' . esc_url( home_url( '/' ) ) . '">Back to homepage</a></p>';
 }
 
 /**
