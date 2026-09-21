@@ -1,3 +1,15 @@
+## [0.42.0] — 2026-09-20 — Single-select tiers that include the ones below
+
+Requested: "only let one plan be selected at a time so each tier above includes the ones below", and Vendor Showcase should include the Featured benefits.
+
+- **Picker (Add Listing wizard + Claim flow):** radios `lis_listing_plan` = `standard` | `featured` | `showcase` replace the Standard-locked + two-checkbox model. Standard is preselected. Card price = the whole tier total (Standard $9 · Featured $9+$19 = $28 · Showcase $9+$100 = $109), so the card matches checkout. Prices are unchanged in WooCommerce; only how they're presented/bundled changed. Taken Showcase slots stay disabled and named (claim flow); the wizard keeps its client-side "category occupied" warning.
+- **Server mapping:** `lis_directory_read_plan_upgrades()` turns the choice into at most one upgrade product (Standard is still bundled in by the checkout builder). A page rendered before this update still posts `lis_listing_upgrades[]` checkboxes: those are honored, and Featured+Showcase collapses to Showcase only so nobody is double-charged.
+- **Showcase includes Featured:** `lis_directory_sync_featured_with_showcase()` on `lis_directory_vendor_status_changed` — vendor Active ⇒ listing Featured (flagged `_lis_listing_featured_via_showcase`); vendor leaves Active ⇒ Featured revoked only if that flag is set. Featured that was paid for (handler clears the flag), or ticked by an admin, is never revoked. Because everything already routes through `lis_directory_set_vendor_status()`, payment, manual approval, release and subscription-end all behave the same.
+- **Catch-up:** one-time `init` backfill (option `lis_directory_showcase_featured_backfill`) makes already-Active Showcase listings Featured.
+- **Not changed:** someone already paying for Featured who later buys Showcase is charged for both — the earlier Featured subscription has to be cancelled by hand in WooCommerce (nothing here touches billing).
+
+Verified in the local WordPress harness (stubbed WooCommerce): picker markup/totals/default/disabled state; plan mapping incl. legacy and both-boxes; Featured granted/revoked with the vendor status and never revoked when hand-set or paid for; a full Showcase payment (draft → published, vendor Active, listing Featured, no Featured product in the order); HTTP claim submissions for each tier and the stale both-boxes post; the wizard form render and real multipart wizard submissions for each choice (checkout URL, `_lis_listing_pending_tier`, pending vendor created only for Showcase); backfill runs once.
+
 ## [0.41.0] — 2026-09-20 — Showcase Slots admin page, checkbox Features box, false "slot taken" fix
 
 - **Showcase Slots** (`includes/showcase-slots.php`, Vendor Showcase → Showcase Slots): held slots table with Release (status → Expired via `lis_directory_set_vendor_status()`, so stock sync etc. react as for a subscription ending; does not touch billing), Waiting table (pending entries, Approve/Reject reuse the existing handlers), and a Slot lookup by listing category showing Open/Taken, the matched Showcase category, and the holder.

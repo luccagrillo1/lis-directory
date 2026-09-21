@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.41.0
+Stable tag: 0.42.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.42.0 =
+* Plans are now pick-one tiers that each include the ones below: Standard, Featured (Standard + Featured badge and priority placement), and Vendor Showcase (everything in Featured + the exclusive category slot). Each card shows the full price for that tier, and that's exactly what checkout charges. Applies to the Add Listing wizard and the Claim flow.
+* Vendor Showcase now includes Featured: while a listing's showcase is Active it's Featured, and that's taken back when the showcase ends (but never a Featured that was separately paid for or set by hand). Showcase buyers are no longer also charged for the Featured product. Existing active Showcase listings are made Featured once on update.
 
 = 0.41.0 =
 * New: Vendor Showcase → Showcase Slots admin page — every held slot (vendor, listing, term end, order) with a one-click Release, the pending entries waiting on payment with Approve/Reject, and a category lookup that says whether a slot is Open or Taken and by whom.

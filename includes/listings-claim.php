@@ -250,15 +250,14 @@ function lis_directory_render_claim_box( $listing_id ) {
 /**
  * The plan picker + "Claim & subscribe" form, shared by the public claim box
  * above (on an already-published listing) and the private draft-claim page
- * (lis_directory_maybe_render_claim_token_page() below) — the token only
- * changes how the recipient reaches this form, not what it does. Returns ''
- * when no tier product is configured/purchasable yet.
+ * (lis_directory_maybe_render_claim_token_page() below). Returns '' when no
+ * tier product is configured/purchasable yet.
  *
- * Same model as the Add Listing wizard's plan step: Standard is the
- * always-included baseline (shown locked, never a choice), and Featured /
- * Vendor Showcase are independent checkboxes that each add their own price on
- * top, with a live running total — so a Standard-only claim is exactly the
- * Standard price and nothing else.
+ * Single-select, and each tier includes the ones below it: Standard <
+ * Featured < Vendor Showcase. A card's price is the WHOLE monthly/annual
+ * total for that tier (Standard is bundled into Featured and Showcase, and
+ * Showcase carries the Featured benefits at no extra charge), so what's on the
+ * card is what checkout charges.
  *
  * @param int    $listing_id
  * @param string $token Optional — carried through as a hidden field so
@@ -268,9 +267,6 @@ function lis_directory_render_claim_box( $listing_id ) {
  */
 function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 	$fmt = function ( $price ) {
-		if ( null === $price || '' === $price ) {
-			return '—';
-		}
 		$is_whole = ( (float) $price == (int) round( (float) $price ) );
 		if ( ! function_exists( 'wc_price' ) ) {
 			return '$' . ( $is_whole ? (string) (int) $price : number_format( (float) $price, 2 ) );
@@ -287,45 +283,54 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 		return '';
 	}
 
-	$std_m = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] : null;
-	$std_y = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] : null;
+	$std = array( 'm' => 0, 'y' => 0 );
+	if ( $std_pid ) {
+		$std['m'] = $num( lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] );
+		$std['y'] = $num( lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] );
+	}
 
-	$upgrades = array();
+	$tiers = array();
+	if ( $std_pid ) {
+		$tiers['standard'] = array( 'label' => 'Standard', 'blurb' => 'Your business listed in the directory.', 'm' => $std['m'], 'y' => $std['y'], 'disabled' => false );
+	}
 	if ( $feat_pid ) {
-		$fm = lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'];
-		$fy = lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'];
-		$upgrades['featured'] = array( 'label' => 'Featured', 'blurb' => 'A Featured badge and priority placement.', 'm' => $fm, 'y' => $fy, 'disabled' => false );
+		$fm = $num( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] );
+		$fy = $num( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] );
+		$tiers['featured'] = array( 'label' => 'Featured', 'blurb' => 'Everything in Standard, plus a Featured badge and priority placement.', 'm' => $std['m'] + $fm, 'y' => $std['y'] + $fy, 'disabled' => false );
 	}
 
 	// Vendor Showcase: the exclusive one-per-category slot. The category a
-	// buyer occupies is the listing's OWN category, so it's only offerable when
-	// the listing has one; if that slot is already taken it's shown but locked.
+	// buyer occupies is the listing's OWN (most specific) category, so it's only
+	// offerable when the listing has one; if that slot is already held it's
+	// shown but locked.
 	$vs_pid     = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
 	$vs_product = ( $vs_pid && function_exists( 'wc_get_product' ) ) ? wc_get_product( $vs_pid ) : null;
 	$cat_id     = function_exists( 'lis_directory_get_listing_showcase_term' ) ? lis_directory_get_listing_showcase_term( $listing_id ) : 0;
 	if ( $vs_product && 'publish' === $vs_product->get_status() && $cat_id ) {
 		$vm_id  = lis_directory_get_showcase_variation( 0, 'month' );
 		$vy_id  = lis_directory_get_showcase_variation( 0, 'year' );
-		$vm     = $vm_id && wc_get_product( $vm_id ) ? wc_get_product( $vm_id )->get_price() : null;
-		$vy     = $vy_id && wc_get_product( $vy_id ) ? wc_get_product( $vy_id )->get_price() : null;
+		$vm     = $vm_id && wc_get_product( $vm_id ) ? $num( wc_get_product( $vm_id )->get_price() ) : 0;
+		$vy     = $vy_id && wc_get_product( $vy_id ) ? $num( wc_get_product( $vy_id )->get_price() ) : 0;
 		$holder = function_exists( 'lis_directory_get_category_showcase_holder' ) ? lis_directory_get_category_showcase_holder( $cat_id ) : null;
 		$term   = get_term( $cat_id, 'lis_listing_category' );
-		$cname  = ( $term && ! is_wp_error( $term ) ) ? $term->name : 'This category';
+		$cname  = ( $term && ! is_wp_error( $term ) ) ? $term->name : 'this category';
 		$mine   = $holder && (int) get_post_meta( $holder->ID, '_lis_pv_listing_id', true ) === (int) $listing_id;
 		if ( $mine ) {
 			$blurb = 'Already active on this listing.';
 		} elseif ( $holder ) {
 			$blurb = sprintf( 'The %s showcase slot is currently held by %s.', $cname, $holder->post_title );
 		} else {
-			$blurb = 'The exclusive one-per-category slot for ' . $cname . ' — your logo in the showcase. Uses the tagline, logo and business card saved on this listing, so save any changes above first.';
+			$blurb = 'Everything in Featured, plus the exclusive one-per-category slot for ' . $cname . ' — your logo in the showcase. Uses the tagline, logo and business card saved on this listing, so save any changes above first.';
 		}
-		$upgrades['showcase'] = array(
-			'label'    => 'Vendor Showcase',
-			'blurb'    => $blurb,
-			'm'        => $vm,
-			'y'        => $vy,
-			'disabled' => (bool) $holder,
-		);
+		$tiers['showcase'] = array( 'label' => 'Vendor Showcase', 'blurb' => $blurb, 'm' => $std['m'] + $vm, 'y' => $std['y'] + $vy, 'disabled' => (bool) $holder );
+	}
+
+	$first = null;
+	foreach ( $tiers as $key => $t ) {
+		if ( ! $t['disabled'] ) {
+			$first = $key;
+			break;
+		}
 	}
 
 	ob_start();
@@ -342,25 +347,16 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 			<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
 			<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
 		</div>
-		<div class="lis-listing-plans">
-			<?php if ( $std_pid ) : ?>
-				<label class="lis-listing-plan-card lis-listing-plan-card--included">
-					<input type="checkbox" checked disabled aria-hidden="true" />
-					<span class="lis-listing-plan-name">Standard <span class="lis-listing-plan-included-tag">Included</span></span>
-					<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt( $std_m ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt( $std_y ) . '/yr' ); ?>"><?php echo esc_html( $fmt( $std_m ) ); ?>/mo</span>
-					<span class="lis-listing-plan-blurb">Claim it and keep it listed in the directory.</span>
-				</label>
-			<?php endif; ?>
-			<?php foreach ( $upgrades as $key => $t ) : ?>
+		<div class="lis-listing-plans" role="radiogroup" aria-label="Plan">
+			<?php foreach ( $tiers as $key => $t ) : ?>
 				<label class="lis-listing-plan-card"<?php echo $t['disabled'] ? ' style="opacity:.6"' : ''; ?>>
-					<input type="checkbox" name="lis_listing_upgrades[]" value="<?php echo esc_attr( $key ); ?>" data-amount-month="<?php echo esc_attr( $num( $t['m'] ) ); ?>" data-amount-year="<?php echo esc_attr( $num( $t['y'] ) ); ?>"<?php echo $t['disabled'] ? ' disabled' : ''; ?> />
+					<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>"<?php echo $key === $first ? ' checked' : ''; ?><?php echo $t['disabled'] ? ' disabled' : ''; ?> />
 					<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
-					<span class="lis-listing-plan-price" data-price-month="+<?php echo esc_attr( $fmt( $t['m'] ) . '/mo' ); ?>" data-price-year="+<?php echo esc_attr( $fmt( $t['y'] ) . '/yr' ); ?>">+<?php echo esc_html( $fmt( $t['m'] ) ); ?>/mo</span>
+					<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt( $t['m'] ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt( $t['y'] ) . '/yr' ); ?>"><?php echo esc_html( $fmt( $t['m'] ) ); ?>/mo</span>
 					<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
 				</label>
 			<?php endforeach; ?>
 		</div>
-		<p class="lis-listing-plan-total">Total: <strong class="lis-listing-plan-total-amount" data-std-month="<?php echo esc_attr( $num( $std_m ) ); ?>" data-std-year="<?php echo esc_attr( $num( $std_y ) ); ?>"><?php echo esc_html( $std_pid ? $fmt( $std_m ) : '—' ); ?>/mo</strong></p>
 		<p><button type="submit" class="lis-listing-claim-submit">Claim &amp; subscribe</button></p>
 	</form>
 	<script>
@@ -370,25 +366,13 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 		// never match — walk back to the previous element instead.
 		var form = document.currentScript.previousElementSibling;
 		if ( ! form || 'FORM' !== form.tagName ) { return; }
-		var totalEl = form.querySelector( '.lis-listing-plan-total-amount' );
-		function fmtDollars( n ) {
-			n = Math.round( n * 100 ) / 100;
-			return '$' + ( n % 1 === 0 ? n.toFixed( 0 ) : n.toFixed( 2 ) );
-		}
 		function sync() {
 			var year = 'year' === ( ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month' );
 			form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
 				el.textContent = year ? el.dataset.priceYear : el.dataset.priceMonth;
 			} );
-			if ( totalEl ) {
-				var total = parseFloat( totalEl.dataset[ year ? 'stdYear' : 'stdMonth' ] ) || 0;
-				form.querySelectorAll( 'input[name="lis_listing_upgrades[]"]:checked' ).forEach( function ( c ) {
-					total += parseFloat( c.dataset[ year ? 'amountYear' : 'amountMonth' ] ) || 0;
-				} );
-				totalEl.textContent = fmtDollars( total ) + ( year ? '/yr' : '/mo' );
-			}
 		}
-		form.querySelectorAll( 'input[name="lis_listing_billing"], input[name="lis_listing_upgrades[]"]' ).forEach( function ( r ) {
+		form.querySelectorAll( 'input[name="lis_listing_billing"]' ).forEach( function ( r ) {
 			r.addEventListener( 'change', sync );
 		} );
 		sync();
@@ -419,16 +403,9 @@ function lis_directory_handle_claim_listing() {
 		exit;
 	}
 
-	$upgrades = array_values( array_intersect(
-		array( 'featured', 'showcase' ),
-		array_map( 'sanitize_key', (array) ( isset( $_POST['lis_listing_upgrades'] ) ? wp_unslash( $_POST['lis_listing_upgrades'] ) : array() ) )
-	) );
-	// A page rendered before this form switched to checkboxes still posts the
-	// old single-select `lis_listing_plan` — honor it rather than dropping it.
-	$legacy = isset( $_POST['lis_listing_plan'] ) ? sanitize_key( wp_unslash( $_POST['lis_listing_plan'] ) ) : '';
-	if ( in_array( $legacy, array( 'featured', 'showcase' ), true ) && ! in_array( $legacy, $upgrades, true ) ) {
-		$upgrades[] = $legacy;
-	}
+	// Single-select tiers, each including those below (see
+	// lis_directory_read_plan_upgrades()) — at most one upgrade product.
+	$upgrades = lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
 	$billing = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
 
 	// Vendor Showcase needs a pending vendor entry for payment to activate (the

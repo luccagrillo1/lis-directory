@@ -243,6 +243,76 @@ function lis_directory_handle_bundle_checkout() {
 }
 
 /**
+ * The upgrades a submitted plan choice means. Plans are single-select tiers
+ * that each include the ones below (Standard < Featured < Vendor Showcase), so
+ * the choice maps to at most ONE upgrade product: Standard is always bundled in
+ * by the checkout builder, and Vendor Showcase carries the Featured benefits
+ * itself (see lis_directory_sync_featured_with_showcase()) — a Showcase buyer is
+ * never also charged for the Featured product.
+ *
+ * Reads the new `lis_listing_plan` radio; a page rendered before the picker
+ * became single-select still posts `lis_listing_upgrades[]` checkboxes, so
+ * those are honored too (Showcase wins over Featured).
+ *
+ * @param array $src Unslashed request data ($_POST).
+ * @return string[] array() (Standard only), array('featured') or array('showcase').
+ */
+function lis_directory_read_plan_upgrades( array $src ) {
+	$plan = isset( $src['lis_listing_plan'] ) ? sanitize_key( $src['lis_listing_plan'] ) : '';
+	if ( in_array( $plan, array( 'standard', 'featured', 'showcase' ), true ) ) {
+		return 'standard' === $plan ? array() : array( $plan );
+	}
+	$legacy = array_map( 'sanitize_key', (array) ( isset( $src['lis_listing_upgrades'] ) ? $src['lis_listing_upgrades'] : array() ) );
+	if ( in_array( 'showcase', $legacy, true ) ) {
+		return array( 'showcase' );
+	}
+	return in_array( 'featured', $legacy, true ) ? array( 'featured' ) : array();
+}
+
+/**
+ * Vendor Showcase includes the Featured benefits: while a listing's showcase
+ * vendor is Active the listing is Featured, and when the vendor stops being
+ * Active that Featured is taken back — but only if Showcase is what granted
+ * it (`_lis_listing_featured_via_showcase`), never a Featured someone paid for
+ * or an admin ticked by hand. Hooked on the plugin's single status choke point
+ * so payment, manual approval and subscription-end all behave the same.
+ */
+add_action( 'lis_directory_vendor_status_changed', 'lis_directory_sync_featured_with_showcase', 10, 2 );
+
+function lis_directory_sync_featured_with_showcase( $vendor_id, $new_status ) {
+	$listing_id = (int) get_post_meta( $vendor_id, '_lis_pv_listing_id', true );
+	if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) ) {
+		return;
+	}
+	if ( 'active' === $new_status ) {
+		if ( ! get_post_meta( $listing_id, '_lis_listing_featured', true ) ) {
+			update_post_meta( $listing_id, '_lis_listing_featured', true );
+			update_post_meta( $listing_id, '_lis_listing_featured_via_showcase', 1 );
+		}
+	} elseif ( get_post_meta( $listing_id, '_lis_listing_featured_via_showcase', true ) ) {
+		delete_post_meta( $listing_id, '_lis_listing_featured_via_showcase' );
+		update_post_meta( $listing_id, '_lis_listing_featured', false );
+	}
+}
+
+/**
+ * One-time catch-up: Showcase vendors that were already Active before Showcase
+ * started including Featured get it too (the status hook above only fires on a
+ * change). Flagged by an option, so it never re-runs.
+ */
+add_action( 'init', 'lis_directory_backfill_showcase_featured', 30 );
+
+function lis_directory_backfill_showcase_featured() {
+	if ( get_option( 'lis_directory_showcase_featured_backfill' ) || ! function_exists( 'lis_directory_get_all_active_vendors' ) ) {
+		return;
+	}
+	foreach ( lis_directory_get_all_active_vendors() as $vendor ) {
+		lis_directory_sync_featured_with_showcase( $vendor->ID, 'active' );
+	}
+	update_option( 'lis_directory_showcase_featured_backfill', 1 );
+}
+
+/**
  * A cart line that's a leftover from the OLD Directorist listing-plan flow
  * (e.g. "Standard - Local Business", a one-time $60 plan) rather than one of
  * this plugin's own tiers. WooCommerce keeps a logged-in user's cart between
@@ -625,6 +695,7 @@ function lis_directory_handle_featured_listing_order( $order_id ) {
 			}
 			update_post_meta( $listing_id, '_lis_listing_featured', true );
 			update_post_meta( $listing_id, '_lis_listing_featured_order_id', $linked_id );
+			delete_post_meta( $listing_id, '_lis_listing_featured_via_showcase' ); // Now genuinely paid for — a later Showcase end must not revoke it.
 		}
 
 		if ( 'showcase' === $tier ) {

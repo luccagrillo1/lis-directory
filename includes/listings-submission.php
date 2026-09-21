@@ -360,35 +360,33 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			return wp_strip_all_tags( wc_price( $price, array( 'decimals' => $decimals ) ) );
 		};
 
-		// Standard is now the always-included baseline (shown as its own
-		// locked/checked card, not a selectable option) — Featured and Vendor
-		// Showcase are independent checkboxes, either or both, each showing
-		// its OWN incremental price (not a bundled total, since Standard is
-		// now visible separately); a live running total below the cards adds
-		// them up so nothing is a surprise at checkout.
+		// Plans are single-select tiers, each including the ones below it:
+		// Standard < Featured < Vendor Showcase. A card's price is the WHOLE
+		// total for that tier — Standard is bundled into Featured and Showcase,
+		// and Showcase carries the Featured benefits at no extra charge (see
+		// lis_directory_read_plan_upgrades() / lis_directory_sync_featured_with_showcase())
+		// — so the number on the card is what checkout charges.
 		$raw_price = function ( $price ) {
 			return ( null !== $price && '' !== $price ) ? (float) $price : 0;
 		};
-		$std_month_p = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] : null;
-		$std_year_p  = $std_pid ? lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] : null;
-		$std_card    = $std_pid ? array(
-			'label' => 'Standard',
-			'blurb' => 'Your business listed in the directory — included with every listing.',
-			'm'     => $fmt_price( $std_month_p ),
-			'y'     => $fmt_price( $std_year_p ),
-		) : null;
+		$std_m = $std_pid ? $raw_price( lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] ) : 0;
+		$std_y = $std_pid ? $raw_price( lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] ) : 0;
 
 		$plan_tiers = array();
+		if ( $std_pid ) {
+			$plan_tiers['standard'] = array(
+				'label' => 'Standard',
+				'blurb' => 'Your business listed in the directory.',
+				'm'     => $std_m,
+				'y'     => $std_y,
+			);
+		}
 		if ( $feat_pid ) {
-			$feat_month_p = lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'];
-			$feat_year_p  = lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'];
 			$plan_tiers['featured'] = array(
-				'label'   => 'Featured',
-				'blurb'   => 'A Featured badge and priority placement.',
-				'm'       => $fmt_price( $feat_month_p ),
-				'y'       => $fmt_price( $feat_year_p ),
-				'amount_m' => $raw_price( $feat_month_p ),
-				'amount_y' => $raw_price( $feat_year_p ),
+				'label' => 'Featured',
+				'blurb' => 'Everything in Standard, plus a Featured badge and priority placement.',
+				'm'     => $std_m + $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] ),
+				'y'     => $std_y + $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] ),
 			);
 		}
 
@@ -405,12 +403,10 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			$vs_month_p = $vs_month_v && wc_get_product( $vs_month_v ) ? wc_get_product( $vs_month_v )->get_price() : null;
 			$vs_year_p  = $vs_year_v && wc_get_product( $vs_year_v ) ? wc_get_product( $vs_year_v )->get_price() : null;
 			$plan_tiers['showcase'] = array(
-				'label'   => 'Vendor Showcase',
-				'blurb'   => 'The exclusive one-per-category slot — your logo in the showcase.',
-				'm'       => $fmt_price( $vs_month_p ),
-				'y'       => $fmt_price( $vs_year_p ),
-				'amount_m' => $raw_price( $vs_month_p ),
-				'amount_y' => $raw_price( $vs_year_p ),
+				'label' => 'Vendor Showcase',
+				'blurb' => 'Everything in Featured, plus the exclusive one-per-category slot — your logo in the showcase.',
+				'm'     => $std_m + $raw_price( $vs_month_p ),
+				'y'     => $std_y + $raw_price( $vs_year_p ),
 			);
 		}
 
@@ -426,33 +422,24 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		}
 		$vs_contact_url = apply_filters( 'lis_directory_showcase_contact_url', home_url( '/contact/' ) );
 
-		if ( $std_card || ! empty( $plan_tiers ) ) :
+		if ( ! empty( $plan_tiers ) ) :
+			$first_plan = key( $plan_tiers );
 			?>
-			<div class="lis-listing-panel" data-panel-section="Your plan" data-panel-question="Want more eyes on your listing?" data-panel-hint="Standard is included with every listing — add these if you want to stand out more.">
+			<div class="lis-listing-panel" data-panel-section="Your plan" data-panel-question="Pick a plan" data-panel-hint="Each plan includes everything in the ones before it.">
 				<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Billing">
 					<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
 					<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
 				</div>
-				<div class="lis-listing-plans">
-					<?php if ( $std_card ) : ?>
-						<label class="lis-listing-plan-card lis-listing-plan-card--included">
-							<input type="checkbox" checked disabled aria-hidden="true" />
-							<span class="lis-listing-plan-name"><?php echo esc_html( $std_card['label'] ); ?> <span class="lis-listing-plan-included-tag">Included</span></span>
-							<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $std_card['m'] . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $std_card['y'] . '/yr' ); ?>"><?php echo esc_html( $std_card['m'] ); ?>/mo</span>
-							<span class="lis-listing-plan-blurb"><?php echo esc_html( $std_card['blurb'] ); ?></span>
-						</label>
-					<?php endif; ?>
+				<div class="lis-listing-plans" role="radiogroup" aria-label="Plan">
 					<?php foreach ( $plan_tiers as $key => $t ) : ?>
 						<label class="lis-listing-plan-card">
-							<input type="checkbox" name="lis_listing_upgrades[]" value="<?php echo esc_attr( $key ); ?>" data-amount-month="<?php echo esc_attr( $t['amount_m'] ); ?>" data-amount-year="<?php echo esc_attr( $t['amount_y'] ); ?>" />
+							<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" <?php checked( $key, $first_plan ); ?> />
 							<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
-							<span class="lis-listing-plan-price" data-price-month="+<?php echo esc_attr( $t['m'] . '/mo' ); ?>" data-price-year="+<?php echo esc_attr( $t['y'] . '/yr' ); ?>">+<?php echo esc_html( $t['m'] ); ?>/mo</span>
+							<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt_price( $t['m'] ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt_price( $t['y'] ) . '/yr' ); ?>"><?php echo esc_html( $fmt_price( $t['m'] ) ); ?>/mo</span>
 							<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
 						</label>
 					<?php endforeach; ?>
 				</div>
-
-				<p class="lis-listing-plan-total">Total: <strong class="lis-listing-plan-total-amount" data-std-month="<?php echo esc_attr( $raw_price( $std_month_p ) ); ?>" data-std-year="<?php echo esc_attr( $raw_price( $std_year_p ) ); ?>"><?php echo esc_html( $std_card ? $std_card['m'] : '—' ); ?>/mo</strong></p>
 
 				<?php if ( isset( $plan_tiers['showcase'] ) ) : ?>
 					<div class="lis-listing-showcase-fields" hidden data-taken-cats="<?php echo esc_attr( wp_json_encode( $vs_taken_cats ) ); ?>">
@@ -470,31 +457,17 @@ function lis_directory_render_listing_submission_form_shortcode() {
 				var form = document.currentScript.closest( 'form' );
 				if ( ! form ) { return; }
 				var showcase = form.querySelector( '.lis-listing-showcase-fields' );
-				var totalEl = form.querySelector( '.lis-listing-plan-total-amount' );
 				var taken = [];
 				if ( showcase ) {
 					try { taken = JSON.parse( showcase.getAttribute( 'data-taken-cats' ) || '[]' ); } catch ( e ) { taken = []; }
 				}
-				function fmtDollars( n ) {
-					n = Math.round( n * 100 ) / 100;
-					return '$' + ( n % 1 === 0 ? n.toFixed( 0 ) : n.toFixed( 2 ) );
-				}
 				function sync() {
-					var billing = ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month';
+					var year = 'year' === ( ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month' );
 					form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
-						el.textContent = 'year' === billing ? el.dataset.priceYear : el.dataset.priceMonth;
+						el.textContent = year ? el.dataset.priceYear : el.dataset.priceMonth;
 					} );
-					var checked = Array.prototype.slice.call( form.querySelectorAll( 'input[name="lis_listing_upgrades[]"]:checked' ) );
-					var upgradeKeys = checked.map( function ( c ) { return c.value; } );
-					if ( totalEl ) {
-						var total = parseFloat( totalEl.dataset[ 'year' === billing ? 'stdYear' : 'stdMonth' ] ) || 0;
-						checked.forEach( function ( c ) {
-							total += parseFloat( c.dataset[ 'year' === billing ? 'amountYear' : 'amountMonth' ] ) || 0;
-						} );
-						totalEl.textContent = fmtDollars( total ) + ( 'year' === billing ? '/yr' : '/mo' );
-					}
 					if ( showcase ) {
-						var on = upgradeKeys.indexOf( 'showcase' ) !== -1;
+						var on = 'showcase' === ( ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '' );
 						showcase.hidden = ! on;
 						var catSel = form.querySelector( '#lis_listing_category' );
 						var chosen = catSel ? parseInt( catSel.value, 10 ) : 0;
@@ -507,7 +480,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 						if ( submitBtn ) { submitBtn.disabled = !! occupied; }
 					}
 				}
-				form.querySelectorAll( 'input[name="lis_listing_billing"], input[name="lis_listing_upgrades[]"]' ).forEach( function ( r ) {
+				form.querySelectorAll( 'input[name="lis_listing_billing"], input[name="lis_listing_plan"]' ).forEach( function ( r ) {
 					r.addEventListener( 'change', sync );
 				} );
 				var catSel = form.querySelector( '#lis_listing_category' );
@@ -608,13 +581,10 @@ function lis_directory_handle_listing_submission() {
 	$logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', false, $errors );
 	$card_id = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
 
-	// Chosen upgrades (final wizard step, checkboxes — Standard is the always-
-	// included baseline and isn't itself one of these). Skipped entirely for
+	// Chosen plan (final wizard step, single-select tiers that each include the
+	// ones below — see lis_directory_read_plan_upgrades()). Skipped entirely for
 	// a "save as draft".
-	$upgrades = $is_draft ? array() : array_values( array_intersect(
-		array( 'featured', 'showcase' ),
-		array_map( 'sanitize_key', (array) ( isset( $_POST['lis_listing_upgrades'] ) ? wp_unslash( $_POST['lis_listing_upgrades'] ) : array() ) )
-	) );
+	$upgrades = $is_draft ? array() : lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
 	$billing = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
 
 	// Vendor Showcase tier: single-product model. The category the vendor
