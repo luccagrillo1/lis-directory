@@ -1,3 +1,13 @@
+## [0.43.1] — 2026-09-21 — Remove items from the checkout page
+
+Reported: no way to X a line out of the cart while on checkout (the theme's checkout has no remove control; only /cart/ does).
+
+- `lis_directory_checkout_remove_link()` on `woocommerce_cart_item_name`, checkout only (`is_checkout()`, which is also true during the order-review AJAX refresh). Uses WooCommerce's own nonce'd `wc_get_cart_remove_url()`; its handler returns you to the page you clicked from, so you stay on checkout.
+- No × on a Standard tier line while a Featured/Showcase line for the same listing is in the cart — Standard is the required foundation for both, and a × there would let a buyer strip it and still get the upgrade. Remove the upgrade line (Standard then gets its own ×), or change plan.
+- Note: the stale $60 "Standard - Local Business" line in the reported cart survived because it predates the cleanup — that only runs when a claim/upgrade checkout is started, and the Payment Test deliberately leaves the cart alone. Its × is the way to clear it now.
+
+Verified on real WooCommerce 11.1 in the local harness: × present on the stale line, payment-test line and Featured line; absent on bundled Standard, absent off checkout; clicking × through WooCommerce's real remove handler removed the line and redirected back to `/checkout/`, other lines untouched; Standard gets its × once alone. Same run confirmed the foreign-plan cleanup against a real cart (adding our tier lines removed a "Standard - Local Business" line).
+
 ## [0.43.0] — 2026-09-21 — $1 Payment Test
 
 Requested: a one-time $1 test purchase that's deleted afterward, to run a real card through checkout.

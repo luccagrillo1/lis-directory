@@ -66,6 +66,7 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	// Standard-only checkouts go through WooCommerce's own ?add-to-cart= URL
 	// (no admin-post handler), so clear leftovers from an add-to-cart hook too.
 	add_action( 'woocommerce_add_to_cart', 'lis_directory_purge_foreign_plan_items_on_add', 10, 6 );
+	add_filter( 'woocommerce_cart_item_name', 'lis_directory_checkout_remove_link', 20, 3 );
 
 	if ( class_exists( 'WC_Subscriptions' ) ) {
 		add_action( 'woocommerce_subscription_status_cancelled', 'lis_directory_handle_featured_listing_subscription_ended' );
@@ -310,6 +311,40 @@ function lis_directory_backfill_showcase_featured() {
 		lis_directory_sync_featured_with_showcase( $vendor->ID, 'active' );
 	}
 	update_option( 'lis_directory_showcase_featured_backfill', 1 );
+}
+
+/**
+ * A "×" in front of each line in the checkout's order review (the theme's
+ * checkout has no remove control — only the cart page does), so a stale or
+ * unwanted line can be dropped without leaving checkout. WooCommerce's own
+ * remove link is used, so it's nonce-protected, and it sends you back to the
+ * page you clicked from (checkout).
+ *
+ * One exception: a Standard tier line that's bundled with a Featured/Showcase
+ * line for the SAME listing has no ×. Standard is the required foundation for
+ * both, and letting a buyer strip it would sell Featured/Showcase without it;
+ * drop the upgrade line instead (or change plan) and Standard stays on its own.
+ */
+function lis_directory_checkout_remove_link( $name, $cart_item, $cart_item_key ) {
+	if ( ! function_exists( 'is_checkout' ) || ! is_checkout() || ! function_exists( 'wc_get_cart_remove_url' ) ) {
+		return $name;
+	}
+	if ( ! empty( $cart_item['lis_listing_id'] ) && function_exists( 'lis_directory_listing_tier_for_product' )
+		&& 'standard' === lis_directory_listing_tier_for_product( (int) $cart_item['product_id'] ) && WC()->cart ) {
+		foreach ( WC()->cart->get_cart() as $other_key => $other ) {
+			if ( $other_key !== $cart_item_key
+				&& isset( $other['lis_listing_id'] ) && (int) $other['lis_listing_id'] === (int) $cart_item['lis_listing_id']
+				&& in_array( lis_directory_listing_tier_for_product( (int) $other['product_id'] ), array( 'featured', 'showcase' ), true ) ) {
+				return $name;
+			}
+		}
+	}
+	$link = sprintf(
+		'<a href="%s" class="remove lis-checkout-remove" aria-label="%s" title="Remove from cart" style="display:inline-block;margin-right:8px;text-decoration:none;font-size:1.3em;line-height:1;font-weight:700;">&times;</a>',
+		esc_url( wc_get_cart_remove_url( $cart_item_key ) ),
+		esc_attr__( 'Remove this item', 'lis-directory' )
+	);
+	return $link . $name;
 }
 
 /**

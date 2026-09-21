@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.43.0
+Stable tag: 0.43.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.43.1 =
+* The checkout page's order review now has a × in front of each line, so you can remove an unwanted or leftover item without going back to the cart. (A Standard listing line that's bundled with Featured/Showcase for the same listing has no ×, since it's the required foundation for them — remove the upgrade line instead.)
 
 = 0.43.0 =
 * New: Vendor Showcase → Payment Test. One click makes a private, one-time $1.00 test product only an admin can buy, takes you to checkout, and deletes the product about a minute after the payment goes through (or on demand). Proves your real payment gateway works without touching any listing, job or subscription product. Refund the $1 from the order afterward if you want it back.
