@@ -194,10 +194,14 @@ function lis_directory_handle_bundle_checkout() {
 	lis_directory_purge_foreign_plan_cart_items();
 
 	$std_pid   = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
-	// Vendor Showcase is the top tier and is a flat price that already includes
-	// Standard (and Featured), so it never gets a separate Standard line —
-	// Standard is granted with it instead (lis_directory_sync_featured_with_showcase()).
-	$needs_std = $std_pid && ! in_array( 'showcase', $tiers, true ) && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
+	// Featured and Vendor Showcase are flat-priced tiers that each already
+	// include Standard (Showcase also includes Featured), so an upgrade never
+	// gets a separate Standard line — Standard is granted with it instead (see
+	// the featured branch of lis_directory_handle_featured_listing_order() and
+	// lis_directory_sync_featured_with_showcase()). $needs_std is therefore only
+	// ever true for a bare call with no upgrade tier.
+	$std_pid   = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
+	$needs_std = $std_pid && ! array_intersect( array( 'featured', 'showcase' ), $tiers ) && ! (bool) get_post_meta( $listing_id, '_lis_listing_standard_active', true );
 
 	$upgrade_pids = array();
 	foreach ( $tiers as $tier ) {
@@ -251,10 +255,11 @@ function lis_directory_handle_bundle_checkout() {
 /**
  * The upgrades a submitted plan choice means. Plans are single-select tiers
  * that each include the ones below (Standard < Featured < Vendor Showcase), so
- * the choice maps to at most ONE upgrade product: Standard is always bundled in
- * by the checkout builder, and Vendor Showcase carries the Featured benefits
- * itself (see lis_directory_sync_featured_with_showcase()) — a Showcase buyer is
- * never also charged for the Featured product.
+ * the choice maps to at most ONE upgrade product. Featured and Showcase are flat
+ * prices that include Standard (and Showcase includes Featured), so nothing is
+ * stacked: the higher tier grants what's below it instead (see
+ * lis_directory_sync_featured_with_showcase() and the featured branch of
+ * lis_directory_handle_featured_listing_order()).
  *
  * Reads the new `lis_listing_plan` radio; a page rendered before the picker
  * became single-select still posts `lis_listing_upgrades[]` checkboxes, so
@@ -369,6 +374,48 @@ function lis_directory_checkout_remove_link( $name, $cart_item, $cart_item_key )
 		esc_attr__( 'Remove this item', 'lis-directory' )
 	);
 	return $link . $name;
+}
+
+/**
+ * One-time price change: Featured is now a flat $24/month or $240/year that
+ * includes Standard (it was a $19/$190 add-on stacked on Standard's $9/$90).
+ * Sets the configured Featured product's Monthly/Annually variations —
+ * including the subscription price WooCommerce Subscriptions bills from — once.
+ * Existing subscribers keep the price they signed up at (Subscriptions stores
+ * it per subscription). Flagged by an option so a price edited in WooCommerce
+ * later is never overwritten.
+ */
+add_action( 'woocommerce_init', 'lis_directory_migrate_featured_flat_price' );
+
+function lis_directory_migrate_featured_flat_price() {
+	if ( get_option( 'lis_directory_featured_flat_24_240' ) ) {
+		return;
+	}
+	$pid = (int) get_option( 'lis_directory_featured_listing_product_id' );
+	if ( ! $pid || ! function_exists( 'wc_get_product' ) || ! wc_get_product( $pid ) ) {
+		return; // Not configured yet — try again on a later load.
+	}
+	foreach ( array( 'month' => 24, 'year' => 240 ) as $billing => $price ) {
+		$var = lis_directory_resolve_plan_variation( $pid, $billing );
+		if ( empty( $var['variation_id'] ) ) {
+			continue;
+		}
+		$variation = wc_get_product( $var['variation_id'] );
+		if ( ! $variation ) {
+			continue;
+		}
+		$variation->set_regular_price( (string) $price );
+		$variation->set_price( (string) $price );
+		$variation->update_meta_data( '_subscription_price', (string) $price );
+		$variation->save();
+	}
+	if ( class_exists( 'WC_Product_Variable' ) ) {
+		WC_Product_Variable::sync( $pid );
+	}
+	if ( function_exists( 'wc_delete_product_transients' ) ) {
+		wc_delete_product_transients( $pid );
+	}
+	update_option( 'lis_directory_featured_flat_24_240', 1 );
 }
 
 /**
@@ -738,7 +785,7 @@ function lis_directory_handle_featured_listing_order( $order_id ) {
 				}
 			}
 			update_post_meta( $listing_id, '_lis_listing_standard_active', true );
-			delete_post_meta( $listing_id, '_lis_listing_standard_via_showcase' ); // Now genuinely paid for.
+			delete_post_meta( $listing_id, '_lis_listing_standard_via_showcase' ); delete_post_meta( $listing_id, '_lis_listing_standard_via_featured' ); // Now genuinely paid for.
 			update_post_meta( $listing_id, '_lis_listing_standard_order_id', $linked_id );
 		}
 
@@ -756,6 +803,13 @@ function lis_directory_handle_featured_listing_order( $order_id ) {
 			update_post_meta( $listing_id, '_lis_listing_featured', true );
 			update_post_meta( $listing_id, '_lis_listing_featured_order_id', $linked_id );
 			delete_post_meta( $listing_id, '_lis_listing_featured_via_showcase' ); // Now genuinely paid for — a later Showcase end must not revoke it.
+			// Featured is a flat tier that includes Standard — grant it (flagged, so
+			// it's only taken back if Featured is what gave it) unless it's already
+			// active from its own subscription.
+			if ( ! get_post_meta( $listing_id, '_lis_listing_standard_active', true ) ) {
+				update_post_meta( $listing_id, '_lis_listing_standard_active', true );
+				update_post_meta( $listing_id, '_lis_listing_standard_via_featured', 1 );
+			}
 		}
 
 		if ( 'showcase' === $tier ) {
@@ -851,6 +905,11 @@ function lis_directory_handle_featured_listing_subscription_ended( $subscription
 	}
 
 	update_post_meta( $listings[0], '_lis_listing_featured', false );
+	// Featured included Standard; take that back too if Featured is what granted it.
+	if ( get_post_meta( $listings[0], '_lis_listing_standard_via_featured', true ) ) {
+		delete_post_meta( $listings[0], '_lis_listing_standard_via_featured' );
+		update_post_meta( $listings[0], '_lis_listing_standard_active', false );
+	}
 }
 
 /**
@@ -1067,7 +1126,7 @@ function lis_directory_get_generated_featured_product_id() {
 
 /**
  * Builds (or tops up) a "Featured Listing" variable-subscription product with
- * Monthly ($19) and Annually ($190) variations, and points
+ * Monthly ($24) and Annually ($240) variations, and points
  * lis_directory_featured_listing_product_id at it. Idempotent.
  *
  * @return array|WP_Error { added:int, product_id:int } on success.
@@ -1112,8 +1171,8 @@ function lis_directory_generate_featured_listing_product() {
 	}
 
 	$plans = array(
-		array( 'label' => 'Monthly',  'price' => 19,  'period' => 'month' ),
-		array( 'label' => 'Annually', 'price' => 190, 'period' => 'year' ),
+		array( 'label' => 'Monthly',  'price' => 24,  'period' => 'month' ),
+		array( 'label' => 'Annually', 'price' => 240, 'period' => 'year' ),
 	);
 
 	$added = 0;

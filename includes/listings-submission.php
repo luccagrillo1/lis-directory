@@ -362,8 +362,8 @@ function lis_directory_render_listing_submission_form_shortcode() {
 
 		// Plans are single-select tiers, each including the ones below it:
 		// Standard < Featured < Vendor Showcase. A card's price is the WHOLE
-		// total for that tier — Standard is bundled into Featured and Showcase,
-		// and Showcase carries the Featured benefits at no extra charge (see
+		// total for that tier — Featured and Vendor Showcase are each their own
+		// flat price that already includes everything below (see
 		// lis_directory_read_plan_upgrades() / lis_directory_sync_featured_with_showcase())
 		// — so the number on the card is what checkout charges.
 		$raw_price = function ( $price ) {
@@ -385,8 +385,8 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			$plan_tiers['featured'] = array(
 				'label' => 'Featured',
 				'blurb' => 'Everything in Standard, plus a Featured badge and priority placement.',
-				'm'     => $std_m + $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] ),
-				'y'     => $std_y + $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] ),
+				'm'     => $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] ),
+				'y'     => $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] ),
 			);
 		}
 

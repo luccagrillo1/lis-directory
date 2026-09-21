@@ -1,3 +1,15 @@
+## [0.45.0] — 2026-09-21 — Featured flat $24/$240; claim-page header fix
+
+- **Featured is flat $24/mo, $240/yr and includes Standard** (requested "to match" Showcase's flat pricing). Previously $19/$190 stacked on Standard's $9/$90 ($28).
+  - `lis_directory_migrate_featured_flat_price()` (`woocommerce_init`, once, option `lis_directory_featured_flat_24_240`) sets the configured Featured product's Monthly/Annually variations to 24/240 — regular price, price and `_subscription_price`, then re-syncs the variable product. Runs once so a price edited in WooCommerce afterwards is never overwritten; existing subscriptions keep the price they were created at (WooCommerce Subscriptions stores it per subscription). The Featured product generator's defaults are now 24/240 as well.
+  - `lis_directory_handle_bundle_checkout()` no longer bundles a Standard line for *any* upgrade tier; both Featured and Showcase are one line.
+  - Paying for Featured grants Standard (`_lis_listing_standard_active`, flag `_lis_listing_standard_via_featured`) unless it's already active; the Featured subscription ending takes it back only if Featured granted it; paying for Standard clears the flag. Showcase's existing grant/revoke is unchanged.
+  - Cards in the claim flow and the Add Listing wizard: Standard $9 · Featured $24 · Showcase $100 (annual $90 · $240 · $1,000).
+  - Not handled: someone already on a paid Standard subscription who then buys Featured pays for both — cancel Standard by hand.
+- **Claim-page menu bar:** the private claim page is served from the home URL, so it inherited the home page's Astra *transparent header* (white nav text designed to sit over a hero photo) — invisible on the page's plain background, with content also riding up under it. `lis_directory_maybe_render_claim_token_page()` now returns false from `astra_is_transparent_header` before `get_header()`, which also stops the transparent-logo swap. Confirmed against Astra's source: `is_transparent_header()` is what both the `ast-theme-transparent-header` body class and the logo replacement key off, and it ends in that filter.
+
+Verified on real WooCommerce 11.1: migration sets 24/24 and 240/240 (and doesn't re-run over a later edit); cards $9/$24/$100 and $90/$240/$1,000; Featured checkout is exactly one line, $24 monthly / $240 annual; a real Featured order publishes, grants Featured + Standard, and its ending takes both back; every Showcase behaviour from 0.44.0 re-passed. Header: with the transparent-header filter forced on, its value at `get_header()` on the claim page is false. (Astra itself isn't installed in the harness, so the visual result on your site is unconfirmed.)
+
 ## [0.44.0] — 2026-09-21 — Vendor Showcase is a flat $100 / $1,000 again
 
 Requested: "put vendor showcase back at a flat $100/m and $1000/yr." In v0.42.0 the Showcase card and checkout were Standard + Showcase ($109), because Standard was always bundled in.

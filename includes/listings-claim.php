@@ -255,9 +255,9 @@ function lis_directory_render_claim_box( $listing_id ) {
  *
  * Single-select, and each tier includes the ones below it: Standard <
  * Featured < Vendor Showcase. A card's price is the WHOLE monthly/annual
- * total for that tier: Featured is Standard + Featured; Vendor Showcase is its
- * own flat price and already includes Standard and Featured — so what's on the
- * card is what checkout charges.
+ * total for that tier: Featured and Vendor Showcase are each their own flat
+ * price that already includes everything below — so what's on the card is what
+ * checkout charges.
  *
  * @param int    $listing_id
  * @param string $token Optional — carried through as a hidden field so
@@ -296,7 +296,7 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 	if ( $feat_pid ) {
 		$fm = $num( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] );
 		$fy = $num( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] );
-		$tiers['featured'] = array( 'label' => 'Featured', 'blurb' => 'Everything in Standard, plus a Featured badge and priority placement.', 'm' => $std['m'] + $fm, 'y' => $std['y'] + $fy, 'disabled' => false );
+		$tiers['featured'] = array( 'label' => 'Featured', 'blurb' => 'Everything in Standard, plus a Featured badge and priority placement.', 'm' => $fm, 'y' => $fy, 'disabled' => false );
 	}
 
 	// Vendor Showcase: the exclusive one-per-category slot. The category a
@@ -576,6 +576,10 @@ function lis_directory_maybe_render_claim_token_page() {
 	$listing = lis_directory_get_listing_by_claim_token( $token );
 
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	// This page is served from the home URL, so it inherits the home page's
+	// TRANSPARENT header (white nav text meant to sit over a hero photo) — which
+	// disappears against this page's plain background. Turn that off here.
+	add_filter( 'astra_is_transparent_header', '__return_false' );
 	nocache_headers();
 	// A leaked/crawled token URL should never end up indexed.
 	header( 'X-Robots-Tag: noindex, nofollow', true );
