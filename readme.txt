@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.45.1
+Stable tag: 0.46.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.46.0 =
+* Cancelling a listing's last remaining paid tier now drafts it, instead of leaving it live with no active subscription. Checked after Standard, Featured, or Vendor Showcase ends — if the listing has none of the three active anymore, it goes to draft. A listing that still has another active tier (e.g. Showcase still active after an unrelated Standard subscription ends) is left alone. Admin-created listings that never went through checkout are never touched by this.
+* Fixed a stale bug from before flat pricing: cancelling a listing's Standard subscription could wrongly also cancel a separate, still-paid Featured or Vendor Showcase on the same listing. Standard ending now only clears its own flag.
 
 = 0.45.1 =
 * Fixed: 0.45.0's one-time change of the Featured product to $24/month and $240/year never took effect, so the plan cards still showed Featured at $19. It now applies on the next page load after updating.

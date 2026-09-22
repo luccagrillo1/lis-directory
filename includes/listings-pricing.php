@@ -312,6 +312,10 @@ function lis_directory_sync_featured_with_showcase( $vendor_id, $new_status ) {
 			update_post_meta( $listing_id, $meta_key, false );
 		}
 	}
+	if ( 'active' !== $new_status ) {
+		// No listing is free — if nothing else is keeping it paid, it comes down.
+		lis_directory_maybe_unpublish_unpaid_listing( $listing_id );
+	}
 }
 
 /**
@@ -887,6 +891,45 @@ function lis_directory_listing_order_thankyou( $order_id ) {
 	<?php
 }
 
+/**
+ * Whether a listing currently has ANY paid tier keeping it live — Standard
+ * active, Featured, or an active Vendor Showcase (any of these implies
+ * Standard is covered too, granted or paid). There is no free tier: every
+ * listing on the site is either admin-created (never went through checkout,
+ * so no subscription-ended event ever fires for it and this never runs) or
+ * has to be on at least Standard ($9/mo) to stay published.
+ */
+function lis_directory_listing_has_any_active_tier( $listing_id ) {
+	if ( get_post_meta( $listing_id, '_lis_listing_standard_active', true ) ) {
+		return true;
+	}
+	if ( get_post_meta( $listing_id, '_lis_listing_featured', true ) ) {
+		return true;
+	}
+	return function_exists( 'lis_directory_listing_is_active_showcase' ) && lis_directory_listing_is_active_showcase( $listing_id );
+}
+
+/**
+ * Draft a listing whose subscription just ended and now has no paid tier left
+ * — called after the specific handler below has already updated that tier's
+ * flags, so lis_directory_listing_has_any_active_tier() reflects the real
+ * current state (a different tier that's still active, e.g. Showcase granting
+ * Standard while a separate Standard subscription cancels, correctly keeps it
+ * published). Only ever touches a currently-published listing; never re-drafts
+ * something an admin already unpublished for another reason, and never
+ * touches an admin-created listing that was never on a paid tier in the first
+ * place (nothing here runs for one, since it has no subscription to end).
+ */
+function lis_directory_maybe_unpublish_unpaid_listing( $listing_id ) {
+	if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) || 'publish' !== get_post_status( $listing_id ) ) {
+		return;
+	}
+	if ( lis_directory_listing_has_any_active_tier( $listing_id ) ) {
+		return;
+	}
+	wp_update_post( array( 'ID' => $listing_id, 'post_status' => 'draft' ) );
+}
+
 function lis_directory_handle_featured_listing_subscription_ended( $subscription ) {
 	$subscription_id = $subscription->get_id();
 
@@ -913,17 +956,22 @@ function lis_directory_handle_featured_listing_subscription_ended( $subscription
 		delete_post_meta( $listings[0], '_lis_listing_standard_via_featured' );
 		update_post_meta( $listings[0], '_lis_listing_standard_active', false );
 	}
+	// No listing is free — if nothing else is keeping it paid, it comes down.
+	lis_directory_maybe_unpublish_unpaid_listing( $listings[0] );
 }
 
 /**
- * Standard is the required foundation for Featured/Vendor Showcase (by
- * request) — cancelling or expiring it cascades to revoke both, on top of
- * clearing its own active flag. Featured already revokes itself the same way
- * on its own subscription ending (see above); Vendor Showcase's own ending
- * is handled separately in includes/woocommerce.php
- * (lis_directory_handle_subscription_ended()) — this just adds the same
- * expiry to the vendor from the Standard side too, so either subscription
- * ending is enough to take the Showcase slot down.
+ * Standard used to be a required bundled line under Featured/Showcase, so
+ * this cascaded to revoke both when it ended. Since the flat-pricing change
+ * (Featured/Showcase are self-contained tiers that GRANT Standard, not the
+ * other way around) that cascade is backwards: it would cancel someone's
+ * separate, still-paid Featured or Showcase just because an unrelated
+ * standalone Standard subscription on the same listing ended. Featured and
+ * Showcase now each own their ending via their own handler
+ * (lis_directory_handle_featured_listing_subscription_ended() above,
+ * lis_directory_handle_subscription_ended() in includes/woocommerce.php) —
+ * this only clears Standard's OWN flag, and only if nothing else currently
+ * grants it.
  */
 function lis_directory_handle_standard_listing_subscription_ended( $subscription ) {
 	$subscription_id = $subscription->get_id();
@@ -946,13 +994,17 @@ function lis_directory_handle_standard_listing_subscription_ended( $subscription
 	}
 	$listing_id = $listings[0];
 
-	update_post_meta( $listing_id, '_lis_listing_standard_active', false );
-	update_post_meta( $listing_id, '_lis_listing_featured', false );
-
-	$vendor_id = lis_directory_get_vendor_for_listing( $listing_id );
-	if ( $vendor_id && function_exists( 'lis_directory_set_vendor_status' ) ) {
-		lis_directory_set_vendor_status( $vendor_id, 'expired' );
+	// Only clear Standard's own flag if nothing ELSE is currently granting it
+	// — a separate, still-active Featured or Showcase must not be undone just
+	// because this unrelated standalone Standard subscription ended.
+	$still_granted = get_post_meta( $listing_id, '_lis_listing_featured', true )
+		|| ( function_exists( 'lis_directory_listing_is_active_showcase' ) && lis_directory_listing_is_active_showcase( $listing_id ) );
+	if ( ! $still_granted ) {
+		update_post_meta( $listing_id, '_lis_listing_standard_active', false );
 	}
+
+	// No listing is free — if nothing else is keeping it paid, it comes down.
+	lis_directory_maybe_unpublish_unpaid_listing( $listing_id );
 }
 
 /* ------------------------------------------------------------------ *
