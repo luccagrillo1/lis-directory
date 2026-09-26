@@ -1,26 +1,7 @@
-/* Job board styles. Own `--lisjob-*` variables (namespaced to this file, same
-   pattern as listings.css's `--lisdir-*`), each pointing at the site-wide
-   `--lis-*` brand token with the real brand value as its fallback — so hex
-   literals only ever appear in this :root block. */
-:root {
-	--lisjob-canvas: var(--lis-canvas, #FBFAF6);
-	--lisjob-surface: var(--lis-surface, #FFFFFF);
-	--lisjob-line: var(--lis-line, #DEDFD8);
-	--lisjob-ink-600: var(--lis-ink-600, #5C6159);
-	--lisjob-ink-900: var(--lis-ink-900, #1A1D19);
-	--lisjob-pine-100: var(--lis-pine-100, #E4EBE4);
-	--lisjob-pine-200: var(--lis-pine-200, #C3D3C8);
-	--lisjob-pine-700: var(--lis-pine-700, #2C5240);
-	--lisjob-pine-900: var(--lis-pine-900, #16281F);
-	--lisjob-clay: var(--lis-clay-600, #A94F2C);
-	--lisjob-clay-tint: var(--lis-clay-100, #F6E8DF);
-	--lisjob-clay-border: var(--lis-clay-200, #E8CDBC);
-	--lisjob-error: var(--lis-error, #8E1D33);
-	--lisjob-error-bg: color-mix(in srgb, var(--lisjob-error) 12%, var(--lisjob-canvas));
-	--lisjob-error-border: color-mix(in srgb, var(--lisjob-error) 32%, var(--lisjob-canvas));
-	--lisjob-info: var(--lis-info, #2A5B78);
-	--lisjob-info-bg: color-mix(in srgb, var(--lisjob-info) 12%, var(--lisjob-canvas));
-}
+/* Theming: every color, radius, shadow and font here reads a --lis-dir-*
+   component variable, falling back to the site's --lis-* brand token and
+   then to a literal brand value. The plugin never defines these variables;
+   the site does. See THEMING.md for the full contract. */
 
 /* The theme's content wrapper can be a flex row, so fill the column rather
    than shrink to content width. */
@@ -34,6 +15,7 @@
 	margin: 0 auto;
 	padding: 24px 24px 48px;
 	box-sizing: border-box;
+	font-family: var(--lis-dir-font-body, inherit);
 }
 
 .lis-job-archive-head {
@@ -53,10 +35,10 @@
 .lis-job-btn {
 	display: inline-block;
 	padding: 10px 20px;
-	border: 1px solid var(--lisjob-pine-700);
-	border-radius: 8px;
-	background: var(--lisjob-surface);
-	color: var(--lisjob-pine-900);
+	border: var(--lis-dir-job-btn-border, 1px solid var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
+	border-radius: var(--lis-dir-job-btn-radius, var(--lis-dir-btn-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px))));
+	background: var(--lis-dir-job-btn-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
+	color: var(--lis-dir-job-btn-text, var(--lis-dir-color-accent-strong, var(--lis-pine-900, #16281F)));
 	font-weight: 600;
 	font-size: 1em;
 	line-height: 1.3;
@@ -65,17 +47,17 @@
 }
 
 .lis-job-btn:hover {
-	background: var(--lisjob-pine-100);
+	background: var(--lis-dir-job-btn-bg-hover, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));
 }
 
 .lis-job-btn--primary {
-	background: var(--lisjob-pine-700);
-	color: var(--lisjob-surface);
+	background: var(--lis-dir-job-btn-primary-bg, var(--lis-dir-btn-bg, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240))));
+	color: var(--lis-dir-job-btn-primary-text, var(--lis-dir-btn-text, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF))));
 }
 
 .lis-job-btn--primary:hover {
-	background: var(--lisjob-pine-900);
-	color: var(--lisjob-surface);
+	background: var(--lis-dir-job-btn-primary-bg-hover, var(--lis-dir-btn-bg-hover, var(--lis-dir-color-accent-strong, var(--lis-pine-900, #16281F))));
+	color: var(--lis-dir-job-btn-primary-text, var(--lis-dir-btn-text, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF))));
 }
 
 /* Filters */
@@ -103,10 +85,10 @@
 .lis-job-form input[type="date"],
 .lis-job-form select {
 	padding: 10px 12px;
-	border: 1px solid var(--lisjob-line);
-	border-radius: 8px;
-	background: var(--lisjob-surface);
-	color: var(--lisjob-ink-900);
+	border: var(--lis-dir-input-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+	border-radius: var(--lis-dir-input-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px)));
+	background: var(--lis-dir-input-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
+	color: var(--lis-dir-input-text, var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19)));
 	font-size: 1em;
 	box-sizing: border-box;
 }
@@ -127,15 +109,15 @@
 	align-items: center;
 	gap: 16px;
 	padding: 16px 18px;
-	border: 1px solid var(--lisjob-line);
-	border-radius: 12px;
-	background: var(--lisjob-surface);
-	color: var(--lisjob-ink-900);
+	border: var(--lis-dir-job-card-border, var(--lis-dir-card-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8))));
+	border-radius: var(--lis-dir-job-card-radius, var(--lis-dir-card-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px))));
+	background: var(--lis-dir-job-card-bg, var(--lis-dir-card-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF))));
+	color: var(--lis-dir-job-card-text, var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19)));
 	text-decoration: none;
 }
 
 .lis-job-card:hover {
-	border-color: var(--lisjob-pine-700);
+	border-color: var(--lis-dir-job-card-border-hover, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
 }
 
 .lis-job-card-logo {
@@ -144,8 +126,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 10px;
-	background: var(--lisjob-pine-100);
+	border-radius: var(--lis-dir-job-logo-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px)));
+	background: var(--lis-dir-job-logo-bg, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));
 	overflow: hidden;
 }
 
@@ -156,7 +138,7 @@
 }
 
 .lis-job-card-logo-fallback {
-	color: var(--lisjob-pine-700);
+	color: var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240));
 	font-weight: 700;
 	font-size: 1.4em;
 }
@@ -172,15 +154,16 @@
 .lis-job-card-title {
 	font-weight: 700;
 	font-size: 1.1em;
+	font-family: var(--lis-dir-font-heading, 'Gabarito', sans-serif);
 }
 
 .lis-job-card-company {
-	color: var(--lisjob-ink-600);
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 }
 
 .lis-job-card-date {
 	flex: 0 0 auto;
-	color: var(--lisjob-ink-600);
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 	font-size: 0.9em;
 	white-space: nowrap;
 }
@@ -194,29 +177,29 @@
 
 .lis-job-chip {
 	padding: 2px 10px;
-	border-radius: 999px;
-	background: var(--lisjob-pine-100);
-	color: var(--lisjob-pine-900);
+	border-radius: var(--lis-dir-job-chip-radius, var(--lis-dir-chip-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px))));
+	background: var(--lis-dir-job-chip-bg, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));
+	color: var(--lis-dir-job-chip-text, var(--lis-dir-color-accent-strong, var(--lis-pine-900, #16281F)));
 	font-size: 0.85em;
 	font-weight: 600;
 }
 
 .lis-job-chip--pay {
-	background: var(--lisjob-clay-tint);
-	color: var(--lisjob-clay);
+	background: var(--lis-dir-job-chip-pay-bg, var(--lis-dir-color-commerce-soft, var(--lis-clay-100, #F6E8DF)));
+	color: var(--lis-dir-job-chip-pay-text, var(--lis-dir-color-commerce, var(--lis-clay-600, #A94F2C)));
 }
 
 .lis-job-chip--cat {
-	background: var(--lisjob-canvas);
-	border: 1px solid var(--lisjob-line);
-	color: var(--lisjob-ink-600);
+	background: var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6));
+	border: 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8));
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 }
 
 .lis-job-empty {
 	padding: 28px;
-	border: 1px dashed var(--lisjob-line);
-	border-radius: 12px;
-	color: var(--lisjob-ink-600);
+	border: 1px dashed var(--lis-dir-color-line, var(--lis-line, #DEDFD8));
+	border-radius: var(--lis-dir-panel-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px)));
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 	text-align: center;
 }
 
@@ -224,20 +207,20 @@
 .lis-job-notice {
 	margin: 0 0 20px;
 	padding: 14px 18px;
-	border: 1px solid var(--lisjob-info);
-	border-radius: 10px;
-	background: var(--lisjob-info-bg);
-	color: var(--lisjob-ink-900);
+	border: var(--lis-dir-notice-info-border, 1px solid var(--lis-dir-color-info, var(--lis-info, #2A5B78)));
+	border-radius: var(--lis-dir-notice-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px)));
+	background: var(--lis-dir-notice-info-bg, var(--lis-dir-color-info-soft, color-mix(in srgb, var(--lis-dir-color-info, var(--lis-info, #2A5B78)) 12%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
+	color: var(--lis-dir-notice-text, var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19)));
 }
 
 .lis-job-notice--success {
-	border-color: var(--lisjob-pine-700);
-	background: var(--lisjob-pine-100);
+	border-color: var(--lis-dir-notice-success-border, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
+	background: var(--lis-dir-notice-success-bg, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));
 }
 
 .lis-job-notice--error {
-	border-color: var(--lisjob-error-border);
-	background: var(--lisjob-error-bg);
+	border-color: var(--lis-dir-notice-error-border-color, var(--lis-dir-color-error-border, color-mix(in srgb, var(--lis-dir-color-error, var(--lis-error, #8E1D33)) 32%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
+	background: var(--lis-dir-notice-error-bg, var(--lis-dir-color-error-soft, color-mix(in srgb, var(--lis-dir-color-error, var(--lis-error, #8E1D33)) 12%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
 }
 
 .lis-job-notice ul,
@@ -260,9 +243,9 @@
 	gap: 20px;
 	flex-wrap: wrap;
 	padding: 24px;
-	border: 1px solid var(--lisjob-line);
-	border-radius: 14px;
-	background: var(--lisjob-surface);
+	border: var(--lis-dir-job-panel-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+	border-radius: var(--lis-dir-job-panel-radius, var(--lis-dir-panel-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px))));
+	background: var(--lis-dir-job-panel-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
 }
 
 .lis-job-single-head > div:not(.lis-job-single-apply) {
@@ -276,8 +259,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 12px;
-	background: var(--lisjob-pine-100);
+	border-radius: var(--lis-dir-job-logo-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px)));
+	background: var(--lis-dir-job-logo-bg, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));
 	overflow: hidden;
 }
 
@@ -293,7 +276,7 @@
 
 .lis-job-single-company {
 	margin: 0 0 8px;
-	color: var(--lisjob-ink-600);
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 }
 
 .lis-job-single-apply {
@@ -316,9 +299,9 @@
 .lis-job-single-side {
 	align-self: start;
 	padding: 20px;
-	border: 1px solid var(--lisjob-line);
-	border-radius: 12px;
-	background: var(--lisjob-canvas);
+	border: var(--lis-dir-job-panel-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+	border-radius: var(--lis-dir-job-panel-radius, var(--lis-dir-panel-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px))));
+	background: var(--lis-dir-panel-bg, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)));
 }
 
 .lis-job-single-side h2,
@@ -333,7 +316,7 @@
 
 .lis-job-details dt {
 	margin-top: 12px;
-	color: var(--lisjob-ink-600);
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 	font-size: 0.85em;
 	font-weight: 600;
 	text-transform: uppercase;
@@ -362,9 +345,9 @@
 .lis-job-form fieldset {
 	margin: 0 0 24px;
 	padding: 20px 22px;
-	border: 1px solid var(--lisjob-line);
-	border-radius: 12px;
-	background: var(--lisjob-surface);
+	border: var(--lis-dir-job-panel-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+	border-radius: var(--lis-dir-job-panel-radius, var(--lis-dir-panel-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px))));
+	background: var(--lis-dir-job-panel-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
 }
 
 .lis-job-form legend {
@@ -401,7 +384,7 @@
 
 .lis-job-optional,
 .lis-job-hint {
-	color: var(--lisjob-ink-600);
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 	font-weight: 400;
 	font-size: 0.9em;
 }
@@ -415,7 +398,7 @@
 
 .lis-job-price-note {
 	margin: 0 0 16px;
-	color: var(--lisjob-ink-600);
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 }
 
 /* Employer dashboard */
@@ -432,9 +415,9 @@
 	gap: 12px;
 	flex-wrap: wrap;
 	padding: 14px 18px;
-	border: 1px solid var(--lisjob-line);
-	border-radius: 12px;
-	background: var(--lisjob-surface);
+	border: var(--lis-dir-job-panel-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+	border-radius: var(--lis-dir-job-panel-radius, var(--lis-dir-panel-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px))));
+	background: var(--lis-dir-job-panel-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
 }
 
 .lis-job-dash-title {
@@ -443,7 +426,7 @@
 
 .lis-job-dash-meta {
 	display: block;
-	color: var(--lisjob-ink-600);
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 	font-size: 0.9em;
 }
 
@@ -455,40 +438,40 @@
 
 .lis-job-dash-pay {
 	font-weight: 700;
-	color: var(--lisjob-clay);
+	color: var(--lis-dir-price-text, var(--lis-dir-color-commerce, var(--lis-clay-600, #A94F2C)));
 }
 
 .lis-job-dash-delete {
-	color: var(--lisjob-error);
+	color: var(--lis-dir-color-error, var(--lis-error, #8E1D33));
 }
 
 .lis-job-status {
 	display: inline-block;
 	margin-left: 6px;
 	padding: 2px 10px;
-	border-radius: 999px;
-	background: var(--lisjob-canvas);
-	border: 1px solid var(--lisjob-line);
-	color: var(--lisjob-ink-600);
+	border-radius: var(--lis-dir-badge-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px)));
+	background: var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6));
+	border: 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8));
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
 	font-size: 0.8em;
 	font-weight: 600;
 }
 
 .lis-job-status--live {
-	background: var(--lisjob-pine-100);
-	border-color: var(--lisjob-pine-200);
-	color: var(--lisjob-pine-900);
+	background: var(--lis-dir-job-status-live-bg, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));
+	border-color: var(--lis-dir-job-status-live-border, var(--lis-dir-color-accent-border, var(--lis-pine-200, #C3D3C8)));
+	color: var(--lis-dir-job-status-live-text, var(--lis-dir-color-accent-strong, var(--lis-pine-900, #16281F)));
 }
 
 .lis-job-status--awaiting-payment,
 .lis-job-status--pending-review {
-	background: var(--lisjob-info-bg);
-	border-color: var(--lisjob-info);
-	color: var(--lisjob-info);
+	background: var(--lis-dir-status-pending-bg, var(--lis-dir-color-info-soft, color-mix(in srgb, var(--lis-dir-color-info, var(--lis-info, #2A5B78)) 12%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
+	border-color: var(--lis-dir-job-status-pending-border, var(--lis-dir-color-info, var(--lis-info, #2A5B78)));
+	color: var(--lis-dir-status-pending-text, var(--lis-dir-color-info, var(--lis-info, #2A5B78)));
 }
 
 .lis-job-status--expired {
-	background: var(--lisjob-error-bg);
-	border-color: var(--lisjob-error-border);
-	color: var(--lisjob-error);
+	background: var(--lis-dir-status-expired-bg, var(--lis-dir-color-error-soft, color-mix(in srgb, var(--lis-dir-color-error, var(--lis-error, #8E1D33)) 12%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
+	border-color: var(--lis-dir-job-status-expired-border, var(--lis-dir-color-error-border, color-mix(in srgb, var(--lis-dir-color-error, var(--lis-error, #8E1D33)) 32%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
+	color: var(--lis-dir-status-expired-text, var(--lis-dir-color-error, var(--lis-error, #8E1D33)));
 }

@@ -138,7 +138,7 @@ function lis_directory_card_admin_hint( $message ) {
 	if ( ! current_user_can( 'edit_posts' ) ) {
 		return '';
 	}
-	return '<p class="lis-pv-admin-hint" style="border:1px dashed #c00;padding:8px;color:#c00;">LIS Directory: ' . esc_html( $message ) . '</p>';
+	return '<p class="lis-pv-admin-hint" style="border:1px dashed var(--lis-dir-color-error, var(--lis-error, #8E1D33));padding:8px;color:var(--lis-dir-color-error, var(--lis-error, #8E1D33));">LIS Directory: ' . esc_html( $message ) . '</p>';
 }
 
 /**

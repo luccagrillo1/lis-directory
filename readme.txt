@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.46.0
+Stable tag: 0.47.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,12 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.47.0 =
+* The plugin's styling is now fully themeable. Every color, corner radius, shadow and font reads a `--lis-dir-*` CSS variable that falls back to the site's brand tokens, so the site can restyle directory pages by setting variables instead of overriding selectors. The full list is in THEMING.md.
+* Corners now follow the brand scale: 6px for buttons, inputs, badges and chips (badges were fully rounded pills), 12px for cards, panels and menus.
+* Listing card titles, the vendor card name and job card titles now use the heading font (Gabarito).
+* Search inputs get a visible focus ring. The search category dropdown text is Ink 600.
 
 = 0.46.0 =
 * Cancelling a listing's last remaining paid tier now drafts it, instead of leaving it live with no active subscription. Checked after Standard, Featured, or Vendor Showcase ends — if the listing has none of the three active anymore, it goes to draft. A listing that still has another active tier (e.g. Showcase still active after an unrelated Standard subscription ends) is left alone. Admin-created listings that never went through checkout are never touched by this.

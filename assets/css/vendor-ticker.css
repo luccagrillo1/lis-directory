@@ -16,8 +16,8 @@
 
 .lis-pv-ticker-group {
 	display: flex;
-	gap: 16px;
-	padding-right: 16px;
+	gap: var(--lis-dir-ticker-gap, 16px);
+	padding-right: var(--lis-dir-ticker-gap, 16px);
 }
 
 .lis-pv-ticker .lis-pv-card {

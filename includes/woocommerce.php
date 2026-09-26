@@ -772,7 +772,7 @@ function lis_directory_maybe_show_submission_link( $order_id ) {
 			'lis_pv_order'    => $linked_id,
 		), get_permalink( $page_id ) );
 		?>
-		<div class="lis-pv-thankyou-link" style="margin:16px 0;padding:16px;border:1px solid #7ad03a;background:#f7fff0;">
+		<div class="lis-pv-thankyou-link" style="margin:16px 0;padding:16px;border:1px solid var(--lis-dir-notice-success-border, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));border-radius:var(--lis-dir-notice-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px)));background:var(--lis-dir-notice-success-bg, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));">
 			<p>Your Vendor Showcase spot is reserved! <a href="<?php echo esc_url( $link ); ?>">Click here to submit your business details</a> so we can get your listing live.</p>
 		</div>
 		<?php

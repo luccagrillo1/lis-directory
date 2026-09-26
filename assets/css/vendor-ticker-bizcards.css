@@ -1,10 +1,7 @@
-/* Design tokens, namespaced to this plugin (see the token-adoption
-   migration). Each fallback is the real brand value, not a pre-migration
-   color, so this renders correctly even where the site-wide token
-   stylesheet hasn't loaded (wp-admin, block editor, etc.). */
-:root {
-	--lisdir-surface: var(--lis-surface, #FFFFFF);
-}
+/* Theming: every color, radius, shadow and font here reads a --lis-dir-*
+   component variable, falling back to the site's --lis-* brand token and
+   then to a literal brand value. The plugin never defines these variables;
+   the site does. See THEMING.md for the full contract. */
 
 /* Extra rules for [lis_preferred_vendor_ticker style="business-cards"] — the
    base .lis-pv-ticker / .lis-pv-ticker-track / .lis-pv-ticker-group rules in
@@ -38,7 +35,7 @@
 	/* Perfect rectangle — no border-radius. A business-card image is a
 	   full-bleed rectangle, so rounding the corners clipped the image and
 	   left dead white space in each corner. */
-	border-radius: 0;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-	background: var(--lisdir-surface);
+	border-radius: var(--lis-dir-bizcard-radius, 0);
+	box-shadow: var(--lis-dir-bizcard-shadow, 0 1px 4px rgba(0, 0, 0, 0.15));
+	background: var(--lis-dir-bizcard-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
 }

@@ -1,3 +1,45 @@
+## [0.47.0] — 2026-09-26 — Themeable through CSS custom properties
+
+Requested: make the plugin restylable by setting variables instead of overriding selectors with `!important`, with defaults that already match the brand. **THEMING.md** (new, plugin root) is the contract: every variable, its default chain, the exact selector and property it styles, and the stable class hooks.
+
+### Architecture
+
+- Every color, radius, shadow and font now reads `var(--lis-dir-<component>-<part>, var(--lis-dir-<shared role>, var(--lis-dir-color-<palette>, var(--lis-<token>, <literal>))))`. **221 component variables**, plus 19 palette variables (`--lis-dir-color-*`), `--lis-dir-radius-control` / `--lis-dir-radius-container` (falling back to the site's `--lis-radius-control` 6px / `--lis-radius-container` 12px), `--lis-dir-font-heading` / `--lis-dir-font-body`, and `--lis-dir-focus-ring`.
+- **The plugin no longer defines any custom properties.** The old per-file `:root { --lisdir-*: … }` / `--lisjob-*` alias blocks are gone. Defining component variables on `:root` from plugin CSS would have made site overrides depend on stylesheet order (`listings.css` loads *after* the site's custom CSS), and those `:root`-computed aliases couldn't see values scoped to a section. Reading with inline fallbacks has neither problem.
+- Existing class names are unchanged. No selector specificity changed, no `!important` or `@layer` added. The one new rule is `.lis-listing-search-input:focus, .lis-listing-search-select:focus` (focus ring).
+- Search form container reads `--lis-dir-search-bg / -backdrop / -border / -shadow / -radius / -padding`, which is everything the glass recipe needs. Verified by setting the recipe on `:root` over the Local Directory hero: computed background `rgba(22,40,31,.24)`, `backdrop-filter: blur(8px) saturate(1.2)`, border `1px solid rgba(251,250,246,.14)`, radius 12px.
+- Status colors (open/closed, verified, sold, published/pending/draft/expired, job live/pending/expired) are `--lis-dir-status-*` / `--lis-dir-job-status-*` with their current meaning-bearing defaults.
+
+### Audit: what was hardcoded (0.46.0)
+
+- **Colors:** only the fallback hexes inside the `:root` alias blocks (all brand values already, from the 0.36.x token migration), plus four `rgba(0,0,0,…)` shadows (card, card hover, feature suggestions, Places menu) and the business-card shadow. All are now component variables with the same literal as the last fallback.
+- **The Add Listing wizard green `rgb(87,104,70)` was already gone.** It was mapped to Pine 700 in the token migration. Checked live: Continue and the progress bar compute `rgb(44,82,64)` (#2C5240). What *was* still off-brand there was the 8px button radius.
+- **Category and Featured badges** were already tokenized. Featured text defaults to Clay 700 now, matching what the site's `lis-brand-overrides` snippet already forces live (Clay 600 on Clay 100 was the plugin's own default).
+- **Fonts:** `font: italic 700 11px/1 Georgia, serif` and `font: 500 12px/1.4 -apple-system, …` on the vendor-card / heading info icons and tooltips (each immediately overridden by `font-family: inherit`). Split into longhands, with the tooltip keeping `font-style: normal`, which the old shorthand used to reset inside the italic icon.
+- **Radii:** 25× 8px, 14× 999px, 14× 12px, 12× 10px, 7× 6px, 3× 14px, 3× 4px, plus geometric 50% / 0. Mapped to the brand scale below.
+- **Front-end inline styles in PHP:** the legacy Showcase thank-you box (`#7ad03a` / `#f7fff0`, off-brand green) now uses the success-notice variables (Pine 700 / Pine 100, 12px). The editor-only card admin hint (`#c00`) uses the error token.
+
+### Intentional visual changes (everything else is computed-style identical)
+
+Checked by swapping 0.46.0 and 0.47.0 CSS on saved copies of the live `/listings/`, a single listing, the home page (logo ticker), Local Directory (business-card ticker + search), and `/jobs/`, plus a fixture with every wizard / dashboard / badge / notice / job / vendor-card state. Every computed color, border, radius, shadow, font and spacing was compared, with transitions disabled:
+
+1. **Controls → 6px:** search submit (was 8px; the site forced 6px with `!important`, which is no longer needed), "More filters", view toggle, all buttons (wizard Back/Continue, Save & finish later, Submit, thank-you, claim, offer, bookmark/share, job buttons), inputs/selects (8px → 6px), tooltips, photo/gallery thumbnails (4/8px → 6px), Places menu items.
+2. **Badges and chips → 6px (were 999px pills):** category, Featured/Popular/Verified/Sold, open/closed, dashboard status and filter tabs, plan Save/Included tags, social links, job type, job chips and job status. The brand scale puts badges and chips on the control radius. To get pills back, set `--lis-dir-badge-radius` / `--lis-dir-chip-radius` / `--lis-dir-filter-radius` / `--lis-dir-job-chip-radius` to `999px`.
+3. **Containers → 12px:** search "more filters" panel (10px), feature suggestions dropdown (6px), Places menu (10px), meta/hours/facts boxes, map, video (10px), gallery and hero photo (14px), dropzone, notices and error boxes (8/10px), report form, edit-asset box, job card logo, job notices, job single header (14px), vendor card (8px).
+4. **Heading font:** listing card titles, the vendor card name and job card titles are Gabarito, not Source Sans 3. Real `<h1>`/`<h2>` headings were already Gabarito from the theme and don't change. Gabarito is wider, so some long card titles wrap one more line.
+5. **Search category `<select>` text:** Ink 600 (#5C6159), was Astra's #666.
+6. **Search input focus:** Pine 700 border plus a 3px Pine-15% ring (was a Pine 100 border and no ring).
+7. Featured badge text: Clay 700 (see above; no change on the live site).
+
+### Not converted
+
+- The search text input's typed-text color is still Astra's (#666). Astra's `input[type="text"]` outranks the plugin's single-class selector, and raising specificity is off the table. Documented in THEMING.md.
+- wp-admin-only inline colors (`showcase-slots.php`, `listings-features.php`, `admin.php`, `directorist-migration.php`) keep WordPress-admin colors.
+- `assets/img/lis-logomark-green.svg` (`fill: #576846`) is an `<img>`, which page CSS can't reach. `lib/plugin-update-checker` is vendored.
+- One pre-existing `!important` (layout margin on `.lis-pv-heading`) is untouched.
+
+Verification: a paren-aware scan of all 8 plugin stylesheets finds **zero** hex/rgb literals outside a `var()` fallback. Hover states weren't in the computed-style comparison, but they read the same base values through the same palette mapping.
+
 ## [0.46.0] — 2026-09-22 — Cancelling the last paid tier drafts the listing
 
 Asked directly: does cancelling a subscription put the listing back to draft? It didn't — cancelling only stripped the paid perks (Featured badge, Standard-active flag, the Showcase slot) and left the listing sitting in the directory published, for free, indefinitely. Confirmed there is no free tier: every listing is either admin-created (never went through checkout, so no subscription event ever targets it) or has to be on at least Standard ($9/mo).

@@ -4,7 +4,7 @@
 .lis-pv-directory-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-	gap: 20px;
+	gap: var(--lis-dir-vendor-directory-gap, 20px);
 }
 
 .lis-pv-directory-grid .lis-pv-card {

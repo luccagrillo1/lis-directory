@@ -1,22 +1,17 @@
-/* Design tokens, namespaced to this plugin (see the token-adoption
-   migration). Each fallback is the real brand value, not a pre-migration
-   color, so this renders correctly even where the site-wide token
-   stylesheet hasn't loaded (wp-admin, block editor, etc.). */
-:root {
-	--lisdir-ink-600: var(--lis-ink-600, #5C6159);
-	--lisdir-ink-900: var(--lis-ink-900, #1A1D19);
-	--lisdir-line: var(--lis-line, #DEDFD8);
-	--lisdir-surface: var(--lis-surface, #FFFFFF);
-}
+/* Theming: every color, radius, shadow and font here reads a --lis-dir-*
+   component variable, falling back to the site's --lis-* brand token and
+   then to a literal brand value. The plugin never defines these variables;
+   the site does. See THEMING.md for the full contract. */
 
 .lis-pv-card {
 	position: relative;
-	border: 1px solid var(--lisdir-line);
-	border-radius: 8px;
-	padding: 16px;
+	border: var(--lis-dir-vendor-card-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+	border-radius: var(--lis-dir-vendor-card-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px)));
+	padding: var(--lis-dir-vendor-card-padding, 16px);
 	max-width: 420px;
-	background: var(--lisdir-surface);
+	background: var(--lis-dir-vendor-card-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
 	box-sizing: border-box;
+	font-family: var(--lis-dir-font-body, inherit);
 }
 
 /* Info icon + "Sponsored" tooltip — same pattern as the [lis_preferred_vendor_heading]
@@ -32,10 +27,13 @@
 	width: 16px;
 	height: 16px;
 	border-radius: 50%;
-	border: 1.5px solid var(--lisdir-ink-600);
-	color: var(--lisdir-ink-600);
-	font: italic 700 11px/1 Georgia, serif;
-	font-family: inherit;
+	border: var(--lis-dir-vendor-info-border, 1.5px solid var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159)));
+	color: var(--lis-dir-vendor-info-text, var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159)));
+	font-style: italic;
+	font-weight: 700;
+	font-size: 11px;
+	line-height: 1;
+	font-family: var(--lis-dir-font-body, inherit);
 	cursor: default;
 	z-index: 1;
 }
@@ -51,15 +49,18 @@
 	transform: translateY(4px);
 	width: max-content;
 	max-width: 200px;
-	background: var(--lisdir-ink-900);
-	color: var(--lisdir-surface);
-	font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	font-family: inherit;
+	background: var(--lis-dir-vendor-tooltip-bg, var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19)));
+	color: var(--lis-dir-vendor-tooltip-text, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
+	font-style: normal;
+	font-weight: 500;
+	font-size: 12px;
+	line-height: 1.4;
+	font-family: var(--lis-dir-font-body, inherit);
 	letter-spacing: 0.02em;
 	text-align: center;
 	white-space: normal;
 	padding: 6px 10px;
-	border-radius: 6px;
+	border-radius: var(--lis-dir-vendor-tooltip-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px)));
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;
@@ -73,7 +74,7 @@
 	top: 100%;
 	right: 10px;
 	border: 5px solid transparent;
-	border-top-color: var(--lisdir-ink-900);
+	border-top-color: var(--lis-dir-vendor-tooltip-bg, var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19)));
 }
 
 .lis-pv-card-info:hover .lis-pv-card-tooltip,
@@ -109,11 +110,13 @@
 .lis-pv-card-name {
 	font-weight: 600;
 	font-size: 1.05em;
+	font-family: var(--lis-dir-vendor-card-name-font, var(--lis-dir-font-heading, 'Gabarito', sans-serif));
+	color: var(--lis-dir-vendor-card-name-text, inherit);
 }
 
 .lis-pv-card-tagline {
 	font-size: 0.9em;
-	color: var(--lisdir-ink-600);
+	color: var(--lis-dir-vendor-card-tagline-text, var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159)));
 }
 
 @media (max-width: 480px) {
