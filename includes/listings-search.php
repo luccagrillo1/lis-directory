@@ -59,20 +59,6 @@ function lis_directory_set_listings_page_size( $query ) {
 	$query->set( 'posts_per_page', $per_page );
 	// WP_Query lets posts_per_archive_page override posts_per_page on archives.
 	$query->set( 'posts_per_archive_page', $per_page );
-
-	// Something else on the site still resets this archive to the Reading
-	// setting ("Blog pages show at most", 10) after every pre_get_posts
-	// callback. Make that option report our size for this request's main
-	// query only, and drop the override once the main query has run.
-	if ( $per_page > 0 ) {
-		$report = function () use ( $per_page ) {
-			return $per_page;
-		};
-		add_filter( 'pre_option_posts_per_page', $report );
-		add_action( 'wp', function () use ( $report ) {
-			remove_filter( 'pre_option_posts_per_page', $report );
-		} );
-	}
 }
 
 /**

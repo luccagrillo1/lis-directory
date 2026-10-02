@@ -1,3 +1,11 @@
+## [0.48.4] — 2026-10-02 — D15 fix: archive grid runs its own query
+
+- **Root cause, found with a temporary admin-only debug snippet (#52, deleted after use):** after every `pre_get_posts` callback, including ours at `PHP_INT_MAX`, the global archive query reports `posts_per_page=10` with our `posts_per_archive_page=36` still set and an **empty `request` SQL**. The object the template loops over isn't the query WordPress ran with our vars; something on the site rebuilds the main archive query. 0.48.1–0.48.3 were attempts to win on the main query, and none could.
+- `templates/archive-listing.php` now runs its own `WP_Query`: the main query's vars (which already carry this plugin's search, category, feature, type and sort filters) with `posts_per_page` = 36 and `paged` on top. Pagination uses that query's `max_num_pages`.
+- "Open now" applies the same after-query filter to this query and stays on one page.
+- A page past the last one (for example `/listings/page/5/`) returns a real **404** instead of an empty grid.
+- Removed the 0.48.3 `pre_option_posts_per_page` override. It didn't help and would have leaked the option to anything else reading it during setup. The Jetpack Infinite Scroll opt-out (0.48.2) stays: listings use numbered pages, not a "More Listings" button.
+
 ## [0.48.3] — 2026-10-02 — D15 fix: archive page size, take three
 
 - With Infinite Scroll off (0.48.2), `/listings/` was still 10 per page and 11 pages. Something still resets the main query to the Reading setting ("Blog pages show at most" = 10) after every `pre_get_posts` callback. It left the old `-1` alone, which is why "all on one page" used to work.

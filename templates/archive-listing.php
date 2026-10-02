@@ -12,6 +12,42 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 
+/*
+ * D15: the grid runs its own query instead of the main loop. On this site the
+ * main archive query is rebuilt after pre_get_posts (a debug dump showed
+ * posts_per_page=10 with our posts_per_archive_page=36 still set and no SQL
+ * of its own), so its page size can't be controlled from here. The query vars
+ * already carry this plugin's search filters (lis_directory_apply_search_filters()),
+ * so they're reused with our page size on top.
+ */
+global $wp_query;
+$lis_paged    = max( 1, (int) get_query_var( 'paged' ) );
+$lis_open_now = ! empty( $_GET['lis_open_now'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only filter param.
+$lis_per_page = $lis_open_now ? -1 : LIS_DIRECTORY_LISTINGS_PER_PAGE;
+$lis_query    = new WP_Query( array_merge( $wp_query->query_vars, array(
+	'posts_per_page'         => $lis_per_page,
+	'posts_per_archive_page' => $lis_per_page,
+	'paged'                  => $lis_paged,
+	'nopaging'               => false,
+	'no_found_rows'          => false,
+	'fields'                 => 'all',
+) ) );
+if ( $lis_open_now ) {
+	// Same post-query filter the main query gets (lis_directory_filter_the_posts_open_now()).
+	$lis_query->posts      = array_values( array_filter( $lis_query->posts, function ( $p ) {
+		return true === lis_directory_is_listing_open_now( $p->ID );
+	} ) );
+	$lis_query->post_count = count( $lis_query->posts );
+}
+// Past the last page of our own paging: a real 404, not an empty grid.
+if ( $lis_paged > 1 && ! $lis_query->have_posts() ) {
+	$wp_query->set_404();
+	status_header( 404 );
+	nocache_headers();
+	include get_404_template();
+	return;
+}
+
 get_header();
 
 $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Listings';
@@ -23,7 +59,7 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 		<?php echo lis_directory_render_search_form_shortcode( array() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already escaped inside the render function. ?>
 	<?php endif; ?>
 
-	<?php if ( have_posts() ) : ?>
+	<?php if ( $lis_query->have_posts() ) : ?>
 		<?php if ( function_exists( 'lis_directory_render_listing_toolbar' ) ) : ?>
 			<?php lis_directory_render_listing_toolbar(); ?>
 		<?php endif; ?>
@@ -40,8 +76,8 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 
 		<div class="lis-listing-grid" data-lis-listing-results>
 			<?php
-			while ( have_posts() ) :
-				the_post();
+			while ( $lis_query->have_posts() ) :
+				$lis_query->the_post();
 				$post_id     = get_the_ID();
 				$type        = lis_directory_get_listing_type( $post_id );
 				$address     = get_post_meta( $post_id, '_lis_listing_address', true );
@@ -118,8 +154,8 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 		</div>
 
 		<?php
-		global $wp_query;
-		echo lis_directory_render_listing_pagination( $wp_query->max_num_pages, get_query_var( 'paged' ) ); // phpcs:ignore -- built by paginate_links().
+		wp_reset_postdata();
+		echo lis_directory_render_listing_pagination( $lis_query->max_num_pages, $lis_paged ); // phpcs:ignore -- built by paginate_links().
 		?>
 
 		<?php wp_enqueue_script( 'lis-directory-listing-view-toggle', LIS_DIRECTORY_URL . 'assets/js/listing-view-toggle.js', array(), LIS_DIRECTORY_VERSION, true ); ?>
