@@ -18,7 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_shortcode( 'lis_listing_search', 'lis_directory_render_search_form_shortcode' );
 add_action( 'pre_get_posts', 'lis_directory_apply_search_filters' );
-add_action( 'pre_get_posts', 'lis_directory_set_listings_page_size' );
+// Runs last: something else on the site (theme or another plugin) resets an
+// archive's page size to the 10-post Reading setting at the default priority.
+add_action( 'pre_get_posts', 'lis_directory_set_listings_page_size', PHP_INT_MAX );
 
 /**
  * D15: listings per page on the archive, category archives and
@@ -41,7 +43,10 @@ function lis_directory_set_listings_page_size( $query ) {
 	if ( ! $query->is_post_type_archive( 'lis_listing' ) && ! $query->is_tax( 'lis_listing_category' ) ) {
 		return;
 	}
-	$query->set( 'posts_per_page', empty( $_GET['lis_open_now'] ) ? LIS_DIRECTORY_LISTINGS_PER_PAGE : -1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only filter param.
+	$per_page = empty( $_GET['lis_open_now'] ) ? LIS_DIRECTORY_LISTINGS_PER_PAGE : -1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only filter param.
+	$query->set( 'posts_per_page', $per_page );
+	// WP_Query lets posts_per_archive_page override posts_per_page on archives.
+	$query->set( 'posts_per_archive_page', $per_page );
 }
 
 /**

@@ -1,3 +1,8 @@
+## [0.48.1] — 2026-10-02 — D15 fix: archive page size
+
+- Verifying 0.48.0 live: `[lis_listing_grid]` paged correctly (36 / 36 / 36 / 2), but the `/listings/` archive came out at **10 per page, 11 pages**. Something else on the site resets the main archive query's page size to the 10-post Reading setting at the default `pre_get_posts` priority. The old `-1` value happened to slip past it.
+- `lis_directory_set_listings_page_size()` now runs at `PHP_INT_MAX`, so it's last, and sets `posts_per_archive_page` as well as `posts_per_page`, since WP_Query prefers the former on archives.
+
 ## [0.48.0] — 2026-10-02 — Audit follow-ups: B13, B25, D15, D17, D19, D22
 
 From the 2026-09-30 site audit (brief: "LIS Directory — Plugin Build Brief (Audit Follow-ups)", 2026-10-01). D2 (slug cleanup) ships separately.
