@@ -1,3 +1,58 @@
+## [0.48.0] — 2026-10-02 — Audit follow-ups: B13, B25, D15, D17, D19, D22
+
+From the 2026-09-30 site audit (brief: "LIS Directory — Plugin Build Brief (Audit Follow-ups)", 2026-10-01). D2 (slug cleanup) ships separately.
+
+### D19: no empty section headings on a listing
+
+- **Description** renders only when the listing has a description (text once tags, shortcodes, whitespace and `&nbsp;` are stripped, or an image/embed). With no description, `the_content()` still runs headless, because Jetpack hangs its Related Posts placeholder off it.
+- **Related** (Jetpack Related Posts): Jetpack prints its "Related" headline server-side and fills the items later over AJAX, so a listing with nothing related shipped an empty `<h3>Related</h3>`. On listings the headline is now filtered out (`jetpack_relatedposts_filter_headline`), and `listing-related-posts.js` puts the same `h3.jp-relatedposts-headline` markup back once at least one item has loaded. A listing with related items looks the same as before.
+
+### D22: alt text on listing images
+
+- `lis_directory_listing_image_alt()` returns the attachment's own alt, or the listing title when that's empty. Used on single gallery images, the single hero thumbnail, archive cards, `[lis_listing_grid]` / author-profile cards and the edit-form photo thumbnails.
+- Jetpack Related Posts thumbnails of other listings get the related listing's title as `alt_text` when theirs is empty (`jetpack_relatedposts_returned_results`).
+- Meta description: **decided in SEOPress, not here** (Titles & Metas → Post Types → Listings, built from the excerpt). No plugin change.
+
+### B25: branded fallback image
+
+- A listing with no photo gets `lis_directory_render_listing_fallback_image()`: the LIS logomark (inline SVG, `currentColor`) on a Pine tint, `role="img"` with the listing title as its label. Card size matches a real card thumb (170px, 200px wide in List view). The single version is 280px with the container radius.
+- Colours: `--lis-dir-fallback-bg` → `--lis-dir-color-accent-soft` → `--lis-pine-100`, `--lis-dir-fallback-mark` → `--lis-dir-color-accent` → `--lis-pine-700`. No new literals beyond the existing palette fallbacks. Both are in THEMING.md.
+- Cards from `lis_directory_render_listing_card()` now always have a thumb wrap, so Featured/Popular/Verified and the category badge overlay the fallback the same way they overlay a photo. The old no-photo branch that moved badges into the meta row is gone.
+
+### D17: Popular is rule-based
+
+- **Rule:** a listing is Popular when it's in the top **`LIS_DIRECTORY_POPULAR_TOP_PERCENT` = 10%** of published listings by views over the last **`LIS_DIRECTORY_POPULAR_WINDOW_DAYS` = 30 days**, with at least **`LIS_DIRECTORY_POPULAR_MIN_VIEWS` = 5** views in that window (so a quiet month doesn't badge whoever got one view). Constants are at the top of `includes/listings-badges.php`. Slots = ceil(published × 10%), so 11 of 110 today.
+- **Counting moved to the browser.** The site is behind the WordPress.com edge cache (`x-ac: … STALE`), so most anonymous page views never reached the old `template_redirect` counter, which only saw cache misses. `listing-actions.js` now sends a `navigator.sendBeacon` to `admin-ajax.php?action=lis_directory_listing_view`. There's no nonce because cached HTML would carry a stale one.
+- **Beacon protections:**
+  1. **Once per listing per browser session.** `sessionStorage` key `lis_viewed_<id>`; reloads and back/forward don't recount.
+  2. **Bots skipped.** An empty user agent, or one matching `bot|crawl|spider|slurp|preview|headless|lighthouse`, gets a 200 but isn't counted. Most crawlers don't run JS, so they never send the beacon anyway.
+  3. **Per-IP rate limit.** At most **`LIS_DIRECTORY_VIEW_RATE_LIMIT` = 30** counted hits per IP per minute (fixed one-minute window; the counter is a transient keyed by a salted hash of the IP, so no raw IP is stored). Hits over the limit get a 200 and aren't counted.
+  4. The endpoint only counts **published `lis_listing`** IDs (anything else → 400), and editors (`edit_others_posts`) aren't counted.
+- Per-day counts live in `_lis_listing_views_by_day` (`Ymd => count`, pruned to the window on write). `_lis_listing_views` is still the all-time total.
+- The ranked set is computed once and cached in the `lis_directory_popular_ids` transient for an hour.
+- The listing edit screen's Badges box shows 30-day and all-time views and why the badge is or isn't showing.
+- **Ramp-up:** the 30-day counts start at zero on deploy, so badges disappear until listings collect at least 5 views in the window. Under the old rule (≥ 20 lifetime views) 31 of 109 cards were badged.
+
+### D15: pagination
+
+- **`LIS_DIRECTORY_LISTINGS_PER_PAGE` = 36** on the `lis_listing` archive, `lis_listing_category` archives and `[lis_listing_grid]` (the `/services/local-directory/local-business/` page). It used to show all ~110 on one page.
+- Plain numbered links (`paginate_links()`, `nav.lis-listing-pagination`), no JS. They use `/page/N/`, and page 2+ is a real crawlable URL. `get_pagenum_link()` keeps the query string, so search, category, features and sort carry across pages.
+- **Open now** stays on one page: that filter runs after the SQL query, so paging it would give short or empty pages.
+- `[lis_listing_grid count="N"]` with an explicit count is still a fixed preview with no pagination.
+- Map view plots the current page's listings.
+- Pagination colours are `--lis-dir-pagination-*` (THEMING.md).
+
+### B13: directory rules out of the inline Page Skin
+
+- The 266 KB of inline CSS on `/listings/cafe-95/` is mostly the site's own Code Snippets (`lis-page-skin` 72 KB, `lis-page-skin-v2` 28 KB, printed on **every** page), not plugin output. By decision, only the directory rules moved. Footer, calendar, heroes, account and the other site-wide sections stay in the snippets.
+- New **`assets/css/directory-skin.css`** (12.4 KB) holds, verbatim and in order: Page Skin "Directory search: glass bar" (`.uagb-block-3ad17e27 …`), the search bar's Glass Rim rule, the 600px search-bar padding, "Listing card tags", and all of Page Skin v2 "[Single Listing v1]".
+- It loads only on directory requests (`lis_directory_is_directory_request()`: single/archive/term templates, `listings.css` already enqueued, or a page containing a `[lis_listing_grid|search|author_profile|dashboard]` shortcode). It's printed as a `<link>` from `wp_head` at priority `LIS_DIRECTORY_SKIN_HEAD_PRIORITY`, just before the snippets, so the rules keep the same cascade position.
+- Parity check: on the live pages (Page Skin snippet #44 prints at `wp_head` 100, so the `<link>` at 99 lands just before `lis-nav-glass` and the skin), the moved rules were swapped from the inline snippets into a stylesheet at that position, and every element's computed style (plus `::before`) was diffed. **0 differences** on Cafe 95, the Local Directory hero search and the Local Business archive, at desktop width and at 390px.
+
+### Site snippets (for Lucca)
+
+- The moved rules were removed from the "Page Skin" snippets in the same session (see the Site Changelog entry). If you ever restore an older copy of those snippets, these rules come back as duplicates, which is harmless but redundant.
+
 ## [0.47.0] — 2026-09-26 — Themeable through CSS custom properties
 
 Requested: make the plugin restylable by setting variables instead of overriding selectors with `!important`, with defaults that already match the brand. **THEMING.md** (new, plugin root) is the contract: every variable, its default chain, the exact selector and property it styles, and the stable class hooks.

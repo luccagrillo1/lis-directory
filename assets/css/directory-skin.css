@@ -1,0 +1,75 @@
+/*
+ * LIS Directory: directory skin (B13, 0.48.0).
+ *
+ * Site-specific rules moved out of the site's "Page Skin" Code Snippets
+ * (inline <style id="lis-page-skin"> / "lis-page-skin-v2" on every page) so
+ * they load as a cached file, and only on pages where this plugin renders.
+ * Copied verbatim, in their original order, so nothing changes visually.
+ * Printed right before the Page Skin snippets in <head> (see
+ * lis_directory_print_directory_skin()), keeping the same cascade position.
+ *
+ * These are site overrides, not part of the THEMING.md contract — the
+ * .uagb-block-3ad17e27 selectors are the Local Directory hero's Spectra block.
+ */
+
+/* Directory search: glass bar */
+.uagb-block-3ad17e27 .lis-listing-search-form{position:relative;isolation:isolate;max-width:960px;margin:0 auto !important;padding:14px !important;border-radius:12px;}
+.uagb-block-3ad17e27 .lis-listing-search-form::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:rgba(22,40,31,.24);-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%);border:1px solid rgba(251,250,246,.14);box-shadow:0 16px 48px rgba(10,20,15,.22);}
+.uagb-block-3ad17e27 .lis-listing-search-row{gap:10px !important;align-items:stretch !important;}
+.uagb-block-3ad17e27{--lis-dir-search-input-bg:var(--lis-canvas,#FBFAF6);--lis-dir-search-input-text:var(--lis-ink-900,#1A1D19);--lis-dir-search-input-border:transparent;--lis-dir-search-input-radius:6px;--lis-dir-search-input-border-focus:var(--lis-pine-200,#C3D3C8);--lis-dir-search-submit-bg:var(--lis-pine-700,#2C5240);--lis-dir-search-submit-bg-hover:var(--lis-pine-600,#37654F);--lis-dir-search-submit-text:var(--lis-canvas,#FBFAF6);--lis-dir-search-submit-radius:6px;--lis-dir-search-more-bg:rgba(251,250,246,.14);--lis-dir-search-more-text:var(--lis-canvas,#FBFAF6);--lis-dir-search-more-radius:6px;}
+.uagb-block-3ad17e27 .lis-listing-search-input,.uagb-block-3ad17e27 .lis-listing-search-select{height:48px !important;font-family:'Source Sans 3',sans-serif !important;font-size:16px !important;padding:0 14px !important;box-shadow:none !important;/* Astra input rules outrank plugin vars (per LIS Directory 0.47.0 THEMING), so these stay explicit */background-color:var(--lis-canvas,#FBFAF6) !important;color:var(--lis-ink-900,#1A1D19) !important;border:1px solid transparent !important;border-radius:6px !important;}
+.uagb-block-3ad17e27 .lis-listing-search-input:focus,.uagb-block-3ad17e27 .lis-listing-search-select:focus{outline:2px solid var(--lis-pine-200,#C3D3C8) !important;outline-offset:1px;}
+.uagb-block-3ad17e27 .lis-listing-search-submit{height:48px !important;padding:0 24px !important;font-weight:600 !important;font-size:16px !important;}
+.uagb-block-3ad17e27 .lis-listing-search-more{margin-top:10px !important;}
+.uagb-block-3ad17e27 .lis-listing-search-more > summary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px !important;border:1px solid rgba(251,250,246,.22) !important;font-weight:600;font-size:15px;cursor:pointer;}
+.uagb-block-3ad17e27 .lis-listing-search-more > summary:hover{background:rgba(251,250,246,.24) !important;}
+
+/* Glass Rim v2.1: search bar rim */
+.uagb-block-3ad17e27 .lis-listing-search-form::before{border:1px solid transparent !important;background:linear-gradient(115deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 45%) padding-box,linear-gradient(rgba(22,40,31,.24),rgba(22,40,31,.24)) padding-box,linear-gradient(135deg,rgba(255,255,255,.60) 0%,rgba(255,255,255,.14) 35%,rgba(255,255,255,.06) 55%,rgba(255,255,255,.22) 85%,rgba(255,255,255,.50) 100%) border-box !important;}
+
+/* Mobile: search bar padding */
+@media (max-width:600px){.uagb-block-3ad17e27 .lis-listing-search-form{padding:10px !important;}}
+
+/* Listing card tags: light frosted glass over the photo */
+.lis-listing-card-thumb-badges .lis-listing-category-badge,.lis-listing-card-thumb-badges .lis-listing-badge--featured{border:1px solid transparent !important;background:linear-gradient(115deg,rgba(255,255,255,.35) 0%,rgba(255,255,255,0) 55%) padding-box,linear-gradient(rgba(251,250,246,.58),rgba(251,250,246,.58)) padding-box,linear-gradient(135deg,#FFFFFF 0%,rgba(255,255,255,.5) 35%,rgba(22,40,31,.10) 55%,rgba(255,255,255,.5) 85%,rgba(255,255,255,.9) 100%) border-box !important;-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);box-shadow:0 2px 8px rgba(22,40,31,.14),inset 0 1px 0 rgba(255,255,255,.7);color:var(--lis-pine-900,#16281F) !important;font-weight:700 !important;}
+.lis-listing-card-thumb-badges .lis-listing-badge--featured{color:var(--lis-clay-700,#8C3E20) !important;}
+
+/* ===== [Single Listing v1] ===== */
+body.single-lis_listing .lis-listing-gallery-strip{overflow:hidden;border-radius:12px !important;background:var(--lis-pine-100,#E4EBE4) !important;}
+body.single-lis_listing .lis-listing-gallery-img{width:100% !important;height:clamp(240px,42vw,480px) !important;object-fit:cover !important;display:block;}
+body.single-lis_listing .lis-listing-header{padding-top:24px !important;align-items:flex-start;}
+body.single-lis_listing .lis-listing-title{font-family:'Gabarito',sans-serif !important;font-weight:600 !important;letter-spacing:-.025em;color:var(--lis-pine-900,#16281F) !important;font-size:clamp(34px,4.4vw,52px) !important;line-height:1.05 !important;margin:0 0 12px !important;}
+body.single-lis_listing .lis-listing-header-meta{gap:8px !important;flex-wrap:wrap;}
+body.single-lis_listing .lis-listing-header-meta .lis-listing-badge,body.single-lis_listing .lis-listing-header-meta .lis-listing-category-badge{border:1px solid transparent !important;background:linear-gradient(115deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.18) 40%,rgba(255,255,255,0) 62%) padding-box,linear-gradient(180deg,rgba(255,255,255,.95) 0%,var(--lis-pine-100,#E4EBE4) 100%) padding-box,linear-gradient(135deg,#FFFFFF 0%,rgba(255,255,255,.5) 35%,rgba(22,40,31,.10) 55%,rgba(255,255,255,.5) 85%,rgba(255,255,255,.9) 100%) border-box !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 3px rgba(22,40,31,.08) !important;color:var(--lis-pine-900,#16281F) !important;font-weight:700 !important;padding:6px 12px !important;text-decoration:none !important;}
+body.single-lis_listing .lis-listing-header-actions{gap:8px !important;}
+body.single-lis_listing .lis-listing-bookmark-btn,body.single-lis_listing .lis-listing-share-btn{border:1px solid transparent !important;background:linear-gradient(115deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.18) 40%,rgba(255,255,255,0) 62%) padding-box,linear-gradient(180deg,rgba(255,255,255,.95) 0%,var(--lis-pine-100,#E4EBE4) 100%) padding-box,linear-gradient(135deg,#FFFFFF 0%,rgba(255,255,255,.5) 35%,rgba(22,40,31,.10) 55%,rgba(255,255,255,.5) 85%,rgba(255,255,255,.9) 100%) border-box !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 3px rgba(22,40,31,.08) !important;min-height:40px !important;padding:0 16px !important;border-radius:6px !important;color:var(--lis-pine-900,#16281F) !important;font-weight:600 !important;font-size:15px !important;cursor:pointer;}
+body.single-lis_listing .lis-listing-bookmark-btn:hover,body.single-lis_listing .lis-listing-share-btn:hover{filter:brightness(.98);}
+body.single-lis_listing .lis-listing-section > h2,body.single-lis_listing .lis-listing-section > h3,body.single-lis_listing .lis-listing-main h2,body.single-lis_listing .lis-listing-main h3{font-family:'Gabarito',sans-serif !important;font-weight:600 !important;letter-spacing:-.015em;color:var(--lis-pine-900,#16281F) !important;}
+body.single-lis_listing .lis-listing-flag-form{border:1px solid var(--lis-line,#DEDFD8) !important;border-radius:12px !important;background:var(--lis-surface,#FFFFFF) !important;box-shadow:inset 0 1px 0 #FFFFFF;margin-bottom:10px !important;}
+body.single-lis_listing .lis-listing-flag-form > summary{padding:12px 16px !important;font-weight:600;color:var(--lis-pine-900,#16281F);cursor:pointer;}
+body.single-lis_listing .lis-listing-flag-form > summary:hover{color:var(--lis-pine-700,#2C5240);}
+body.single-lis_listing .lis-listing-meta{background:var(--lis-surface,#FFFFFF) !important;border:1px solid var(--lis-line,#DEDFD8) !important;border-radius:12px !important;box-shadow:inset 0 1px 0 #FFFFFF,0 1px 2px rgba(22,40,31,.04);padding:18px 20px !important;}
+body.single-lis_listing .lis-listing-meta-row{padding:8px 0 !important;border-bottom:1px solid var(--lis-line,#DEDFD8);align-items:baseline;gap:12px;}
+body.single-lis_listing .lis-listing-meta-row:last-child{border-bottom:0;}
+body.single-lis_listing .lis-listing-meta-label{font-size:11px !important;font-weight:600 !important;letter-spacing:.13em;text-transform:uppercase;color:var(--lis-ink-600,#5C6159) !important;min-width:72px;}
+body.single-lis_listing .lis-listing-meta-row a{color:var(--lis-pine-700,#2C5240) !important;font-weight:600;text-decoration:none;word-break:break-word;}
+body.single-lis_listing .lis-listing-meta-row a:hover{text-decoration:underline;text-underline-offset:3px;}
+body.single-lis_listing .lis-listing-map{overflow:hidden !important;border-radius:12px !important;border:1px solid var(--lis-line,#DEDFD8);}
+body.single-lis_listing .ast-related-posts-title-section .ast-related-posts-title,body.single-lis_listing .ast-related-posts-title{font-family:'Gabarito',sans-serif !important;font-weight:600 !important;font-size:24px !important;letter-spacing:-.015em;color:var(--lis-pine-900,#16281F) !important;text-transform:none !important;}
+body.single-lis_listing .ast-related-post img,body.single-lis_listing .ast-related-post .post-thumb-img-content img{border-radius:12px !important;aspect-ratio:4/3;object-fit:cover;width:100%;}
+body.single-lis_listing .ast-related-post .entry-title,body.single-lis_listing .ast-related-post .entry-title a{font-family:'Gabarito',sans-serif !important;font-weight:600 !important;color:var(--lis-pine-900,#16281F) !important;}
+body.single-lis_listing .comment-respond .comment-reply-title,body.single-lis_listing .comments-title,body.single-lis_listing #comments h2,body.single-lis_listing #comments h3{font-family:'Gabarito',sans-serif !important;font-weight:600 !important;color:var(--lis-pine-900,#16281F) !important;letter-spacing:-.015em;}
+body.single-lis_listing .comment-respond textarea,body.single-lis_listing .comment-respond input[type=text],body.single-lis_listing .comment-respond input[type=email],body.single-lis_listing .comment-respond input[type=url]{border:1px solid var(--lis-line,#DEDFD8) !important;border-radius:6px !important;background:var(--lis-surface,#FFFFFF) !important;box-shadow:none !important;}
+body.single-lis_listing .comment-respond textarea:focus,body.single-lis_listing .comment-respond input:focus{border-color:var(--lis-pine-700,#2C5240) !important;box-shadow:0 0 0 3px var(--lis-pine-100,#E4EBE4) !important;outline:none !important;}
+body.single-lis_listing .comment-respond .submit,body.single-lis_listing .comment-respond input[type=submit],body.single-lis_listing .comment-respond button[type=submit]{background:var(--lis-pine-700,#2C5240) !important;color:var(--lis-canvas,#FBFAF6) !important;border:0 !important;border-radius:6px !important;min-height:44px;padding:0 22px !important;font-weight:600 !important;}
+body.single-lis_listing .comment-respond .submit:hover,body.single-lis_listing .comment-respond input[type=submit]:hover{background:var(--lis-pine-600,#37654F) !important;}
+body.single-lis_listing .lis-listing-section > h2{font-size:22px !important;margin-bottom:12px !important;}
+body.single-lis_listing .jp-relatedposts{margin-top:28px !important;padding-top:24px !important;border-top:1px solid var(--lis-line,#DEDFD8) !important;}
+body.single-lis_listing .jp-relatedposts .jp-relatedposts-headline{margin:0 0 14px !important;}
+body.single-lis_listing .jp-relatedposts .jp-relatedposts-headline em{font-style:normal !important;font-family:'Gabarito',sans-serif !important;font-weight:600 !important;font-size:22px !important;letter-spacing:-.015em;color:var(--lis-pine-900,#16281F) !important;}
+body.single-lis_listing .jp-relatedposts .jp-relatedposts-headline em::before{content:none !important;}
+body.single-lis_listing .jp-relatedposts-post-img{border-radius:12px !important;aspect-ratio:4/3;object-fit:cover;width:100% !important;height:auto !important;margin-bottom:8px !important;}
+body.single-lis_listing .jp-relatedposts-post-title,body.single-lis_listing .jp-relatedposts-post-title a{font-family:'Gabarito',sans-serif !important;font-weight:600 !important;font-size:16px !important;color:var(--lis-pine-900,#16281F) !important;text-decoration:none !important;}
+body.single-lis_listing .jp-relatedposts-post-excerpt{color:var(--lis-ink-600,#5C6159) !important;font-size:14px !important;line-height:1.5 !important;}
+body.single-lis_listing .jp-relatedposts-post-context{color:var(--lis-ink-600,#5C6159) !important;font-size:12px !important;opacity:.8;}
+@media (max-width:600px){body.single-lis_listing .lis-listing-header{flex-direction:column !important;gap:12px;}body.single-lis_listing .lis-listing-columns{gap:20px !important;}}

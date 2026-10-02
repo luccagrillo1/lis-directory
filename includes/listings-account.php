@@ -80,11 +80,12 @@ function lis_directory_handle_toggle_sold() {
 function lis_directory_render_grid_shortcode( $atts ) {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 
-	// count="-1" (the default) means every published listing, no pagination —
-	// same "scroll, don't click through pages" behavior as the main archive
-	// (see lis_directory_show_all_listings_on_one_page() in listings-search.php).
-	// A caller can still pass an explicit count for a genuine preview widget.
+	// count="-1" (the default) means every published listing, paged
+	// LIS_DIRECTORY_LISTINGS_PER_PAGE at a time with numbered links, same as the
+	// main archive (D15). An explicit count is a fixed preview widget: that many
+	// listings, no pagination.
 	$atts  = shortcode_atts( array( 'type' => '', 'count' => -1, 'search' => 'auto' ), $atts, 'lis_listing_grid' );
+	$paged = -1 === (int) $atts['count'];
 	$types = lis_directory_get_listing_types();
 	$type  = isset( $types[ $atts['type'] ] ) ? $atts['type'] : '';
 
@@ -105,7 +106,9 @@ function lis_directory_render_grid_shortcode( $atts ) {
 	$query_args = array(
 		'post_type'      => 'lis_listing',
 		'post_status'    => 'publish',
-		'posts_per_page' => ( -1 === (int) $atts['count'] ) ? -1 : max( 1, (int) $atts['count'] ),
+		'posts_per_page' => $paged ? LIS_DIRECTORY_LISTINGS_PER_PAGE : max( 1, (int) $atts['count'] ),
+		'paged'          => $paged ? max( 1, (int) get_query_var( 'paged' ), (int) get_query_var( 'page' ) ) : 1,
+		'no_found_rows'  => ! $paged,
 	);
 
 	if ( $type ) {
@@ -121,7 +124,8 @@ function lis_directory_render_grid_shortcode( $atts ) {
 		}
 	}
 
-	$listings     = get_posts( $query_args );
+	$grid_query   = new WP_Query( $query_args );
+	$listings     = $grid_query->posts;
 	$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
 
 	ob_start();
@@ -147,6 +151,10 @@ function lis_directory_render_grid_shortcode( $atts ) {
 				<?php echo lis_directory_render_listing_card( $listing ); // phpcs:ignore -- escaped inside helper. ?>
 			<?php endforeach; ?>
 		</div>
+
+		<?php if ( $paged ) : ?>
+			<?php echo lis_directory_render_listing_pagination( $grid_query->max_num_pages, $query_args['paged'] ); // phpcs:ignore -- built by paginate_links(). ?>
+		<?php endif; ?>
 
 		<?php wp_enqueue_script( 'lis-directory-listing-view-toggle', LIS_DIRECTORY_URL . 'assets/js/listing-view-toggle.js', array(), LIS_DIRECTORY_VERSION, true ); ?>
 	<?php endif; ?>
@@ -394,25 +402,27 @@ function lis_directory_render_listing_card( $post ) {
 
 	ob_start();
 	?>
-	<?php $has_thumb = has_post_thumbnail( $post ); ?>
 	<a class="lis-listing-card" href="<?php echo esc_url( get_permalink( $post ) ); ?>" <?php echo $address ? 'data-address="' . esc_attr( $address ) . '" data-title="' . esc_attr( get_the_title( $post ) ) . '"' : ''; ?>>
-		<?php if ( $has_thumb ) : ?>
-			<div class="lis-listing-card-thumb-wrap">
-				<?php echo get_the_post_thumbnail( $post, 'medium', array( 'class' => 'lis-listing-card-thumb' ) ); ?>
-				<?php if ( $featured || $popular || $verified ) : ?>
-					<div class="lis-listing-card-thumb-badges lis-listing-card-thumb-badges--left">
-						<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
-						<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
-						<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Verified</span><?php endif; ?>
-					</div>
-				<?php endif; ?>
-				<?php if ( $category ) : ?>
-					<div class="lis-listing-card-thumb-badges lis-listing-card-thumb-badges--right">
-						<span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span>
-					</div>
-				<?php endif; ?>
-			</div>
-		<?php endif; ?>
+		<?php // B25: every card has an image — the photo, or the branded fallback (badges overlay either). ?>
+		<div class="lis-listing-card-thumb-wrap">
+			<?php if ( has_post_thumbnail( $post ) ) : ?>
+				<?php echo get_the_post_thumbnail( $post, 'medium', array( 'class' => 'lis-listing-card-thumb', 'alt' => lis_directory_listing_image_alt( get_post_thumbnail_id( $post ), $post ) ) ); ?>
+			<?php else : ?>
+				<?php echo lis_directory_render_listing_fallback_image( $post, 'card' ); // phpcs:ignore -- escaped inside helper. ?>
+			<?php endif; ?>
+			<?php if ( $featured || $popular || $verified ) : ?>
+				<div class="lis-listing-card-thumb-badges lis-listing-card-thumb-badges--left">
+					<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
+					<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
+					<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Verified</span><?php endif; ?>
+				</div>
+			<?php endif; ?>
+			<?php if ( $category ) : ?>
+				<div class="lis-listing-card-thumb-badges lis-listing-card-thumb-badges--right">
+					<span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span>
+				</div>
+			<?php endif; ?>
+		</div>
 		<div class="lis-listing-card-body">
 			<div class="lis-listing-card-title-row">
 				<p class="lis-listing-card-title"><?php echo esc_html( get_the_title( $post ) ); ?></p>
@@ -420,15 +430,9 @@ function lis_directory_render_listing_card( $post ) {
 					<span class="lis-listing-open-status lis-listing-open-status--sm <?php echo $is_open ? 'is-open' : 'is-closed'; ?>"><?php echo $is_open ? 'Open' : 'Closed'; ?></span>
 				<?php endif; ?>
 			</div>
-			<?php if ( ! $has_thumb || $avg_rating ) : ?>
+			<?php if ( $avg_rating ) : ?>
 				<div class="lis-listing-card-meta-row">
-					<?php if ( ! $has_thumb ) : ?>
-						<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
-						<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
-						<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Verified</span><?php endif; ?>
-						<?php if ( $category ) : ?><span class="lis-listing-category-badge"><?php echo esc_html( $category->name ); ?></span><?php endif; ?>
-					<?php endif; ?>
-					<?php if ( $avg_rating ) : ?><span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?></span><?php endif; ?>
+					<span class="lis-listing-rating-summary"><?php echo esc_html( lis_directory_render_stars( $avg_rating ) ); ?></span>
 				</div>
 			<?php endif; ?>
 			<?php if ( ( 'real-estate-sale' === $type || 'real-estate-rent' === $type ) && ( $bedrooms || $bathrooms || $sqft ) ) : ?>

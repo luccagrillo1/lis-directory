@@ -83,7 +83,7 @@ Radii of `50%` (avatars, info dots), `0` (underline inputs, business cards, segm
 toggle buttons) and the `999px` wizard progress track are geometry, not scale values, so
 they stay literal. The progress track is still exposed as `--lis-dir-wizard-progress-radius`.
 
-## Component variables (221)
+## Component variables (229)
 
 Groups follow the markup. "Styles" lists the exact selector and property each variable
 feeds. Where a component variable falls back to a shared one (e.g. `--lis-dir-btn-bg`),
@@ -191,6 +191,14 @@ Small pill-like labels: feature chips, social links, plan “Save”/“Included
 | `--lis-dir-card-shadow` | `0 1px 3px rgba(0, 0, 0, 0.06)` | `.lis-listing-card` box-shadow |
 | `--lis-dir-card-shadow-hover` | `0 6px 16px rgba(0, 0, 0, 0.1)` | `.lis-listing-card:hover` box-shadow |
 | `--lis-dir-card-thumb-bg` | `--lis-dir-color-canvas` → `--lis-canvas` → `#FBFAF6` | `.lis-listing-card-thumb` background |
+| `--lis-dir-fallback-bg` | `--lis-dir-color-accent-soft` → `--lis-pine-100` → `#E4EBE4` | `.lis-listing-fallback-img` background (no-photo listing, card and single) |
+| `--lis-dir-fallback-mark` | `--lis-dir-color-accent` → `--lis-pine-700` → `#2C5240` | `.lis-listing-fallback-img` logomark color |
+| `--lis-dir-pagination-bg` | `--lis-dir-color-surface` → `--lis-surface` → `#FFFFFF` | `.lis-listing-pagination .page-numbers` background |
+| `--lis-dir-pagination-border` | `1px solid var(--lis-dir-color-line)` | `.lis-listing-pagination .page-numbers` border |
+| `--lis-dir-pagination-radius` | `--lis-dir-radius-control` → `--lis-radius-control` → `6px` | `.lis-listing-pagination .page-numbers` border-radius |
+| `--lis-dir-pagination-text` | `--lis-dir-color-text` → `--lis-ink-900` → `#1A1D19` | `.lis-listing-pagination .page-numbers` color |
+| `--lis-dir-pagination-accent` | `--lis-dir-color-accent` → `--lis-pine-700` → `#2C5240` | `.lis-listing-pagination` hover + current page |
+| `--lis-dir-pagination-current-text` | `--lis-dir-color-surface` → `--lis-surface` → `#FFFFFF` | `.lis-listing-pagination .page-numbers.current` color |
 | `--lis-dir-card-title-font` | `--lis-dir-font-heading` → `'Gabarito', sans-serif` | `.lis-listing-card-title` font-family |
 | `--lis-dir-map-border` | `1px solid var(--lis-dir-color-line)` | `.lis-listing-map-view` border |
 | `--lis-dir-map-radius` | `--lis-dir-radius-container` → `--lis-radius-container` → `12px` | `.lis-listing-map-view` border-radius<br>`.lis-listing-map` border-radius |
@@ -434,7 +442,7 @@ New classes are only ever added, BEM-style and `lis-`-prefixed.
 - `.lis-listing-author-bio`, `.lis-listing-author-header`, `.lis-listing-author-name`, `.lis-listing-author-profile`
 - `.lis-listing-badge`, `.lis-listing-badge--featured`, `.lis-listing-badge--popular`, `.lis-listing-badge--sold`, `.lis-listing-badge--verified`
 - `.lis-listing-bookmark-btn`
-- `.lis-listing-card`, `.lis-listing-card-body`, `.lis-listing-card-excerpt`, `.lis-listing-card-facts`, `.lis-listing-card-facts--salary`, `.lis-listing-card-meta-row`, `.lis-listing-card-tags`, `.lis-listing-card-thumb`, `.lis-listing-card-thumb-badges`, `.lis-listing-card-thumb-badges--left`, `.lis-listing-card-thumb-badges--right`, `.lis-listing-card-thumb-wrap`, `.lis-listing-card-title`, `.lis-listing-card-title-right`, `.lis-listing-card-title-row`
+- `.lis-listing-card`, `.lis-listing-card-body`, `.lis-listing-card-excerpt`, `.lis-listing-card-facts`, `.lis-listing-card-facts--salary`, `.lis-listing-card-meta-row`, `.lis-listing-card-tags`, `.lis-listing-card-thumb`, `.lis-listing-card-thumb-badges`, `.lis-listing-card-thumb-badges--left`, `.lis-listing-card-thumb-badges--right`, `.lis-listing-card-thumb-wrap`, `.lis-listing-card-title`, `.lis-listing-card-title-right`, `.lis-listing-card-title-row`, `.lis-listing-fallback-img`, `.lis-listing-fallback-img--card`, `.lis-listing-fallback-img--single`, `.lis-listing-fallback-mark`, `.lis-listing-pagination`
 - `.lis-listing-category-badge`
 - `.lis-listing-claim-box`, `.lis-listing-claim-btn`, `.lis-listing-claim-cta`, `.lis-listing-claim-page`, `.lis-listing-claim-page-divider`, `.lis-listing-claim-page-invalid`, `.lis-listing-claim-submit`
 - `.lis-listing-columns`

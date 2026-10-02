@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.47.0
+Stable tag: 0.48.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,14 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.48.0 =
+* Listings with no description or no related listings no longer show empty "Description" / "Related" headings.
+* Every listing image has alt text (falls back to the listing title).
+* Listings with no photo show a branded placeholder on cards and the single page.
+* "Popular" now means the top 10% of listings by views over the last 30 days (at least 5 views), counted in the browser so cached page views count.
+* Listings archive, category pages and the listings grid show 36 per page with numbered pages.
+* Directory styling that lived in the site's inline Page Skin moved to a cached stylesheet that loads only on directory pages.
 
 = 0.47.0 =
 * The plugin's styling is now fully themeable. Every color, corner radius, shadow and font reads a `--lis-dir-*` CSS variable that falls back to the site's brand tokens, so the site can restyle directory pages by setting variables instead of overriding selectors. The full list is in THEMING.md.

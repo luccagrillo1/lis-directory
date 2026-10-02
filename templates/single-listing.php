@@ -88,11 +88,13 @@ while ( have_posts() ) :
 		<?php if ( ! empty( $gallery_ids ) ) : ?>
 			<div class="lis-listing-gallery-strip">
 				<?php foreach ( $gallery_ids as $attachment_id ) : ?>
-					<?php echo wp_get_attachment_image( $attachment_id, 'large', false, array( 'class' => 'lis-listing-gallery-img' ) ); ?>
+					<?php echo wp_get_attachment_image( $attachment_id, 'large', false, array( 'class' => 'lis-listing-gallery-img', 'alt' => lis_directory_listing_image_alt( $attachment_id, $post_id ) ) ); ?>
 				<?php endforeach; ?>
 			</div>
 		<?php elseif ( has_post_thumbnail() ) : ?>
-			<?php the_post_thumbnail( 'large', array( 'class' => 'lis-listing-single-thumb' ) ); ?>
+			<?php the_post_thumbnail( 'large', array( 'class' => 'lis-listing-single-thumb', 'alt' => lis_directory_listing_image_alt( get_post_thumbnail_id(), $post_id ) ) ); ?>
+		<?php else : ?>
+			<?php echo lis_directory_render_listing_fallback_image( $post_id, 'single' ); // phpcs:ignore -- escaped inside helper. ?>
 		<?php endif; ?>
 
 		<div class="lis-listing-header">
@@ -165,10 +167,21 @@ while ( have_posts() ) :
 					<?php endif; ?>
 				<?php endif; ?>
 
-				<div class="lis-listing-section">
-					<h2>Description</h2>
-					<div class="lis-listing-content"><?php the_content(); ?></div>
-				</div>
+				<?php
+				// D19: no "Description" heading over an empty description. the_content()
+				// still runs either way — Jetpack hangs its Related Posts placeholder off
+				// it, and listing-related-posts.js moves that block further down.
+				$has_description = '' !== preg_replace( '/[\s\x{00A0}]+/u', '', html_entity_decode( wp_strip_all_tags( strip_shortcodes( get_the_content() ) ), ENT_QUOTES, 'UTF-8' ) )
+					|| preg_match( '/<(img|iframe|video|audio|embed|object)\b|\[[a-z]/i', get_the_content() );
+				?>
+				<?php if ( $has_description ) : ?>
+					<div class="lis-listing-section">
+						<h2>Description</h2>
+						<div class="lis-listing-content"><?php the_content(); ?></div>
+					</div>
+				<?php else : ?>
+					<div class="lis-listing-content lis-listing-content--empty"><?php the_content(); ?></div>
+				<?php endif; ?>
 
 				<?php if ( ! empty( $service_lines ) ) : ?>
 					<div class="lis-listing-section">

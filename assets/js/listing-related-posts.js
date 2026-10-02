@@ -6,6 +6,11 @@
  * element to a fixed anchor further down the page. It's a plain node move
  * (not a clone), so whatever Jetpack's own script later does to fill it
  * still works normally — it doesn't care where in the DOM the element sits.
+ *
+ * On listings the server-side "Related" headline is removed (see
+ * lis_directory_related_posts_headline() in includes/listings-template.php)
+ * so an empty block never ships a heading. Once Jetpack has actually filled
+ * in at least one item, the same headline markup is put back here.
  */
 ( function () {
 	'use strict';
@@ -17,6 +22,30 @@
 			return;
 		}
 		anchor.insertAdjacentElement( 'afterend', related );
+		watchForItems( related );
+	}
+
+	function addHeadline( related ) {
+		if ( related.querySelector( '.jp-relatedposts-headline' ) || ! related.querySelector( '.jp-relatedposts-post' ) ) {
+			return false;
+		}
+		var headline = document.createElement( 'h3' );
+		headline.className = 'jp-relatedposts-headline';
+		headline.innerHTML = '<em>Related</em>';
+		related.insertBefore( headline, related.firstChild );
+		return true;
+	}
+
+	function watchForItems( related ) {
+		if ( addHeadline( related ) || ! window.MutationObserver ) {
+			return;
+		}
+		var observer = new MutationObserver( function () {
+			if ( addHeadline( related ) ) {
+				observer.disconnect();
+			}
+		} );
+		observer.observe( related, { childList: true, subtree: true } );
 	}
 
 	if ( 'loading' !== document.readyState ) {

@@ -66,7 +66,9 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 				?>
 				<a class="lis-listing-card" href="<?php the_permalink(); ?>" <?php echo $address ? 'data-address="' . esc_attr( $address ) . '" data-title="' . esc_attr( get_the_title() ) . '"' : ''; ?>>
 					<?php if ( $thumb_id ) : ?>
-						<?php echo wp_get_attachment_image( $thumb_id, 'medium', false, array( 'class' => 'lis-listing-card-thumb' ) ); ?>
+						<?php echo wp_get_attachment_image( $thumb_id, 'medium', false, array( 'class' => 'lis-listing-card-thumb', 'alt' => lis_directory_listing_image_alt( $thumb_id, $post_id ) ) ); ?>
+					<?php else : ?>
+						<?php echo lis_directory_render_listing_fallback_image( $post_id, 'card' ); // phpcs:ignore -- escaped inside helper. ?>
 					<?php endif; ?>
 					<div class="lis-listing-card-body">
 						<div class="lis-listing-card-title-row">
@@ -114,6 +116,11 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 				</a>
 			<?php endwhile; ?>
 		</div>
+
+		<?php
+		global $wp_query;
+		echo lis_directory_render_listing_pagination( $wp_query->max_num_pages, get_query_var( 'paged' ) ); // phpcs:ignore -- built by paginate_links().
+		?>
 
 		<?php wp_enqueue_script( 'lis-directory-listing-view-toggle', LIS_DIRECTORY_URL . 'assets/js/listing-view-toggle.js', array(), LIS_DIRECTORY_VERSION, true ); ?>
 	<?php else : ?>

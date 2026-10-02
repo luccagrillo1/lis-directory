@@ -432,6 +432,41 @@
 	display: block;
 }
 
+/* B25: branded stand-in for a listing with no photo — the LIS logomark on a
+   Pine tint, same footprint as a real card thumb / single hero. */
+.lis-listing-fallback-img {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 170px;
+	background: var(--lis-dir-fallback-bg, var(--lis-dir-color-accent-soft, var(--lis-pine-100, #E4EBE4)));
+	color: var(--lis-dir-fallback-mark, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
+}
+
+.lis-listing-fallback-mark {
+	width: 56px;
+	height: 56px;
+	opacity: 0.5;
+}
+
+.lis-listing-fallback-img--single {
+	height: 280px;
+	margin-bottom: 24px;
+	border-radius: var(--lis-dir-gallery-radius, var(--lis-dir-radius-container, var(--lis-radius-container, 12px)));
+}
+
+.lis-listing-fallback-img--single .lis-listing-fallback-mark {
+	width: 112px;
+	height: 112px;
+}
+
+.lis-listing-grid--list .lis-listing-fallback-img {
+	width: 200px;
+	height: 100%;
+	flex-shrink: 0;
+}
+
 /* Featured/Popular/Verified + category badges, overlaid on the thumbnail
    instead of taking up their own row in the card body — status badges
    top-left, category top-right. */
@@ -523,6 +558,60 @@
 	background: var(--lis-dir-tag-bg, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)));
 	padding: 3px 8px;
 	border-radius: var(--lis-dir-tag-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px)));
+}
+
+/* D15: numbered pages under the results grid (archive + [lis_listing_grid]). */
+.lis-listing-pagination {
+	margin: 32px 0 8px;
+}
+
+.lis-listing-pagination ul.page-numbers {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 6px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.lis-listing-pagination li {
+	margin: 0;
+	border: 0;
+}
+
+.lis-listing-pagination .page-numbers:not(ul) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 40px;
+	height: 40px;
+	padding: 0 12px;
+	border: var(--lis-dir-pagination-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+	border-radius: var(--lis-dir-pagination-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px)));
+	background: var(--lis-dir-pagination-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
+	color: var(--lis-dir-pagination-text, var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19)));
+	font-family: var(--lis-dir-font-body, inherit);
+	font-weight: 600;
+	line-height: 1;
+	text-decoration: none;
+}
+
+.lis-listing-pagination a.page-numbers:hover {
+	border-color: var(--lis-dir-pagination-accent, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
+	color: var(--lis-dir-pagination-accent, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
+}
+
+.lis-listing-pagination .page-numbers.current {
+	border-color: var(--lis-dir-pagination-accent, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
+	background: var(--lis-dir-pagination-accent, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
+	color: var(--lis-dir-pagination-current-text, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF)));
+}
+
+.lis-listing-pagination .page-numbers.dots {
+	border-color: transparent;
+	background: transparent;
 }
 
 .lis-listing-empty {

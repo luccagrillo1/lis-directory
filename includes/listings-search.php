@@ -18,23 +18,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_shortcode( 'lis_listing_search', 'lis_directory_render_search_form_shortcode' );
 add_action( 'pre_get_posts', 'lis_directory_apply_search_filters' );
-add_action( 'pre_get_posts', 'lis_directory_show_all_listings_on_one_page' );
+add_action( 'pre_get_posts', 'lis_directory_set_listings_page_size' );
 
 /**
- * By request: no numbered pagination on the listings archive (or a
- * `lis_listing_category` term archive — same template, same query) — every
- * published listing on one page, scroll instead of click through pages.
- * Separate from lis_directory_apply_search_filters() above since this always
- * applies, whether or not a search/sort filter is also present.
+ * D15: listings per page on the archive, category archives and
+ * [lis_listing_grid]. 36 = an even 2-, 3- or 4-column grid.
  */
-function lis_directory_show_all_listings_on_one_page( $query ) {
+define( 'LIS_DIRECTORY_LISTINGS_PER_PAGE', 36 );
+
+/**
+ * Numbered pages on the listings archive and `lis_listing_category` term
+ * archives (D15 — it used to put all ~110 listings on one page). Separate
+ * from lis_directory_apply_search_filters() since it applies with or without
+ * a filter. "Open now" is the exception: that filter runs after the query
+ * (lis_directory_filter_the_posts_open_now()), so paging it in SQL would give
+ * short or empty pages — an open-now search stays on one page.
+ */
+function lis_directory_set_listings_page_size( $query ) {
 	if ( is_admin() || ! $query->is_main_query() ) {
 		return;
 	}
 	if ( ! $query->is_post_type_archive( 'lis_listing' ) && ! $query->is_tax( 'lis_listing_category' ) ) {
 		return;
 	}
-	$query->set( 'posts_per_page', -1 );
+	$query->set( 'posts_per_page', empty( $_GET['lis_open_now'] ) ? LIS_DIRECTORY_LISTINGS_PER_PAGE : -1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only filter param.
+}
+
+/**
+ * Plain numbered links (works without JS, crawlable). paginate_links() builds
+ * on get_pagenum_link(), which keeps the current query string, so search,
+ * category, feature and sort params carry across pages.
+ */
+function lis_directory_render_listing_pagination( $total_pages, $current_page ) {
+	if ( $total_pages < 2 ) {
+		return '';
+	}
+	$links = paginate_links( array(
+		'total'     => (int) $total_pages,
+		'current'   => max( 1, (int) $current_page ),
+		'type'      => 'list',
+		'mid_size'  => 1,
+		'prev_text' => '<span aria-hidden="true">&larr;</span> Previous',
+		'next_text' => 'Next <span aria-hidden="true">&rarr;</span>',
+	) );
+	return $links ? '<nav class="lis-listing-pagination" aria-label="Listings pages">' . $links . '</nav>' : '';
 }
 
 /**

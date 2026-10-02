@@ -1,7 +1,33 @@
 (function () {
 	'use strict';
 
+	// View beacon for the Popular badge (includes/listings-badges.php). Sent
+	// from the browser because the page itself is usually edge-cached; one per
+	// listing per session so reloads don't count twice.
+	function recordView() {
+		if (!window.LIS_LISTING_ACTIONS || !LIS_LISTING_ACTIONS.postId) {
+			return;
+		}
+		var key = 'lis_viewed_' + LIS_LISTING_ACTIONS.postId;
+		try {
+			if (window.sessionStorage.getItem(key)) {
+				return;
+			}
+			window.sessionStorage.setItem(key, '1');
+		} catch (e) {}
+		var body = new URLSearchParams();
+		body.append('action', 'lis_directory_listing_view');
+		body.append('post_id', LIS_LISTING_ACTIONS.postId);
+		if (navigator.sendBeacon) {
+			navigator.sendBeacon(LIS_LISTING_ACTIONS.ajaxUrl, body);
+		} else {
+			fetch(LIS_LISTING_ACTIONS.ajaxUrl, { method: 'POST', body: body, keepalive: true });
+		}
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
+		recordView();
+
 		var bookmarkBtn = document.querySelector('.lis-listing-bookmark-btn');
 		var shareBtn = document.querySelector('.lis-listing-share-btn');
 

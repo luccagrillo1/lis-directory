@@ -242,7 +242,7 @@ function lis_directory_render_listing_edit_form( $listing_id, $token = '' ) {
 						<?php $thumb = wp_get_attachment_image_url( $attachment_id, 'thumbnail' ); ?>
 						<?php if ( $thumb ) : ?>
 							<label class="lis-listing-edit-gallery-item">
-								<img src="<?php echo esc_url( $thumb ); ?>" alt="" />
+								<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( lis_directory_listing_image_alt( $attachment_id, $listing_id ) ); ?>" />
 								<span><input type="checkbox" name="lis_listing_remove_photos[]" value="<?php echo (int) $attachment_id; ?>" /> Remove</span>
 							</label>
 						<?php endif; ?>
