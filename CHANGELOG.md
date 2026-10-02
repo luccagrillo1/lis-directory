@@ -79,7 +79,7 @@ From the 2026-09-30 site audit (brief: "LIS Directory — Plugin Build Brief (Au
 
 ### Site snippets (for Lucca)
 
-- The moved rules were removed from the "Page Skin" snippets in the same session (see the Site Changelog entry). If you ever restore an older copy of those snippets, these rules come back as duplicates, which is harmless but redundant.
+- Removed the moved rules from **snippet #44** "LIS Page Skin v1.1" (3,902 chars: search glass bar, its Glass Rim rule, the 600px search padding, Listing card tags) and **snippet #46** "LIS Page Skin v2" (8,449 chars: [Single Listing v1]). Snippet #36 brand overrides are untouched. Inline CSS on Cafe 95 went from 273,781 to 261,430 chars, and every page sheds about 12 KB. Site Changelog v2.20.15. To roll back, paste the matching blocks from `directory-skin.css` back at their old anchors.
 
 ## [0.47.0] — 2026-09-26 — Themeable through CSS custom properties
 
