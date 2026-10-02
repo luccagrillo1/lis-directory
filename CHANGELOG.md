@@ -1,3 +1,9 @@
+## [0.48.2] — 2026-10-02 — D15 fix: Jetpack Infinite Scroll on listing archives
+
+- The real cause of the 10-per-page archive: **Jetpack Infinite Scroll** is on for the site and claims the `lis_listing` archive. Its inline settings showed `posts_per_page: 10` and `posts_per_archive_page: 36`, so our hook was running and Jetpack still overrode it. It also replaces numbered pages with a "More Listings" button.
+- Listing archives (`lis_listing` post-type archive, `lis_listing_category` and `lis_listing_feature` terms) now opt out through `infinite_scroll_archive_supported`. Blog archives keep infinite scroll.
+- The 0.48.1 changes (hook at `PHP_INT_MAX`, `posts_per_archive_page`) stay as belt-and-braces.
+
 ## [0.48.1] — 2026-10-02 — D15 fix: archive page size
 
 - Verifying 0.48.0 live: `[lis_listing_grid]` paged correctly (36 / 36 / 36 / 2), but the `/listings/` archive came out at **10 per page, 11 pages**. Something else on the site resets the main archive query's page size to the 10-post Reading setting at the default `pre_get_posts` priority. The old `-1` value happened to slip past it.

@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.48.1
+Stable tag: 0.48.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.48.2 =
+* Listing archives opt out of Jetpack Infinite Scroll, which was forcing 10 per page and a "More Listings" button over the numbered pages.
 
 = 0.48.1 =
 * The listings archive and category pages now show 36 per page (they were coming out at 10).

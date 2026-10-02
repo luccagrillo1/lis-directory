@@ -18,9 +18,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_shortcode( 'lis_listing_search', 'lis_directory_render_search_form_shortcode' );
 add_action( 'pre_get_posts', 'lis_directory_apply_search_filters' );
-// Runs last: something else on the site (theme or another plugin) resets an
-// archive's page size to the 10-post Reading setting at the default priority.
 add_action( 'pre_get_posts', 'lis_directory_set_listings_page_size', PHP_INT_MAX );
+add_filter( 'infinite_scroll_archive_supported', 'lis_directory_disable_infinite_scroll_on_listings', 99 );
+
+/**
+ * Jetpack Infinite Scroll is on for the site and claims the listings archive
+ * too: it forces its own 10-per-page size onto the main query and swaps
+ * numbered pages for a "More Listings" button. Listings use numbered,
+ * crawlable pages (D15), so opt these archives out. Blog archives keep it.
+ */
+function lis_directory_disable_infinite_scroll_on_listings( $supported ) {
+	if ( is_post_type_archive( 'lis_listing' ) || is_tax( array( 'lis_listing_category', 'lis_listing_feature' ) ) ) {
+		return false;
+	}
+	return $supported;
+}
 
 /**
  * D15: listings per page on the archive, category archives and
