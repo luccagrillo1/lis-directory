@@ -28,7 +28,7 @@ $lis_query    = new WP_Query( array_merge( $wp_query->query_vars, array(
 	'posts_per_page'         => $lis_per_page,
 	'posts_per_archive_page' => $lis_per_page,
 	'paged'                  => $lis_paged,
-	'nopaging'               => false,
+	'nopaging'               => -1 === $lis_per_page, // false would make WP build LIMIT 0, -1 for "all".
 	'no_found_rows'          => false,
 	'fields'                 => 'all',
 ) ) );

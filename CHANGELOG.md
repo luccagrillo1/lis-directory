@@ -1,3 +1,7 @@
+## [0.48.5] — 2026-10-02 — Fix "Open now" search returning nothing
+
+- 0.48.4 regression, caught in live verification: the archive's own query passed `nopaging => false` even for an "Open now" search (page size `-1` = all). WordPress then built `LIMIT 0, -1`, and the query returned nothing ("No listings here yet."). `nopaging` now follows the page size.
+
 ## [0.48.4] — 2026-10-02 — D15 fix: archive grid runs its own query
 
 - **Root cause, found with a temporary admin-only debug snippet (#52, deleted after use):** after every `pre_get_posts` callback, including ours at `PHP_INT_MAX`, the global archive query reports `posts_per_page=10` with our `posts_per_archive_page=36` still set and an **empty `request` SQL**. The object the template loops over isn't the query WordPress ran with our vars; something on the site rebuilds the main archive query. 0.48.1–0.48.3 were attempts to win on the main query, and none could.
