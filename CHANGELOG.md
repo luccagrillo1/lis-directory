@@ -1,3 +1,8 @@
+## [0.48.3] — 2026-10-02 — D15 fix: archive page size, take three
+
+- With Infinite Scroll off (0.48.2), `/listings/` was still 10 per page and 11 pages. Something still resets the main query to the Reading setting ("Blog pages show at most" = 10) after every `pre_get_posts` callback. It left the old `-1` alone, which is why "all on one page" used to work.
+- On the listing archive's main query only, `pre_option_posts_per_page` now reports 36 for the rest of query setup, and the filter is removed on `wp` (right after the main query runs). Nothing else on the page sees the change.
+
 ## [0.48.2] — 2026-10-02 — D15 fix: Jetpack Infinite Scroll on listing archives
 
 - The real cause of the 10-per-page archive: **Jetpack Infinite Scroll** is on for the site and claims the `lis_listing` archive. Its inline settings showed `posts_per_page: 10` and `posts_per_archive_page: 36`, so our hook was running and Jetpack still overrode it. It also replaces numbered pages with a "More Listings" button.
