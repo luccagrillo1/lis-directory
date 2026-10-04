@@ -1,3 +1,12 @@
+## [0.50.1] — 2026-10-04 — Payment Audit: use Directorist to place the orders that name no listing
+
+After 0.50.0's Apply, 15 paid orders were left unmatched; six were real buyers whose orders never recorded a listing. Asked to check Directorist: it is still installed and its `at_biz_dir` listings carry an author.
+
+- `lis_directory_audit_single_directorist_listing()`: an order with no `_listing_id` is matched to the paying account's Directorist listing **only when the account owns exactly one** (`at_biz_dir`, any status) **and that listing's id is lower than the order's** (a listing created after a purchase can't be what it paid for). That listing then goes through the usual `_lis_migrated_from` pairing to its `lis_listing`. Shown as "(matched by account)"; applied by the same Apply. Guests, multi-listing accounts, post-dated listings and unmigrated listings stay unmatched.
+- Checked against the live data first (read-only): Joey Bowden #5306 → Pivo Peaks Alehouse, Kyla Kulp #5456 → All About Chimneys, Eric Mann #5472 → 5th Avenue Car Wash, Devin Watson #5549 → Landshapers — each account has exactly one Directorist listing, created just before its order. The three "Jay Lewis Rental" orders (#5441, #5443, #5468, Nov 2025) are not matched: the account has two Directorist listings, both created *after* those orders, so they were bought for something that no longer exists.
+
+Verified on real WooCommerce 11.2 in the local harness: single-listing account matched and applied (listing id + legacy Directorist id on the order, payment reference filled); two-listing account, post-dated listing, guest order and unmigrated listing all left alone; an order that names its listing still takes the normal path; the earlier audit suite still passes.
+
 ## [0.50.0] — 2026-10-04 — Payment Audit: old orders belong to the new listings
 
 Requested: make the renewal/payment info filled for every order ever, list the expired ones, and have the old Directorist orders point to the new `lis_listing` versions so those are the listings their payments apply to.

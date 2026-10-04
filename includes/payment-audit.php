@@ -82,6 +82,29 @@ function lis_directory_audit_find_lis_listing( $directorist_id ) {
 }
 
 /**
+ * The one Directorist listing a paying account owns, or 0 if it has none or
+ * several. It must also predate the order — an account's listing created
+ * AFTER a purchase can't be what that purchase was for.
+ */
+function lis_directory_audit_single_directorist_listing( $customer_id, $order_id ) {
+	$customer_id = (int) $customer_id;
+	if ( ! $customer_id ) {
+		return 0;
+	}
+	$ids = get_posts( array(
+		'post_type'      => 'at_biz_dir',
+		'post_status'    => 'any',
+		'author'         => $customer_id,
+		'posts_per_page' => 3,
+		'fields'         => 'ids',
+	) );
+	if ( 1 !== count( $ids ) || (int) $ids[0] > (int) $order_id ) {
+		return 0;
+	}
+	return (int) $ids[0];
+}
+
+/**
  * Where a listing stands, from its subscriptions if it has any, else from its
  * expiry date. Returns array( code, label ).
  */
@@ -164,10 +187,19 @@ function lis_directory_audit_collect() {
 		$dir_id = 0;
 		if ( ! $lid ) {
 			$dir_id = (int) $order->get_meta( '_listing_id' );
+			if ( ! $dir_id ) {
+				// No listing recorded on the order itself: ask Directorist. If the
+				// paying account has exactly ONE Directorist listing, that is what
+				// it paid for (an account with several is ambiguous, so left alone).
+				$dir_id = lis_directory_audit_single_directorist_listing( $order->get_customer_id(), $order->get_id() );
+				$by_acct = (bool) $dir_id;
+			} else {
+				$by_acct = false;
+			}
 			if ( $dir_id ) {
 				$found = lis_directory_audit_find_lis_listing( $dir_id );
 				$lid   = $found['id'];
-				$how   = $found['how'];
+				$how   = ( $by_acct && 'migrated' === $found['how'] ) ? 'account' : $found['how'];
 			}
 		}
 
@@ -214,10 +246,14 @@ function lis_directory_audit_collect() {
 		$row['uncertain'] = ! empty( $row['uncertain'] );
 		// Orders that reached this listing through the Directorist pairing and
 		// don't yet carry the listing id themselves.
-		$row['legacy'] = array();
+		$row['legacy']     = array();
+		$row['by_account'] = false;
 		foreach ( $row['orders'] as $o ) {
-			if ( $o['dir_id'] && 'migrated' === $o['how'] ) {
+			if ( $o['dir_id'] && in_array( $o['how'], array( 'migrated', 'account' ), true ) ) {
 				$row['legacy'][ $o['order_id'] ] = $o['dir_id'];
+				if ( 'account' === $o['how'] ) {
+					$row['by_account'] = true;
+				}
 			}
 		}
 		// Paying (or in term) but the listing itself isn't published.
@@ -242,7 +278,7 @@ function lis_directory_audit_table( array $rows, $with_checkbox_note = false ) {
 	$h = '<table class="widefat striped"><thead><tr><th>Listing</th><th>Owner</th><th>Listing status</th><th>Where it stands</th><th>Latest order</th><th>Payment reference</th><th>Old orders to link</th></tr></thead><tbody>';
 	foreach ( $rows as $r ) {
 		$h .= '<tr>'
-			. '<td><a href="' . esc_url( get_edit_post_link( $r['id'] ) ) . '">' . esc_html( $r['title'] ) . '</a>' . ( $r['uncertain'] ? ' <em title="Matched only by title">(title match)</em>' : '' ) . '</td>'
+			. '<td><a href="' . esc_url( get_edit_post_link( $r['id'] ) ) . '">' . esc_html( $r['title'] ) . '</a>' . ( $r['uncertain'] ? ' <em title="Matched only by title">(title match)</em>' : '' ) . ( $r['by_account'] ? ' <em title="The order names no listing; the paying account has exactly one Directorist listing, and it predates the order">(matched by account)</em>' : '' ) . '</td>'
 			. '<td>' . esc_html( $r['owner'] ) . '</td>'
 			. '<td>' . esc_html( $r['status'] ) . '</td>'
 			. '<td><strong>' . esc_html( $r['state'][1] ) . '</strong></td>'
