@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.48.5
+Stable tag: 0.49.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.49.0 =
+* The listing editor now has a read-only "Renews" row under Payment reference: each subscription behind the listing with its plan, status, the date it next charges (or when access ends if it's set to cancel), the amount, and a link to the subscription.
+* Paid orders now complete themselves. Once a listing tier or job posting order is paid and everything on it is live, WooCommerce's order moves from Processing to Completed with a note, so nobody has to do it by hand. An order with anything else in it, a Showcase whose slot didn't activate, or a line with no listing attached stays Processing for a person to look at. Turn it off with the `lis_directory_autocomplete_orders` filter.
 
 = 0.48.5 =
 * Fixed the "Open now" search filter showing no listings.

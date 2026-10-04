@@ -58,6 +58,9 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	add_action( 'woocommerce_checkout_create_order_line_item', 'lis_directory_persist_listing_id_to_order_item', 10, 4 );
 	add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );
+	// Priority 99: after every handler that reacts to a paid order (listing tier,
+	// claim ownership transfer, job posting) has run, so "published" is settled.
+	add_action( 'woocommerce_order_status_processing', 'lis_directory_autocomplete_fulfilled_order', 99 );
 	add_action( 'woocommerce_thankyou', 'lis_directory_listing_order_thankyou' );
 	add_action( 'admin_post_lis_directory_generate_standard_listing', 'lis_directory_handle_generate_standard_listing' );
 	add_action( 'admin_post_lis_directory_generate_featured_listing', 'lis_directory_handle_generate_featured_listing' );
@@ -889,6 +892,141 @@ function lis_directory_listing_order_thankyou( $order_id ) {
 		</div>
 	</div>
 	<?php
+}
+
+/**
+ * The WooCommerce subscriptions behind a listing, for the admin "Renews" row.
+ * A listing can point at its subscription in several places depending on how
+ * it was bought — the generic payment reference, the per-tier Standard /
+ * Featured order ids, and its Vendor Showcase entry — and each may hold either
+ * a subscription id or the parent order id, so every candidate is resolved
+ * either way and de-duplicated.
+ *
+ * @return object[] WC_Subscription objects keyed by id (empty without
+ *                  WooCommerce Subscriptions, or for a one-time purchase).
+ */
+function lis_directory_get_listing_subscriptions( $listing_id ) {
+	if ( ! function_exists( 'wcs_get_subscription' ) || ! function_exists( 'wcs_get_subscriptions_for_order' ) ) {
+		return array();
+	}
+	$ids = array(
+		(int) get_post_meta( $listing_id, '_lis_listing_paid_order_id', true ),
+		(int) get_post_meta( $listing_id, '_lis_listing_standard_order_id', true ),
+		(int) get_post_meta( $listing_id, '_lis_listing_featured_order_id', true ),
+	);
+	if ( function_exists( 'lis_directory_get_vendor_for_listing' ) ) {
+		$vendor_id = lis_directory_get_vendor_for_listing( $listing_id );
+		if ( $vendor_id ) {
+			$ids[] = (int) get_post_meta( $vendor_id, '_lis_pv_wc_order_id', true );
+		}
+	}
+
+	$subs = array();
+	foreach ( array_unique( array_filter( $ids ) ) as $id ) {
+		$sub = wcs_get_subscription( $id );
+		if ( $sub ) {
+			$subs[ $sub->get_id() ] = $sub;
+			continue;
+		}
+		foreach ( (array) wcs_get_subscriptions_for_order( $id, array( 'order_type' => 'any' ) ) as $found ) {
+			$subs[ $found->get_id() ] = $found;
+		}
+	}
+	return $subs;
+}
+
+/**
+ * Admin-box HTML: one row per subscription — plan, status, when it next
+ * charges (or when it ends, if it's set to cancel), and the amount.
+ */
+function lis_directory_render_listing_renewals( $listing_id ) {
+	$subs = lis_directory_get_listing_subscriptions( $listing_id );
+	if ( empty( $subs ) ) {
+		return '<span class="description">No subscription found &mdash; a one-time purchase, an admin-created listing, or WooCommerce Subscriptions isn&rsquo;t active. It won&rsquo;t renew or auto-expire by itself.</span>';
+	}
+	$fmt_date = function ( $sub, $key ) {
+		$ts = (int) $sub->get_time( $key );
+		return $ts ? wp_date( get_option( 'date_format' ), $ts ) : '';
+	};
+	$rows = '';
+	foreach ( $subs as $sub ) {
+		$status = $sub->get_status();
+		$items  = $sub->get_items();
+		$first  = $items ? reset( $items ) : null;
+		$plan   = $first ? $first->get_name() : 'Subscription';
+		$next   = $fmt_date( $sub, 'next_payment' );
+		$end    = $fmt_date( $sub, 'end' );
+
+		if ( in_array( $status, array( 'cancelled', 'expired' ), true ) ) {
+			$when = $end ? 'Ended ' . $end : 'Ended';
+		} elseif ( 'pending-cancel' === $status ) {
+			$when = $end ? 'Cancelled &mdash; access ends ' . esc_html( $end ) : 'Cancelled';
+		} elseif ( 'on-hold' === $status ) {
+			$when = 'On hold (payment needs attention)';
+		} else {
+			$when = $next ? 'Renews ' . esc_html( $next ) : '&mdash;';
+		}
+		$label = function_exists( 'wcs_get_subscription_status_name' ) ? wcs_get_subscription_status_name( $status ) : ucfirst( $status );
+		$rows .= '<tr><td>' . esc_html( $plan ) . '</td><td>' . esc_html( $label ) . '</td><td><strong>' . $when . '</strong></td><td>' . wp_kses_post( $sub->get_formatted_order_total() ) . '</td><td><a href="' . esc_url( admin_url( 'post.php?post=' . $sub->get_id() . '&action=edit' ) ) . '" target="_blank">#' . (int) $sub->get_id() . '</a></td></tr>';
+	}
+	return '<table class="widefat striped" style="max-width:760px;"><thead><tr><th>Plan</th><th>Status</th><th>Next</th><th>Amount</th><th>Subscription</th></tr></thead><tbody>' . $rows . '</tbody></table>';
+}
+
+/**
+ * Mark a paid order Completed once what it bought has actually been delivered —
+ * the listing is live (and, for a Vendor Showcase, the slot is active) or the
+ * job posting is live — instead of leaving every order sitting in Processing
+ * for someone to complete by hand. These are virtual products, so WooCommerce
+ * itself never moves them past Processing.
+ *
+ * Deliberately conservative: it only touches an order whose EVERY line is one of
+ * ours (a listing tier or the Job Posting product) and every one is delivered.
+ * An order with anything else in it (an event ticket, say), or a purchase that
+ * didn't take effect — a Showcase held "pending" because someone took the
+ * category in the meantime, a listing that isn't published — stays Processing
+ * so a person looks at it. Turn it off with
+ * add_filter( 'lis_directory_autocomplete_orders', '__return_false' ).
+ */
+function lis_directory_autocomplete_fulfilled_order( $order_id ) {
+	if ( ! apply_filters( 'lis_directory_autocomplete_orders', true, $order_id ) ) {
+		return;
+	}
+	$order = $order_id ? wc_get_order( $order_id ) : null;
+	if ( ! $order || 'processing' !== $order->get_status() ) {
+		return;
+	}
+	$items = $order->get_items();
+	if ( empty( $items ) ) {
+		return;
+	}
+	$job_product = function_exists( 'lis_directory_get_job_product_id' ) ? lis_directory_get_job_product_id() : 0;
+
+	foreach ( $items as $item ) {
+		$product_id = (int) $item->get_product_id();
+		$tier       = lis_directory_listing_tier_for_product( $product_id );
+
+		if ( $tier ) {
+			$listing_id = (int) $item->get_meta( '_lis_listing_id' );
+			if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) || 'publish' !== get_post_status( $listing_id ) ) {
+				return;
+			}
+			if ( 'showcase' === $tier ) {
+				$vendor_id = lis_directory_get_vendor_for_listing( $listing_id );
+				if ( ! $vendor_id || 'active' !== get_post_meta( $vendor_id, '_lis_pv_status', true ) ) {
+					return;
+				}
+			}
+		} elseif ( $job_product && $product_id === $job_product ) {
+			$job_id = (int) $item->get_meta( '_lis_job_id' );
+			if ( ! $job_id || 'lis_job' !== get_post_type( $job_id ) || 'publish' !== get_post_status( $job_id ) ) {
+				return;
+			}
+		} else {
+			return; // Something we don't deliver — leave the whole order to a person.
+		}
+	}
+
+	$order->update_status( 'completed', 'Auto-completed: everything on this order is delivered and live.' );
 }
 
 /**

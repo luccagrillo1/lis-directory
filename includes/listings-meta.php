@@ -431,6 +431,13 @@ function lis_directory_render_listing_meta_box( $post ) {
 			</td>
 		</tr>
 		<tr>
+			<th>Renews</th>
+			<td>
+				<?php echo function_exists( 'lis_directory_render_listing_renewals' ) ? lis_directory_render_listing_renewals( $post->ID ) : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>
+				<p class="description">Read-only, straight from WooCommerce Subscriptions. A subscription listing stays live while this is Active and drafts when it ends &mdash; don't set an Expires date for it.</p>
+			</td>
+		</tr>
+		<tr>
 			<th><label for="lis_listing_expiry">Expires</label></th>
 			<td>
 				<input type="date" id="lis_listing_expiry" name="lis_listing_expiry" value="<?php echo esc_attr( $expiry_date ); ?>" />
