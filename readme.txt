@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.49.0
+Stable tag: 0.50.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.50.0 =
+* New: Vendor Showcase → Payment Audit. Lists every paid order matched to its listing, including older orders placed against Directorist listings (matched through the migration), with where each stands: renewing, lapsed, expired, or paid but not published. Download the expired/lapsed list (or everything) as a CSV.
+* One-click Apply: links each old Directorist-era order to its new listing (the same way newer orders carry it, with the original Directorist listing id kept and a note on the order) and fills the listing's Payment reference. Only listings the migration pairing links with certainty; title-only matches and unmatched orders are listed for you to review, never changed. Status, owner, expiry, tier and subscription are never touched.
+* The Renews row now also covers older one-time listings: it shows their term end date, "Expired", or "Never expires".
 
 = 0.49.0 =
 * The listing editor now has a read-only "Renews" row under Payment reference: each subscription behind the listing with its plan, status, the date it next charges (or when access ends if it's set to cancel), the amount, and a link to the subscription.

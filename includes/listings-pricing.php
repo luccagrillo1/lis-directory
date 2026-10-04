@@ -942,7 +942,18 @@ function lis_directory_get_listing_subscriptions( $listing_id ) {
 function lis_directory_render_listing_renewals( $listing_id ) {
 	$subs = lis_directory_get_listing_subscriptions( $listing_id );
 	if ( empty( $subs ) ) {
-		return '<span class="description">No subscription found &mdash; a one-time purchase, an admin-created listing, or WooCommerce Subscriptions isn&rsquo;t active. It won&rsquo;t renew or auto-expire by itself.</span>';
+		// Older (Directorist-era) listings were one-time purchases with a term,
+		// not subscriptions — the Expires date is their renewal date.
+		if ( get_post_meta( $listing_id, '_lis_listing_never_expire', true ) ) {
+			return '<strong>Never expires</strong> <span class="description">&mdash; no subscription; stays live until someone changes it.</span>';
+		}
+		$expiry = function_exists( 'lis_directory_get_listing_expiry' ) ? lis_directory_get_listing_expiry( $listing_id ) : '';
+		if ( '' !== $expiry ) {
+			$ts      = strtotime( $expiry );
+			$expired = $ts < current_time( 'timestamp' );
+			return '<strong>' . ( $expired ? 'Expired ' : 'One-time term &mdash; runs to ' ) . esc_html( wp_date( get_option( 'date_format' ), $ts ) ) . '</strong> <span class="description">&mdash; no subscription, so nothing renews automatically; this is the Expires date below.</span>';
+		}
+		return '<span class="description">No subscription and no expiry date &mdash; an admin-created listing or a one-time purchase with no term. It won&rsquo;t renew or auto-expire by itself.</span>';
 	}
 	$fmt_date = function ( $sub, $key ) {
 		$ts = (int) $sub->get_time( $key );
