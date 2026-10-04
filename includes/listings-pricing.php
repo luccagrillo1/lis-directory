@@ -1046,7 +1046,7 @@ function lis_directory_autocomplete_fulfilled_order( $order_id ) {
  * Standard is covered too, granted or paid). There is no free tier: every
  * listing on the site is either admin-created (never went through checkout,
  * so no subscription-ended event ever fires for it and this never runs) or
- * has to be on at least Standard ($9/mo) to stay published.
+ * has to be on at least Standard to stay published.
  */
 function lis_directory_listing_has_any_active_tier( $listing_id ) {
 	if ( get_post_meta( $listing_id, '_lis_listing_standard_active', true ) ) {
@@ -1230,7 +1230,7 @@ function lis_directory_generate_standard_listing_product() {
 	}
 
 	$plans = array(
-		array( 'label' => 'Monthly',  'price' => 9,  'period' => 'month' ),
+		array( 'label' => 'Monthly',  'price' => 10, 'period' => 'month' ),
 		array( 'label' => 'Annually', 'price' => 90, 'period' => 'year' ),
 	);
 
