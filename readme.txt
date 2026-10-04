@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.50.1
+Stable tag: 0.50.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -166,6 +166,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.50.2 =
+* Payment Audit: when a listing has several orders, the one used as its Payment reference is now the latest one that was actually charged to a card, not just the latest. Orders with no payment method (made by hand, tests) no longer win.
+* The Directorist account match now compares dates instead of post ids, and allows the listing to be created up to 14 days after the order, because Directorist sells the plan first and the buyer then creates the listing.
 
 = 0.50.1 =
 * Payment Audit now also uses Directorist for older orders that never recorded which listing they were for: if the paying account owns exactly one Directorist listing, and that listing existed before the order, that's the listing it paid for. Accounts with several Directorist listings, guest orders and listings created after the order are still left for you. These show as "(matched by account)" and are applied the same way as the rest.

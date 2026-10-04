@@ -1,3 +1,15 @@
+## [0.50.2] — 2026-10-04 — Payment Audit: real payments win; date-based account match
+
+Triggered by checking the four proposed matches against the live orders instead of trusting the tool:
+
+- **#5398 (the order 0.50.0 linked to Pivo Peaks and made its Payment reference) is not a payment.** It belongs to the owner's own account, has no payment method, and sits in a batch of seven $60 orders (#5392–#5398) created in the same minute on Oct 31, 2025 — admin tooling, not a charge. Pivo's real payment is #5306: Joey Bowden, Amex, $60, Oct 29, 2025. So "latest order" is now "latest order that was actually charged" (has a payment method), falling back to the latest if none was.
+- **The "predates the order" check used post ids, which are wrong for Directorist.** Pivo's Directorist listing has id 45 but was created Oct 31, two days *after* its owner's Oct 29 order (Directorist sells the plan first, then you create the listing). `lis_directory_audit_single_directorist_listing()` now compares dates: the account's single Directorist listing may be created up to 14 days after the order, never months after.
+- The other three matches (Kyla Kulp → All About Chimneys, Eric Mann → 5th Avenue Car Wash, Devin Watson → Landshapers) were confirmed against real card payments, the Directorist listing created the same day as the order, and the same author and title on the new listing.
+- Not matched, on purpose: "Jay Lewis Rental" orders #5441/#5443/#5468 — job/rent plans bought in Nov 2025 by an account whose two current listings are rentals created months later.
+- Does not rewrite a Payment reference that is already set; Pivo Peaks' (set to #5398 by 0.50.0) is corrected by hand.
+
+Verified on real WooCommerce 11.2 in the local harness: plan-first listing (2 days after) matches, 90-days-later does not, real payment preferred over a later hand-made order, and the earlier suites still pass.
+
 ## [0.50.1] — 2026-10-04 — Payment Audit: use Directorist to place the orders that name no listing
 
 After 0.50.0's Apply, 15 paid orders were left unmatched; six were real buyers whose orders never recorded a listing. Asked to check Directorist: it is still installed and its `at_biz_dir` listings carry an author.

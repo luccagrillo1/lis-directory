@@ -83,10 +83,14 @@ function lis_directory_audit_find_lis_listing( $directorist_id ) {
 
 /**
  * The one Directorist listing a paying account owns, or 0 if it has none or
- * several. It must also predate the order — an account's listing created
- * AFTER a purchase can't be what that purchase was for.
+ * several. Judged by date, not post id (ids on imported Directorist posts aren't
+ * chronological): the listing must not have been created long AFTER the order.
+ * A short window after is allowed because Directorist sells the plan first and
+ * the buyer then creates the listing with it (Pivo Peaks: paid Oct 29, listing
+ * created Oct 31); a listing that appeared months later can't be what the
+ * order was for.
  */
-function lis_directory_audit_single_directorist_listing( $customer_id, $order_id ) {
+function lis_directory_audit_single_directorist_listing( $customer_id, $order_ts ) {
 	$customer_id = (int) $customer_id;
 	if ( ! $customer_id ) {
 		return 0;
@@ -98,7 +102,11 @@ function lis_directory_audit_single_directorist_listing( $customer_id, $order_id
 		'posts_per_page' => 3,
 		'fields'         => 'ids',
 	) );
-	if ( 1 !== count( $ids ) || (int) $ids[0] > (int) $order_id ) {
+	if ( 1 !== count( $ids ) ) {
+		return 0;
+	}
+	$listing_ts = (int) get_post_time( 'U', true, $ids[0] );
+	if ( $order_ts && $listing_ts > $order_ts + 14 * DAY_IN_SECONDS ) {
 		return 0;
 	}
 	return (int) $ids[0];
@@ -191,7 +199,7 @@ function lis_directory_audit_collect() {
 				// No listing recorded on the order itself: ask Directorist. If the
 				// paying account has exactly ONE Directorist listing, that is what
 				// it paid for (an account with several is ambiguous, so left alone).
-				$dir_id = lis_directory_audit_single_directorist_listing( $order->get_customer_id(), $order->get_id() );
+				$dir_id = lis_directory_audit_single_directorist_listing( $order->get_customer_id(), $order->get_date_created() ? $order->get_date_created()->getTimestamp() : 0 );
 				$by_acct = (bool) $dir_id;
 			} else {
 				$by_acct = false;
@@ -209,6 +217,9 @@ function lis_directory_audit_collect() {
 			'total'    => (float) $order->get_total(),
 			'status'   => $order->get_status(),
 			'plan'     => implode( ' + ', $names ),
+			// An order with no payment method was made by hand (admin tooling,
+			// tests) — not a charge. Real payments are preferred as "the" order.
+			'charged'  => '' !== (string) $order->get_payment_method(),
 			'billing'  => trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ),
 			'dir_id'   => $dir_id,
 			'how'      => $how,
@@ -225,7 +236,8 @@ function lis_directory_audit_collect() {
 
 	foreach ( $out['listings'] as $lid => &$row ) {
 		$post          = get_post( $lid );
-		$latest        = end( $row['orders'] );
+		$charged       = array_values( array_filter( $row['orders'], function ( $o ) { return $o['charged']; } ) );
+		$latest        = $charged ? end( $charged ) : end( $row['orders'] );
 		$subs          = lis_directory_get_listing_subscriptions( $lid );
 		if ( ! $subs && function_exists( 'wcs_get_subscriptions_for_order' ) ) {
 			foreach ( $row['orders'] as $o ) {
