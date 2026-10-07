@@ -52,8 +52,7 @@ function lis_directory_handle_toggle_sold() {
 		exit;
 	}
 
-	$current = (bool) get_post_meta( $listing_id, '_lis_listing_sold', true );
-	update_post_meta( $listing_id, '_lis_listing_sold', ! $current );
+	lis_directory_set_real_estate_off_market( $listing_id, ! lis_directory_real_estate_is_off_market( $listing_id ) );
 
 	wp_safe_redirect( $redirect_base );
 	exit;
@@ -113,6 +112,9 @@ function lis_directory_render_grid_shortcode( $atts ) {
 
 	if ( $type ) {
 		$query_args['meta_query'] = array( array( 'key' => '_lis_listing_type', 'value' => $type ) );
+	} elseif ( function_exists( 'lis_directory_not_real_estate_clause' ) ) {
+		// An all-types grid is the business directory; real estate has its own pages.
+		$query_args['meta_query'] = array( lis_directory_not_real_estate_clause() );
 	}
 
 	if ( ! empty( $_GET['lis_sort'] ) ) {
@@ -347,6 +349,7 @@ function lis_directory_render_dashboard_shortcode() {
 										<button type="submit" class="lis-listing-dashboard-link-button"><?php echo $sold ? esc_html( 'Mark Available' ) : esc_html( 'Mark ' . $sold_label ); ?></button>
 									</form>
 								<?php endif; ?>
+								<?php if ( ! $is_re ) : // Featured / Vendor Showcase are business-directory upgrades. ?>
 								<?php
 								$featured    = (bool) get_post_meta( $listing->ID, '_lis_listing_featured', true );
 								$feature_url = ( 'publish' === $listing->post_status && ! $featured ) ? lis_directory_get_feature_listing_url( $listing->ID ) : '';
@@ -364,6 +367,7 @@ function lis_directory_render_dashboard_shortcode() {
 									<a href="<?php echo esc_url( $showcase_url ); ?>">Join the Vendor Showcase</a>
 								<?php elseif ( $is_showcase ) : ?>
 									<span class="lis-listing-badge lis-listing-badge--featured">Vendor Showcase</span>
+								<?php endif; ?>
 								<?php endif; ?>
 							</td>
 						</tr>

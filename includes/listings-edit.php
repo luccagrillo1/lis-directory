@@ -50,6 +50,10 @@ function lis_directory_register_listing_edit_settings() {
  * Settings) — callers should fall back to the wp-admin edit link in that case.
  */
 function lis_directory_get_listing_edit_url( $listing_id ) {
+	// Real estate has its own form (submit page in edit mode).
+	if ( function_exists( 'lis_directory_is_real_estate_listing' ) && lis_directory_is_real_estate_listing( $listing_id ) ) {
+		return lis_directory_get_real_estate_edit_url( $listing_id );
+	}
 	$page_id = (int) get_option( 'lis_directory_listing_edit_page_id' );
 	if ( ! $page_id ) {
 		return '';

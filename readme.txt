@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.50.2
+Stable tag: 0.51.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -130,6 +130,16 @@ variations is a wp-admin task, not something this plugin does for you).
 Set up the job board under LIS Jobs → Job Settings: create the Job Posting
 product, set the posting length, and create the "Post a job" / "My jobs" pages.
 
+Real estate (For Rent / For Sale, `lis_listing` with the Directory set to Real Estate):
+
+* `[lis_real_estate type="rent|sale"]` — the filterable rentals / homes-for-sale
+  list (price, beds, baths, area, sort).
+* `[lis_real_estate_submit]` — list a property (logged-in, moderated); with
+  `?listing_id=` the owner edits it.
+
+Set up under LIS Listings → Real Estate: listing lengths (60 / 180 days by
+default), "Create real estate pages", and the expiry preview.
+
 == Setup: WooCommerce Subscriptions ==
 
 **This site's WooCommerce Subscriptions install does not use the classic
@@ -166,6 +176,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.51.0 =
+* Real estate runs on LIS Directory now: For Rent / For Sale pages with price, bed, bath and area filters, a list-a-property form (moderated, admin emailed), a real-estate listing page, schema.org markup, and noindex for sold or rented listings.
+* Real-estate listings expire 60 days (rentals) or 180 days (sales) after they're published, never kept on a stale date, and "Never expires" is always honored. LIS Listings → Real Estate shows exactly what the next expiry check would unpublish.
+* The business directory's archive and search no longer show real-estate listings.
 
 = 0.50.2 =
 * Payment Audit: when a listing has several orders, the one used as its Payment reference is now the latest one that was actually charged to a card, not just the latest. Orders with no payment method (made by hand, tests) no longer win.

@@ -17,6 +17,10 @@ function lis_directory_listing_single_template( $template ) {
 	if ( ! is_singular( 'lis_listing' ) ) {
 		return $template;
 	}
+	if ( function_exists( 'lis_directory_is_real_estate_listing' ) && lis_directory_is_real_estate_listing( get_queried_object_id() ) ) {
+		$theme_template = locate_template( array( 'single-lis_listing-real-estate.php' ) );
+		return $theme_template ? $theme_template : LIS_DIRECTORY_PATH . 'templates/single-real-estate.php';
+	}
 	$theme_template = locate_template( array( 'single-lis_listing.php' ) );
 	return $theme_template ? $theme_template : LIS_DIRECTORY_PATH . 'templates/single-listing.php';
 }
@@ -142,7 +146,7 @@ function lis_directory_is_directory_request() {
 	}
 	if ( is_singular() ) {
 		$post = get_queried_object();
-		if ( $post instanceof WP_Post && preg_match( '/\[lis_listing_(grid|search|author_profile|dashboard)\b/', $post->post_content ) ) {
+		if ( $post instanceof WP_Post && preg_match( '/\[lis_(listing_(grid|search|author_profile|dashboard)|real_estate)\b/', $post->post_content ) ) {
 			return true;
 		}
 	}

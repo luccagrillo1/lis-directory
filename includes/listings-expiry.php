@@ -64,31 +64,39 @@ function lis_directory_is_listing_expired( $listing_id ) {
  * of public views). Renewing/republishing clears the flag on next publish.
  */
 function lis_directory_run_expiry_check() {
-	$now = current_time( 'mysql' );
-
 	$due = get_posts( array(
 		'post_type'      => 'lis_listing',
 		'post_status'    => 'publish',
 		'posts_per_page' => -1,
 		'fields'         => 'ids',
-		'meta_query'     => array(
-			'relation' => 'AND',
-			array(
-				'key'     => '_lis_listing_expiry',
-				'value'   => $now,
-				'compare' => '<',
-				'type'    => 'DATETIME',
-			),
-			array(
-				'relation' => 'OR',
-				array( 'key' => '_lis_listing_never_expire', 'compare' => 'NOT EXISTS' ),
-				array( 'key' => '_lis_listing_never_expire', 'value' => '1', 'compare' => '!=' ),
-			),
-		),
+		'meta_query'     => lis_directory_expiry_due_meta_query(),
 	) );
 
 	foreach ( $due as $listing_id ) {
 		wp_update_post( array( 'ID' => $listing_id, 'post_status' => 'draft' ) );
 		update_post_meta( $listing_id, '_lis_listing_expired', 1 );
 	}
+	return count( $due );
+}
+
+/**
+ * The sweep's selection: an expiry that has passed, and not "never expires".
+ * Shared with the read-only "what would expire next" list on LIS Listings →
+ * Real Estate (includes/real-estate.php).
+ */
+function lis_directory_expiry_due_meta_query() {
+	return array(
+		'relation' => 'AND',
+		array(
+			'key'     => '_lis_listing_expiry',
+			'value'   => current_time( 'mysql' ),
+			'compare' => '<',
+			'type'    => 'DATETIME',
+		),
+		array(
+			'relation' => 'OR',
+			array( 'key' => '_lis_listing_never_expire', 'compare' => 'NOT EXISTS' ),
+			array( 'key' => '_lis_listing_never_expire', 'value' => '1', 'compare' => '!=' ),
+		),
+	);
 }

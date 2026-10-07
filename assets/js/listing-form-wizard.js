@@ -12,7 +12,10 @@
  * onboarding flow, so it now renders every `.lis-listing-panel` flat and
  * visible at once instead (see the .lis-listing-edit-flat CSS in
  * listings.css, and the enqueue note in listings-edit.php). This file only
- * runs against `[lis_listing_submit]`'s own form now.
+ * runs against `[lis_listing_submit]`'s own form now — and the create mode of
+ * `[lis_real_estate_submit]` (includes/real-estate.php), which adds rent-only /
+ * sale-only panels via `data-show-if` and labelled review rows via
+ * `data-review-labels`.
  *
  * Panels are read from the markup itself: each `.lis-listing-panel` in
  * listings-submission.php carries `data-panel-section` (small label),
@@ -72,12 +75,45 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			stage.appendChild( panel );
 		} );
 
+		// `data-show-if="field=value"` (the real estate form's rent-only /
+		// sale-only panels): the panel applies only while that radio/select
+		// currently has that value.
+		function panelApplies( panel ) {
+			var rule = panel.dataset.showIf;
+			if ( ! rule ) {
+				return true;
+			}
+			var parts = rule.split( '=' );
+			var field = form.elements[ parts[0] ];
+			return !! field && field.value === parts[1];
+		}
+
+		// A panel that doesn't apply has its fields disabled, so its `required`
+		// inputs neither block the browser's own validation (which runs before
+		// any submit handler) nor get posted. Re-synced whenever a field changes.
+		function syncConditionalPanels() {
+			panels.forEach( function ( panel ) {
+				if ( ! panel.dataset.showIf ) {
+					return;
+				}
+				var off = ! panelApplies( panel );
+				panel.querySelectorAll( 'input, select, textarea' ).forEach( function ( control ) {
+					control.disabled = off;
+				} );
+			} );
+		}
+		form.addEventListener( 'change', syncConditionalPanels );
+		syncConditionalPanels();
+
 		// Only panels actually reachable right now, given the fork choice
 		// (if any) — the fork panel itself is always included.
 		function activePanels() {
 			return panels.filter( function ( panel ) {
 				if ( panel === forkPanel ) {
 					return true;
+				}
+				if ( ! panelApplies( panel ) ) {
+					return false;
 				}
 				return ! ( 'true' === panel.dataset.googleFillable && 'google' === form.dataset.entryMode );
 			} );
@@ -242,6 +278,35 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		 * this form could ever grow, but covers everything it has today.
 		 */
 		function readPanelValue( panel ) {
+			// Panels with several labelled fields (data-review-labels) list each
+			// one as "Label: value".
+			if ( panel.dataset.reviewLabels ) {
+				var radio = panel.querySelector( 'input[type="radio"]:checked' );
+				var lines = [];
+				if ( radio ) {
+					var radioLabel = radio.closest( 'label' );
+					var radioName = radioLabel ? radioLabel.querySelector( '.lis-listing-plan-name' ) : null;
+					lines.push( escapeHtml( ( radioName || radioLabel || radio ).textContent.trim() || radio.value ) );
+				}
+				var controls = panel.querySelectorAll( 'input:not([type="hidden"]):not([type="file"]):not([type="radio"]):not([type="checkbox"]), select, textarea' );
+				Array.prototype.forEach.call( controls, function ( control ) {
+					var value = 'SELECT' === control.tagName
+						? ( control.value && control.selectedOptions[0] ? control.selectedOptions[0].textContent : '' )
+						: control.value.trim();
+					if ( ! value ) {
+						return;
+					}
+					var label = control.id ? form.querySelector( 'label[for="' + control.id + '"]:not(.screen-reader-text)' ) : null;
+					var labelText = label ? label.textContent.replace( /\(optional\)/, '' ).trim() : '';
+					lines.push( ( labelText ? escapeHtml( labelText ) + ': ' : '' ) + escapeHtml( value ).replace( /\n/g, '<br>' ) );
+				} );
+				var photos = panel.querySelectorAll( '.lis-listing-photos-preview img' );
+				if ( photos.length ) {
+					lines.push( photos.length + ' photo' + ( 1 === photos.length ? '' : 's' ) );
+				}
+				return lines.join( '<br>' );
+			}
+
 			var editorTextarea = panel.querySelector( 'textarea.wp-editor-area' );
 			if ( editorTextarea ) {
 				if ( window.tinymce ) {
@@ -309,7 +374,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		function renderReview() {
 			reviewList.innerHTML = '';
 			panels.forEach( function ( panel ) {
-				if ( panel === forkPanel ) {
+				if ( panel === forkPanel || ! panelApplies( panel ) ) {
 					return;
 				}
 				var value = readPanelValue( panel );

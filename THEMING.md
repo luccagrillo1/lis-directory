@@ -83,7 +83,7 @@ Radii of `50%` (avatars, info dots), `0` (underline inputs, business cards, segm
 toggle buttons) and the `999px` wizard progress track are geometry, not scale values, so
 they stay literal. The progress track is still exposed as `--lis-dir-wizard-progress-radius`.
 
-## Component variables (229)
+## Component variables (237)
 
 Groups follow the markup. "Styles" lists the exact selector and property each variable
 feeds. Where a component variable falls back to a shared one (e.g. `--lis-dir-btn-bg`),
@@ -412,6 +412,26 @@ These stylesheets are inlined per shortcode, so they may render on pages without
 | `--lis-dir-job-status-live-text` | `--lis-dir-color-accent-strong` → `--lis-pine-900` → `#16281F` | `.lis-job-status--live` color |
 | `--lis-dir-job-status-pending-border` | `--lis-dir-color-info` → `--lis-info` → `#2A5B78` | `.lis-job-status--awaiting-payment, .lis-job-status--pending-review` border-color |
 
+### Real estate
+
+For Rent / For Sale archives (`[lis_real_estate]`), cards, single and submit form. Everything
+else on those pages reuses the listing-card, search-form, badge, panel and wizard variables above.
+
+| Variable | Default (fallback chain) | Styles |
+|---|---|---|
+| `--lis-dir-re-btn-bg` | `--lis-dir-btn-bg` → `--lis-dir-color-accent` → `--lis-pine-700` → `#2C5240` | `.lis-re-btn` background ("List a rental" / "List a home for sale") |
+| `--lis-dir-re-btn-bg-hover` | `--lis-dir-btn-bg-hover` → `--lis-dir-color-accent-strong` → `--lis-pine-900` → `#16281F` | `.lis-re-btn:hover` background |
+| `--lis-dir-re-btn-radius` | `--lis-dir-btn-radius` → `--lis-dir-radius-control` → `--lis-radius-control` → `6px` | `.lis-re-btn` border-radius |
+| `--lis-dir-re-btn-text` | `--lis-dir-btn-text` → `--lis-dir-color-surface` → `--lis-surface` → `#FFFFFF` | `.lis-re-btn` color |
+| `--lis-dir-re-details-divider` | `1px solid var(--lis-dir-color-line)` | `.lis-re-details-row` border-bottom |
+| `--lis-dir-re-filter-label-text` | `--lis-dir-color-text-muted` → `--lis-ink-600` → `#5C6159` | `.lis-re-filter-label` color |
+| `--lis-dir-re-price-font` | `--lis-dir-font-heading` → `'Gabarito', sans-serif` | `.lis-re-card-price` / `.lis-re-price` font-family |
+| `--lis-dir-re-price-text` | `--lis-dir-price-text` → `--lis-dir-color-commerce` → `--lis-clay-600` → `#A94F2C` | `.lis-re-card-price` / `.lis-re-price` color |
+
+Also read here: `--lis-dir-status-pending-bg/-text` (`.lis-re-badge--pending`, "Sale pending"),
+`--lis-dir-status-sold-bg/-text` (Sold / Rented badges), `--lis-dir-card-excerpt-text`
+(`.lis-re-card-meta`), `--lis-dir-card-title-font` (card titles, Gabarito).
+
 ## Stable class hooks
 
 Every class below is styled by the plugin and is a public hook. They keep their names.
@@ -496,6 +516,10 @@ New classes are only ever added, BEM-style and `lis-`-prefixed.
 - `.lis-listing-video-wrap`
 - `.lis-listing-view-btn`, `.lis-listing-view-toggle`
 - `.lis-listing-wizard`, `.lis-listing-wizard-back`, `.lis-listing-wizard-controls`, `.lis-listing-wizard-next`, `.lis-listing-wizard-panel`, `.lis-listing-wizard-panel-body`, `.lis-listing-wizard-panel-hint`, `.lis-listing-wizard-panel-question`, `.lis-listing-wizard-panel-section`, `.lis-listing-wizard-panel-section-row`, `.lis-listing-wizard-progress`, `.lis-listing-wizard-progress-bar`, `.lis-listing-wizard-review-list`, `.lis-listing-wizard-stage`
+- `.lis-re-archive`, `.lis-re-archive--rent`, `.lis-re-archive--sale`, `.lis-re-archive-cta`, `.lis-re-btn`, `.lis-re-filters`, `.lis-re-filter`, `.lis-re-filter-label`, `.lis-re-filters-reset`, `.lis-re-grid`
+- `.lis-re-card`, `.lis-re-card-price`, `.lis-re-card-meta`, `.lis-re-badge--pending`
+- `.lis-re-single`, `.lis-re-back`, `.lis-re-price`, `.lis-re-area`, `.lis-re-details`, `.lis-re-details-row`
+- `.lis-re-submit-form`, `.lis-re-type-choices`, `.lis-re-field`, `.lis-re-field-row`
 - `.lis-pv-card`, `.lis-pv-card-body`, `.lis-pv-card-info`, `.lis-pv-card-info-icon`, `.lis-pv-card-inner`, `.lis-pv-card-logo`, `.lis-pv-card-name`, `.lis-pv-card-tagline`, `.lis-pv-card-tooltip`
 - `.lis-pv-directory-grid`
 - `.lis-pv-heading`, `.lis-pv-heading-info`, `.lis-pv-heading-info-icon`, `.lis-pv-heading-link`, `.lis-pv-heading-lockup`, `.lis-pv-heading-tooltip`

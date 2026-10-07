@@ -1665,6 +1665,9 @@
 .lis-listing-panel input[type="email"],
 .lis-listing-panel input[type="url"],
 .lis-listing-panel input[type="time"],
+.lis-listing-panel input[type="number"],
+.lis-listing-panel input[type="date"],
+.lis-listing-panel input[type="tel"],
 .lis-listing-panel select {
 	width: 100%;
 	max-width: 100%;
@@ -1682,6 +1685,9 @@
 .lis-listing-panel input[type="email"]:focus,
 .lis-listing-panel input[type="url"]:focus,
 .lis-listing-panel input[type="time"]:focus,
+.lis-listing-panel input[type="number"]:focus,
+.lis-listing-panel input[type="date"]:focus,
+.lis-listing-panel input[type="tel"]:focus,
 .lis-listing-panel select:focus {
 	outline: none;
 	border-bottom-color: var(--lis-dir-wizard-input-border-focus, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240)));
@@ -1698,7 +1704,8 @@
 /* Photos: hide the raw file input, style its own label as the clickable "button" instead of relying on the ugly native browser control. */
 /* Only the multi-photo input is visually hidden (it has its own dropzone
    label). Other uploads — logo, business card — stay visible inputs. */
-#lis_listing_photos {
+#lis_listing_photos,
+#lis_re_photos {
 	position: absolute;
 	width: 1px;
 	height: 1px;
@@ -1706,7 +1713,7 @@
 	overflow: hidden;
 }
 
-.lis-listing-panel input[type="file"]:not(#lis_listing_photos) {
+.lis-listing-panel input[type="file"]:not(#lis_listing_photos):not(#lis_re_photos) {
 	display: block;
 	margin-top: 6px;
 	font-size: 0.95em;
@@ -2515,4 +2522,192 @@
 .lis-listing-faq p {
 	margin: 10px 0 0 0;
 	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+}
+
+/* ---------- Real estate (For Rent / For Sale) ---------- */
+
+/* Archive filters: the search-form shell, with a small label over each control. */
+.lis-re-filters .lis-listing-search-row {
+	align-items: flex-end;
+}
+
+.lis-re-filter {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 1 1 140px;
+	min-width: 0;
+}
+
+.lis-re-filter .lis-listing-search-input,
+.lis-re-filter .lis-listing-search-select {
+	flex: none;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+.lis-re-filter-label {
+	font-size: 0.78em;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--lis-dir-re-filter-label-text, var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159)));
+}
+
+.lis-re-filters-reset {
+	margin: 10px 0 0;
+}
+
+.lis-re-archive-cta {
+	max-width: 1400px;
+	margin: 0 auto 20px;
+	text-align: right;
+}
+
+.lis-re-btn {
+	display: inline-block;
+	padding: 10px 20px;
+	border-radius: var(--lis-dir-re-btn-radius, var(--lis-dir-btn-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px))));
+	background: var(--lis-dir-re-btn-bg, var(--lis-dir-btn-bg, var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240))));
+	color: var(--lis-dir-re-btn-text, var(--lis-dir-btn-text, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF))));
+	font-weight: 600;
+	text-decoration: none;
+	font-family: var(--lis-dir-font-body, inherit);
+}
+
+.lis-re-btn:hover,
+.lis-re-btn:focus {
+	background: var(--lis-dir-re-btn-bg-hover, var(--lis-dir-btn-bg-hover, var(--lis-dir-color-accent-strong, var(--lis-pine-900, #16281F))));
+	color: var(--lis-dir-re-btn-text, var(--lis-dir-btn-text, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF))));
+}
+
+/* Cards: reuse .lis-listing-card; its inner spans are laid out as blocks. */
+.lis-re-card .lis-listing-card-thumb-wrap,
+.lis-re-card .lis-listing-card-body,
+.lis-re-card .lis-listing-card-body > span {
+	display: block;
+}
+
+.lis-re-card .lis-listing-card-thumb,
+.lis-re-card .lis-listing-fallback-img {
+	height: 200px;
+}
+
+.lis-re-card-price {
+	font-family: var(--lis-dir-re-price-font, var(--lis-dir-font-heading, 'Gabarito', sans-serif));
+	font-size: 1.25em;
+	font-weight: 700;
+	line-height: 1.2;
+	margin-bottom: 2px;
+	color: var(--lis-dir-re-price-text, var(--lis-dir-price-text, var(--lis-dir-color-commerce, var(--lis-clay-600, #A94F2C))));
+}
+
+.lis-re-card-meta {
+	font-size: 0.85em;
+	margin-top: 4px;
+	color: var(--lis-dir-card-excerpt-text, var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159)));
+}
+
+.lis-re-badge--pending {
+	color: var(--lis-dir-status-pending-text, var(--lis-dir-color-info, var(--lis-info, #2A5B78)));
+	background: var(--lis-dir-status-pending-bg, var(--lis-dir-color-info-soft, color-mix(in srgb, var(--lis-dir-color-info, var(--lis-info, #2A5B78)) 12%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
+}
+
+/* Single */
+.lis-re-back {
+	margin: 0 0 12px;
+	font-size: 0.9em;
+}
+
+.lis-re-back a {
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+}
+
+.lis-re-price {
+	margin: 0 0 4px;
+	font-family: var(--lis-dir-re-price-font, var(--lis-dir-font-heading, 'Gabarito', sans-serif));
+	font-size: 1.6em;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--lis-dir-re-price-text, var(--lis-dir-price-text, var(--lis-dir-color-commerce, var(--lis-clay-600, #A94F2C))));
+}
+
+.lis-re-area {
+	font-size: 0.9em;
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+}
+
+.lis-re-details {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 0 24px;
+	margin: 0;
+}
+
+.lis-re-details-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 0;
+	border-bottom: var(--lis-dir-re-details-divider, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8)));
+}
+
+.lis-re-details dt {
+	margin: 0;
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+}
+
+.lis-re-details dd {
+	margin: 0;
+	font-weight: 600;
+	text-align: right;
+	color: var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19));
+}
+
+/* Submit / edit form */
+.lis-re-type-choices {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 14px;
+}
+
+.lis-re-type-choices .lis-listing-plan-name,
+.lis-re-type-choices .lis-listing-plan-blurb {
+	display: block;
+}
+
+.lis-re-field label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.lis-re-field small {
+	display: block;
+	margin-top: 4px;
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+}
+
+.lis-re-field-row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 0 16px;
+}
+
+.lis-re-submit-form input[type="number"],
+.lis-re-submit-form input[type="date"],
+.lis-re-submit-form input[type="tel"],
+.lis-re-submit-form select,
+.lis-re-submit-form textarea {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+	.lis-re-archive-cta {
+		text-align: left;
+	}
+	.lis-re-filter {
+		flex: 1 1 calc(50% - 10px);
+	}
 }

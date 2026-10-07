@@ -1,6 +1,7 @@
 /**
- * Shared by [lis_listing_submit] and [lis_listing_edit] — both use the
- * same #lis_listing_photos file input markup: the native input is
+ * Shared by [lis_listing_submit], [lis_listing_edit] and
+ * [lis_real_estate_submit] — the same file input markup (#lis_listing_photos,
+ * or #lis_re_photos on the real estate form): the native input is
  * visually hidden (see .lis-listing-submit-section input[type="file"] in
  * listings.css), a <label> styled as a dropzone triggers it on click
  * (native <label for>/click-to-open behavior, no JS needed for that
@@ -21,7 +22,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	var MAX_FILES = 6; // Mirrors LIS_DIRECTORY_SUBMIT_MAX_PHOTOS.
 	var OK_TYPE = /^image\/(png|jpeg)$/;
 
-	document.querySelectorAll( '#lis_listing_photos' ).forEach( function ( input ) {
+	document.querySelectorAll( '#lis_listing_photos, #lis_re_photos' ).forEach( function ( input ) {
 		var dropzone = document.querySelector( 'label.lis-listing-photos-dropzone[for="' + input.id + '"]' );
 
 		// The preview container is authored right after the input, but the

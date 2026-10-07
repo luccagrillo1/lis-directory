@@ -285,9 +285,8 @@ function lis_directory_render_listing_toolbar() {
 
 /**
  * Only touches the real, public, main query — never wp-admin, never a
- * secondary/widget query — and only when one of this plugin's own filter
- * params is actually present, so a plain visit to `/listings/` with no
- * query string behaves exactly as it did before this shortcode existed.
+ * secondary/widget query. With none of this plugin's filter params present,
+ * the only change is leaving real estate out (it has its own pages).
  */
 function lis_directory_apply_search_filters( $query ) {
 	if ( is_admin() || ! $query->is_main_query() ) {
@@ -300,7 +299,16 @@ function lis_directory_apply_search_filters( $query ) {
 	$has_any_filter = isset( $_GET['lis_q'] ) || isset( $_GET['lis_type'] ) || isset( $_GET['lis_category'] )
 		|| isset( $_GET['lis_price'] ) || isset( $_GET['lis_open_now'] ) || isset( $_GET['lis_feature'] )
 		|| isset( $_GET['lis_sort'] );
+	// Real estate (For Rent / For Sale) has its own pages
+	// (includes/real-estate.php), so the business archive, category archives
+	// and keyword search leave it out unless a real-estate type is asked for
+	// explicitly with lis_type.
+	$exclude_real_estate = function_exists( 'lis_directory_not_real_estate_clause' );
+
 	if ( ! $has_any_filter ) {
+		if ( $exclude_real_estate ) {
+			$query->set( 'meta_query', array( lis_directory_not_real_estate_clause() ) );
+		}
 		return;
 	}
 
@@ -343,16 +351,21 @@ function lis_directory_apply_search_filters( $query ) {
 	}
 
 	$meta_query = array();
+	$typed      = false;
 
 	if ( ! empty( $_GET['lis_type'] ) ) {
 		$types = lis_directory_get_listing_types();
 		$type  = sanitize_key( wp_unslash( $_GET['lis_type'] ) );
 		if ( isset( $types[ $type ] ) ) {
+			$typed        = true;
 			$meta_query[] = array(
 				'key'   => '_lis_listing_type',
 				'value' => $type,
 			);
 		}
+	}
+	if ( ! $typed && $exclude_real_estate ) {
+		$meta_query[] = lis_directory_not_real_estate_clause();
 	}
 
 	if ( ! empty( $_GET['lis_price'] ) ) {

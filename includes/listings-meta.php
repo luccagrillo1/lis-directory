@@ -246,13 +246,17 @@ function lis_directory_render_listing_meta_box( $post ) {
 				<p class="description">Real Estate only.</p>
 			</td>
 		</tr>
-		<tr class="lis-listing-type-fields lis-listing-type-fields--real-estate-sale lis-listing-type-fields--real-estate-rent">
+		<tr class="lis-listing-type-fields lis-listing-type-fields--real-estate-rent">
 			<th>Status</th>
 			<td>
-				<label><input type="checkbox" id="lis_listing_sold" name="lis_listing_sold" value="1" <?php checked( $sold ); ?> /> Mark as Sold / Rented</label>
-				<p class="description">Shows a "Sold"/"Rented" badge and keeps the listing visible but flagged as no longer available.</p>
+				<label><input type="checkbox" id="lis_listing_sold" name="lis_listing_sold" value="1" <?php checked( $sold ); ?> /> Mark as Rented</label>
+				<p class="description">Shows a "Rented" badge, drops it from the For Rent page and hides it from search engines. (Sale listings use the Status select below.)</p>
 			</td>
 		</tr>
+		<?php
+		// Rent/sale field group — includes/real-estate.php.
+		do_action( 'lis_directory_listing_meta_box_type_rows', $post );
+		?>
 		<tr class="lis-listing-type-fields lis-listing-type-fields--job-listing">
 			<th><label for="lis_listing_salary">Salary</label></th>
 			<td>
@@ -441,6 +445,7 @@ function lis_directory_render_listing_meta_box( $post ) {
 			<th><label for="lis_listing_expiry">Expires</label></th>
 			<td>
 				<input type="date" id="lis_listing_expiry" name="lis_listing_expiry" value="<?php echo esc_attr( $expiry_date ); ?>" />
+				<input type="hidden" name="lis_listing_expiry_prev" value="<?php echo esc_attr( $expiry_date ); ?>" />
 				<label style="margin-left:12px;"><input type="checkbox" name="lis_listing_never_expire" value="1" <?php checked( $never_expire ); ?> /> Never expires</label>
 				<p class="description">Auto-unpublished after this date (checked once a day). Leave blank or tick "Never expires" to keep it live indefinitely.</p>
 			</td>
@@ -570,7 +575,11 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 			update_post_meta( $post_id, "_{$key}", sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) );
 		}
 	}
-	update_post_meta( $post_id, '_lis_listing_sold', ! empty( $_POST['lis_listing_sold'] ) );
+	// The checkbox is the rent-only "Mark as Rented" box; a sale listing's sold
+	// flag follows its Status select (includes/real-estate.php), so leave it be.
+	if ( 'real-estate-sale' !== lis_directory_get_listing_type( $post_id ) ) {
+		update_post_meta( $post_id, '_lis_listing_sold', ! empty( $_POST['lis_listing_sold'] ) );
+	}
 	if ( isset( $_POST['lis_listing_employment_type'] ) ) {
 		$employment_type = sanitize_key( wp_unslash( $_POST['lis_listing_employment_type'] ) );
 		$valid           = lis_directory_get_employment_types();
@@ -631,7 +640,12 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 
 	// Expiry.
 	update_post_meta( $post_id, '_lis_listing_never_expire', ! empty( $_POST['lis_listing_never_expire'] ) );
-	if ( isset( $_POST['lis_listing_expiry'] ) ) {
+	// Only write the date when the admin actually changed it. In the block
+	// editor this meta box posts AFTER the publish request, so a field rendered
+	// before publish would otherwise wipe an expiry the publish just stamped
+	// (lis_directory_real_estate_expiry_on_publish()).
+	$expiry_changed = ! isset( $_POST['lis_listing_expiry_prev'] ) || ( isset( $_POST['lis_listing_expiry'] ) && wp_unslash( $_POST['lis_listing_expiry'] ) !== wp_unslash( $_POST['lis_listing_expiry_prev'] ) );
+	if ( isset( $_POST['lis_listing_expiry'] ) && $expiry_changed ) {
 		$d = sanitize_text_field( wp_unslash( $_POST['lis_listing_expiry'] ) );
 		if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $d ) ) {
 			update_post_meta( $post_id, '_lis_listing_expiry', $d . ' 23:59:59' );
