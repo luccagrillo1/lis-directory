@@ -1,3 +1,7 @@
+## [0.51.1] — 2026-10-07 — Real estate filters: price boxes match the dropdowns
+
+- Seen live after 0.51.0: Astra's `input[type="number"]` and WooCommerce's `select` rules (0,2,1) outrank the single-class search-form controls, so on the For Rent / For Sale filters the Min/Max price boxes had a grey fill, square corners and a different height from the dropdowns beside them. `.lis-re-filters .lis-re-filter .lis-listing-search-input/-select` (three classes, scoped to the real-estate filter only) now sets one height (46px), padding, background, border, radius and color for both, from the existing `--lis-dir-search-input-*` variables. The Search button matches the height. No new variables, and the business search form is unchanged. Checked on staging with computed styles: both controls are now white, 6px and 46px.
+
 ## [0.51.0] — 2026-10-07 — Real estate (For Rent / For Sale) moves off Directorist
 
 LIS Directory now runs the whole real-estate path. Nothing on it depends on Directorist any more. Directorist's two real-estate directory types were empty (0 listings each), so there's no data to migrate. This release rebuilds the workflow and the pages.

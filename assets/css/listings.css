@@ -2547,6 +2547,32 @@
 	box-sizing: border-box;
 }
 
+/* Price boxes + dropdowns as one matched row. Three classes so these outrank
+   Astra / WooCommerce input[type="number"] and select rules (0,2,1), which
+   otherwise give the number boxes and the selects different fills, radii
+   and heights. Same --lis-dir-search-input-* variables as the search form. */
+.lis-re-filters .lis-re-filter .lis-listing-search-input,
+.lis-re-filters .lis-re-filter .lis-listing-search-select {
+	height: 46px;
+	padding: 0 14px;
+	font-size: 1em;
+	line-height: normal;
+	box-shadow: none;
+	background: var(--lis-dir-search-input-bg, var(--lis-dir-input-bg, var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF))));
+	border: var(--lis-dir-search-input-border, var(--lis-dir-input-border, 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8))));
+	border-radius: var(--lis-dir-search-input-radius, var(--lis-dir-input-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px))));
+	color: var(--lis-dir-search-input-text, var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159)));
+}
+
+.lis-re-filters .lis-re-filter .lis-listing-search-select {
+	padding-right: 2em;
+}
+
+.lis-re-filters .lis-listing-search-submit {
+	height: 46px;
+	padding: 0 26px;
+}
+
 .lis-re-filter-label {
 	font-size: 0.78em;
 	font-weight: 600;

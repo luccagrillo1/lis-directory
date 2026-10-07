@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.51.0
+Stable tag: 0.51.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.51.1 =
+* For Rent / For Sale filters: the min/max price boxes now match the dropdowns next to them.
 
 = 0.51.0 =
 * Real estate runs on LIS Directory now: For Rent / For Sale pages with price, bed, bath and area filters, a list-a-property form (moderated, admin emailed), a real-estate listing page, schema.org markup, and noindex for sold or rented listings.
