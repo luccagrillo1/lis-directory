@@ -80,7 +80,8 @@ function lis_directory_run_expiry_check() {
 }
 
 /**
- * The sweep's selection: an expiry that has passed, and not "never expires".
+ * The sweep's selection: an expiry that has passed, not "never expires", and
+ * not on an active Standard subscription.
  * Shared with the read-only "what would expire next" list on LIS Listings →
  * Real Estate (includes/real-estate.php).
  */
@@ -97,6 +98,14 @@ function lis_directory_expiry_due_meta_query() {
 			'relation' => 'OR',
 			array( 'key' => '_lis_listing_never_expire', 'compare' => 'NOT EXISTS' ),
 			array( 'key' => '_lis_listing_never_expire', 'value' => '1', 'compare' => '!=' ),
+		),
+		// Never unpublish a listing a Standard subscription is paying for — the
+		// subscription decides when it ends. Backstop for listings that got a
+		// subscription while still carrying an old one-time end date.
+		array(
+			'relation' => 'OR',
+			array( 'key' => '_lis_listing_standard_active', 'compare' => 'NOT EXISTS' ),
+			array( 'key' => '_lis_listing_standard_active', 'value' => '1', 'compare' => '!=' ),
 		),
 	);
 }

@@ -351,6 +351,22 @@ function lis_directory_render_dashboard_shortcode() {
 								<?php endif; ?>
 								<?php if ( ! $is_re ) : // Featured / Vendor Showcase are business-directory upgrades. ?>
 								<?php
+								// A listing on a one-time term (Directorist-era purchase) or one
+								// that has expired: offer the Standard subscription, the only way
+								// to keep a business listing live once its term runs out.
+								$on_term     = '' !== $expiry_raw && ! $never_expire;
+								$needs_plan  = ! get_post_meta( $listing->ID, '_lis_listing_standard_active', true )
+									&& ( 'expired' === $dash_status || ( 'publish' === $listing->post_status && $on_term ) );
+								$std_month   = $needs_plan ? lis_directory_build_listing_checkout_url( array(), 'month', $listing->ID ) : '';
+								$std_year    = $needs_plan ? lis_directory_build_listing_checkout_url( array(), 'year', $listing->ID ) : '';
+								if ( $std_month ) :
+									?>
+									<a href="<?php echo esc_url( $std_month ); ?>"><?php echo 'expired' === $dash_status ? 'Renew' : 'Keep it listed'; ?>: Standard monthly</a>
+									<?php if ( $std_year ) : ?>
+										<a href="<?php echo esc_url( $std_year ); ?>">or annually</a>
+									<?php endif; ?>
+								<?php endif; ?>
+								<?php
 								$featured    = (bool) get_post_meta( $listing->ID, '_lis_listing_featured', true );
 								$feature_url = ( 'publish' === $listing->post_status && ! $featured ) ? lis_directory_get_feature_listing_url( $listing->ID ) : '';
 								if ( $feature_url ) :

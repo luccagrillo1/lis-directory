@@ -783,6 +783,16 @@ function lis_directory_handle_featured_listing_order( $order_id ) {
 		}
 		update_post_meta( $listing_id, '_lis_listing_paid_order_id', $order_id );
 
+		// A subscription now keeps this listing live (it drafts when the
+		// subscription ends — see the *_subscription_ended handlers), so drop any
+		// one-time end date it carried, e.g. a Directorist-era term or an expired
+		// listing being renewed. Left in place, the daily expiry sweep would
+		// unpublish it on that date while the owner is still paying.
+		if ( function_exists( 'wcs_get_subscriptions_for_order' ) && ! empty( wcs_get_subscriptions_for_order( $order_id ) ) ) {
+			delete_post_meta( $listing_id, '_lis_listing_expiry' );
+			delete_post_meta( $listing_id, '_lis_listing_expired' );
+		}
+
 		if ( 'standard' === $tier ) {
 			// Same subscription-id-lookup pattern as Featured/Showcase below, so
 			// lis_directory_handle_standard_listing_subscription_ended() can find

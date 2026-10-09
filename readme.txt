@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.51.1
+Stable tag: 0.51.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,10 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.51.2 =
+* Paying for a subscription now clears a listing's old one-time end date, so the nightly expiry check can't unpublish a listing whose owner is still paying. The expiry check also skips any listing on an active Standard subscription.
+* My Listings: business listings that are expired or on a one-time term get "Standard monthly / or annually" links to move onto the subscription.
 
 = 0.51.1 =
 * For Rent / For Sale filters: the min/max price boxes now match the dropdowns next to them.
