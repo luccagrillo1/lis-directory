@@ -357,14 +357,11 @@ function lis_directory_render_dashboard_shortcode() {
 								$on_term     = '' !== $expiry_raw && ! $never_expire;
 								$needs_plan  = ! get_post_meta( $listing->ID, '_lis_listing_standard_active', true )
 									&& ( 'expired' === $dash_status || ( 'publish' === $listing->post_status && $on_term ) );
-								$std_month   = $needs_plan ? lis_directory_build_listing_checkout_url( array(), 'month', $listing->ID ) : '';
+								// Standard is sold annually only (lis_directory_plan_billing()).
 								$std_year    = $needs_plan ? lis_directory_build_listing_checkout_url( array(), 'year', $listing->ID ) : '';
-								if ( $std_month ) :
+								if ( $std_year ) :
 									?>
-									<a href="<?php echo esc_url( $std_month ); ?>"><?php echo 'expired' === $dash_status ? 'Renew' : 'Keep it listed'; ?>: Standard monthly</a>
-									<?php if ( $std_year ) : ?>
-										<a href="<?php echo esc_url( $std_year ); ?>">or annually</a>
-									<?php endif; ?>
+									<a href="<?php echo esc_url( $std_year ); ?>"><?php echo 'expired' === $dash_status ? 'Renew' : 'Keep it listed'; ?>: Standard (annual)</a>
 								<?php endif; ?>
 								<?php
 								$featured    = (bool) get_post_meta( $listing->ID, '_lis_listing_featured', true );
@@ -380,7 +377,11 @@ function lis_directory_render_dashboard_shortcode() {
 								$showcase_url = ( 'publish' === $listing->post_status && ! $is_showcase && function_exists( 'lis_directory_get_showcase_upgrade_url' ) ) ? lis_directory_get_showcase_upgrade_url( $listing->ID ) : '';
 								if ( $showcase_url ) :
 									?>
-									<a href="<?php echo esc_url( $showcase_url ); ?>">Join the Vendor Showcase</a>
+									<a href="<?php echo esc_url( $showcase_url ); ?>">Join the Vendor Showcase (monthly)</a>
+									<?php $showcase_year_url = lis_directory_get_showcase_upgrade_url( $listing->ID, 'year' ); ?>
+									<?php if ( $showcase_year_url ) : ?>
+										<a href="<?php echo esc_url( $showcase_year_url ); ?>">or annually</a>
+									<?php endif; ?>
 								<?php elseif ( $is_showcase ) : ?>
 									<span class="lis-listing-badge lis-listing-badge--featured">Vendor Showcase</span>
 								<?php endif; ?>

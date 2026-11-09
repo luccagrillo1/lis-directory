@@ -56,6 +56,9 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	// and made the line item read as a run-on, so they're intentionally not hooked.
 	add_filter( 'woocommerce_get_item_data', 'lis_directory_show_listing_in_cart_item_data', 10, 2 );
 	add_action( 'woocommerce_checkout_create_order_line_item', 'lis_directory_persist_listing_id_to_order_item', 10, 4 );
+	add_filter( 'woocommerce_order_item_get_formatted_meta_data', 'lis_directory_order_item_business_meta', 10, 2 );
+	add_filter( 'woocommerce_checkout_fields', 'lis_directory_require_checkout_business_name', 20 );
+	add_filter( 'default_checkout_billing_company', 'lis_directory_default_checkout_business_name' );
 	add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );
 	// Priority 99: after every handler that reacts to a paid order (listing tier,
@@ -79,6 +82,31 @@ function lis_directory_init_listing_pricing_woocommerce() {
 		add_action( 'woocommerce_subscription_status_cancelled', 'lis_directory_handle_standard_listing_subscription_ended' );
 		add_action( 'woocommerce_subscription_status_expired', 'lis_directory_handle_standard_listing_subscription_ended' );
 	}
+}
+
+/**
+ * Billing periods per tier (client decision, 2026-11): Standard and Featured
+ * are annual only; Vendor Showcase (the scrolling business-card slot) is
+ * monthly or annual, the buyer's choice. Every checkout path (Add Listing
+ * wizard, claim, dashboard upsells/renewals, bundle checkout) resolves its
+ * billing through here, so a stale form or a hand-edited ?billing= can't buy
+ * a period we no longer sell.
+ *
+ * @param string|string[] $plan_or_upgrades 'standard'|'featured'|'showcase' or an upgrades array.
+ * @param string          $requested        The buyer's pick; only honored for Showcase.
+ * @return string 'month'|'year'
+ */
+function lis_directory_plan_billing( $plan_or_upgrades, $requested = 'month' ) {
+	$tiers   = (array) $plan_or_upgrades;
+	$billing = in_array( 'showcase', $tiers, true ) ? ( 'year' === $requested ? 'year' : 'month' ) : 'year';
+	return ( 'month' === apply_filters( 'lis_directory_plan_billing', $billing, $tiers, $requested ) ) ? 'month' : 'year';
+}
+
+/**
+ * Whether a tier lets the buyer choose monthly vs annual (Showcase only).
+ */
+function lis_directory_plan_has_billing_choice( $tier ) {
+	return lis_directory_plan_billing( $tier, 'month' ) !== lis_directory_plan_billing( $tier, 'year' );
 }
 
 /**
@@ -139,7 +167,7 @@ function lis_directory_get_listing_upgrades_url( $listing_id, $tiers, $billing =
 		'action'         => 'lis_directory_bundle_checkout',
 		'tier'           => implode( ',', $tiers ),
 		'lis_listing_id' => $listing_id,
-		'billing'        => ( 'year' === $billing ) ? 'year' : 'month',
+		'billing'        => lis_directory_plan_billing( $tiers, $billing ),
 	), admin_url( 'admin-post.php' ) );
 }
 
@@ -184,7 +212,8 @@ function lis_directory_handle_bundle_checkout() {
 	$tiers_raw  = isset( $_GET['tier'] ) ? sanitize_text_field( wp_unslash( $_GET['tier'] ) ) : '';
 	$tiers      = array_values( array_unique( array_intersect( array( 'featured', 'showcase' ), array_map( 'sanitize_key', explode( ',', $tiers_raw ) ) ) ) );
 	$listing_id = isset( $_GET['lis_listing_id'] ) ? absint( $_GET['lis_listing_id'] ) : 0;
-	$billing    = ( isset( $_GET['billing'] ) && 'year' === $_GET['billing'] ) ? 'year' : 'month';
+	// The tier decides which periods are allowed (lis_directory_plan_billing()).
+	$billing    = lis_directory_plan_billing( $tiers, isset( $_GET['billing'] ) ? sanitize_key( $_GET['billing'] ) : 'month' );
 
 	if ( empty( $tiers ) || ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) || ! function_exists( 'WC' ) ) {
 		wp_safe_redirect( home_url( '/' ) );
@@ -692,7 +721,7 @@ function lis_directory_build_listing_checkout_url( $plan_or_upgrades, $billing, 
 		'add-to-cart'    => $product_id,
 		'lis_listing_id' => (int) $listing_id,
 	);
-	$var = lis_directory_resolve_plan_variation( $product_id, $billing );
+	$var = lis_directory_resolve_plan_variation( $product_id, lis_directory_plan_billing( 'standard' ) );
 	if ( $var['variation_id'] ) {
 		$args['variation_id']      = $var['variation_id'];
 		$args['attribute_billing'] = $var['attr'];
@@ -740,6 +769,76 @@ function lis_directory_add_listing_to_order_item_name( $name, $item ) {
 		return $name;
 	}
 	return $name . ' &mdash; Featuring: ' . esc_html( $listing_title );
+}
+
+/**
+ * Show the business on orders, invoices, order emails, subscriptions and
+ * renewal orders: a "Business: <listing title>" line under any line item
+ * tied to a listing. Computed at display time from the hidden
+ * `_lis_listing_id` item meta (which every listing purchase already carries,
+ * and which WooCommerce Subscriptions copies onto the subscription and each
+ * renewal), so it also appears on orders placed before this was added.
+ */
+function lis_directory_order_item_business_meta( $formatted_meta, $item ) {
+	if ( ! is_a( $item, 'WC_Order_Item_Product' ) ) {
+		return $formatted_meta;
+	}
+	$listing_id = (int) $item->get_meta( '_lis_listing_id' );
+	if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) ) {
+		return $formatted_meta;
+	}
+	$business = get_the_title( $listing_id );
+	if ( '' === $business ) {
+		return $formatted_meta;
+	}
+	$formatted_meta[ 'lis_business_' . $listing_id ] = (object) array(
+		'key'           => 'lis_business',
+		'value'         => $business,
+		'display_key'   => __( 'Business', 'lis-directory' ),
+		'display_value' => wpautop( esc_html( $business ) ),
+	);
+	return $formatted_meta;
+}
+
+/**
+ * The listing in the current cart, if any (first one found), or 0.
+ */
+function lis_directory_cart_listing_id() {
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return 0;
+	}
+	foreach ( WC()->cart->get_cart() as $item ) {
+		if ( ! empty( $item['lis_listing_id'] ) && 'lis_listing' === get_post_type( (int) $item['lis_listing_id'] ) ) {
+			return (int) $item['lis_listing_id'];
+		}
+	}
+	return 0;
+}
+
+/**
+ * Checkout for a listing purchase: WooCommerce's optional "Company name" becomes
+ * a required "Business name", pre-filled with the listing's name when the buyer
+ * hasn't saved one. It lands in the order's billing address, so the business
+ * shows on the invoice next to the payer. Classic (shortcode) checkout, which
+ * is what this site uses; WooCommerce enforces `required` itself.
+ */
+function lis_directory_require_checkout_business_name( $fields ) {
+	$listing_id = lis_directory_cart_listing_id();
+	if ( ! $listing_id || ! isset( $fields['billing']['billing_company'] ) ) {
+		return $fields;
+	}
+	$fields['billing']['billing_company']['required'] = true;
+	$fields['billing']['billing_company']['label']    = __( 'Business name', 'lis-directory' );
+	return $fields;
+}
+
+/** Pre-fill Business name with the listing's name when the buyer has none saved. */
+function lis_directory_default_checkout_business_name( $value ) {
+	if ( null !== $value && '' !== $value ) {
+		return $value;
+	}
+	$listing_id = lis_directory_cart_listing_id();
+	return $listing_id ? get_the_title( $listing_id ) : $value;
 }
 
 function lis_directory_persist_listing_id_to_order_item( $item, $cart_item_key, $values, $order ) {

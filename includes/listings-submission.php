@@ -426,16 +426,17 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			$first_plan = key( $plan_tiers );
 			?>
 			<div class="lis-listing-panel" data-panel-section="Your plan" data-panel-question="Pick a plan" data-panel-hint="Each plan includes everything in the ones before it.">
-				<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Billing">
-					<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
-					<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
-				</div>
 				<div class="lis-listing-plans" role="radiogroup" aria-label="Plan">
 					<?php foreach ( $plan_tiers as $key => $t ) : ?>
 						<label class="lis-listing-plan-card">
 							<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" <?php checked( $key, $first_plan ); ?> />
 							<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
-							<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt_price( $t['m'] ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt_price( $t['y'] ) . '/yr' ); ?>"><?php echo esc_html( $fmt_price( $t['m'] ) ); ?>/mo</span>
+							<?php if ( lis_directory_plan_has_billing_choice( $key ) ) : ?>
+								<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $t['m'] ) . '/mo' ); ?></span>
+								<span class="lis-listing-plan-price-alt"><?php echo esc_html( 'or ' . $fmt_price( $t['y'] ) . '/yr' ); ?></span>
+							<?php else : $yearly = 'year' === lis_directory_plan_billing( $key ); ?>
+								<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $yearly ? $t['y'] : $t['m'] ) . ( $yearly ? '/yr' : '/mo' ) ); ?></span>
+							<?php endif; ?>
 							<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
 						</label>
 					<?php endforeach; ?>
@@ -447,6 +448,10 @@ function lis_directory_render_listing_submission_form_shortcode() {
 							<p>This category is currently occupied. If you'd like to recommend a new category, or ask about filling this spot, <a href="<?php echo esc_url( $vs_contact_url ); ?>">contact us</a>.</p>
 						</div>
 						<div class="lis-listing-showcase-inputs">
+							<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Vendor Showcase billing">
+								<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly &middot; <?php echo esc_html( $fmt_price( $plan_tiers['showcase']['m'] ) ); ?>/mo</label>
+								<label><input type="radio" name="lis_listing_billing" value="year" /> Annually &middot; <?php echo esc_html( $fmt_price( $plan_tiers['showcase']['y'] ) ); ?>/yr <span class="lis-listing-plan-save">save ~2 months</span></label>
+							</div>
 							<p class="lis-listing-showcase-note">Your Vendor Showcase card uses the tagline, logo, and business card from the <strong>Branding</strong> step. Go back and add them if you haven't — a card without a logo won't appear in the logo showcase.</p>
 						</div>
 					</div>
@@ -462,10 +467,6 @@ function lis_directory_render_listing_submission_form_shortcode() {
 					try { taken = JSON.parse( showcase.getAttribute( 'data-taken-cats' ) || '[]' ); } catch ( e ) { taken = []; }
 				}
 				function sync() {
-					var year = 'year' === ( ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month' );
-					form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
-						el.textContent = year ? el.dataset.priceYear : el.dataset.priceMonth;
-					} );
 					if ( showcase ) {
 						var on = 'showcase' === ( ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '' );
 						showcase.hidden = ! on;
@@ -480,7 +481,7 @@ function lis_directory_render_listing_submission_form_shortcode() {
 						if ( submitBtn ) { submitBtn.disabled = !! occupied; }
 					}
 				}
-				form.querySelectorAll( 'input[name="lis_listing_billing"], input[name="lis_listing_plan"]' ).forEach( function ( r ) {
+				form.querySelectorAll( 'input[name="lis_listing_plan"]' ).forEach( function ( r ) {
 					r.addEventListener( 'change', sync );
 				} );
 				var catSel = form.querySelector( '#lis_listing_category' );
@@ -585,7 +586,8 @@ function lis_directory_handle_listing_submission() {
 	// ones below — see lis_directory_read_plan_upgrades()). Skipped entirely for
 	// a "save as draft".
 	$upgrades = $is_draft ? array() : lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
-	$billing = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
+	// Standard/Featured are annual; Showcase is the buyer's monthly/annual pick.
+	$billing  = lis_directory_plan_billing( $upgrades, ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month' );
 
 	// Vendor Showcase tier: single-product model. The category the vendor
 	// occupies is the listing's OWN category ($term, chosen earlier) — there's

@@ -2018,6 +2018,22 @@
 	cursor: pointer;
 }
 
+.lis-listing-plan-price-alt {
+	display: block;
+	font-size: 0.85em;
+	opacity: 0.75;
+}
+
+.lis-listing-showcase-inputs .lis-listing-plan-billing,
+.lis-listing-claim-form .lis-listing-plan-billing {
+	flex-wrap: wrap;
+	margin: 0 0 12px;
+}
+
+.lis-listing-plan-billing[hidden] {
+	display: none;
+}
+
 .lis-listing-plan-save {
 	font-weight: 500;
 	font-size: 0.82em;

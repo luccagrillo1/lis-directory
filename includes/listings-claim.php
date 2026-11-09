@@ -343,36 +343,40 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 		<?php endif; ?>
 		<?php wp_nonce_field( 'lis_directory_claim_listing_' . (int) $listing_id, 'lis_claim_nonce' ); ?>
 
-		<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Billing">
-			<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly</label>
-			<label><input type="radio" name="lis_listing_billing" value="year" /> Annually <span class="lis-listing-plan-save">save ~2 months</span></label>
-		</div>
 		<div class="lis-listing-plans" role="radiogroup" aria-label="Plan">
 			<?php foreach ( $tiers as $key => $t ) : ?>
 				<label class="lis-listing-plan-card"<?php echo $t['disabled'] ? ' style="opacity:.6"' : ''; ?>>
 					<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>"<?php echo $key === $first ? ' checked' : ''; ?><?php echo $t['disabled'] ? ' disabled' : ''; ?> />
 					<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
-					<span class="lis-listing-plan-price" data-price-month="<?php echo esc_attr( $fmt( $t['m'] ) . '/mo' ); ?>" data-price-year="<?php echo esc_attr( $fmt( $t['y'] ) . '/yr' ); ?>"><?php echo esc_html( $fmt( $t['m'] ) ); ?>/mo</span>
+					<?php if ( lis_directory_plan_has_billing_choice( $key ) ) : ?>
+						<span class="lis-listing-plan-price"><?php echo esc_html( $fmt( $t['m'] ) . '/mo' ); ?></span>
+						<span class="lis-listing-plan-price-alt"><?php echo esc_html( 'or ' . $fmt( $t['y'] ) . '/yr' ); ?></span>
+					<?php else : $yearly = 'year' === lis_directory_plan_billing( $key ); ?>
+						<span class="lis-listing-plan-price"><?php echo esc_html( $fmt( $yearly ? $t['y'] : $t['m'] ) . ( $yearly ? '/yr' : '/mo' ) ); ?></span>
+					<?php endif; ?>
 					<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
 				</label>
 			<?php endforeach; ?>
 		</div>
+		<?php if ( isset( $tiers['showcase'] ) && ! $tiers['showcase']['disabled'] ) : ?>
+			<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Vendor Showcase billing" data-showcase-billing<?php echo 'showcase' === $first ? '' : ' hidden'; ?>>
+				<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly &middot; <?php echo esc_html( $fmt( $tiers['showcase']['m'] ) ); ?>/mo</label>
+				<label><input type="radio" name="lis_listing_billing" value="year" /> Annually &middot; <?php echo esc_html( $fmt( $tiers['showcase']['y'] ) ); ?>/yr <span class="lis-listing-plan-save">save ~2 months</span></label>
+			</div>
+		<?php endif; ?>
 		<p><button type="submit" class="lis-listing-claim-submit">Claim &amp; subscribe</button></p>
 	</form>
 	<script>
 	( function () {
-		// The script tag is a SIBLING right after </form> above, not a
-		// descendant of it, so .closest('form') on the script itself would
-		// never match — walk back to the previous element instead.
+		// The script is a SIBLING right after </form>, so walk back to it.
 		var form = document.currentScript.previousElementSibling;
 		if ( ! form || 'FORM' !== form.tagName ) { return; }
+		var box = form.querySelector( '[data-showcase-billing]' );
+		if ( ! box ) { return; }
 		function sync() {
-			var year = 'year' === ( ( form.querySelector( 'input[name="lis_listing_billing"]:checked' ) || {} ).value || 'month' );
-			form.querySelectorAll( '.lis-listing-plan-price' ).forEach( function ( el ) {
-				el.textContent = year ? el.dataset.priceYear : el.dataset.priceMonth;
-			} );
+			box.hidden = 'showcase' !== ( ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '' );
 		}
-		form.querySelectorAll( 'input[name="lis_listing_billing"]' ).forEach( function ( r ) {
+		form.querySelectorAll( 'input[name="lis_listing_plan"]' ).forEach( function ( r ) {
 			r.addEventListener( 'change', sync );
 		} );
 		sync();
@@ -406,7 +410,8 @@ function lis_directory_handle_claim_listing() {
 	// Single-select tiers, each including those below (see
 	// lis_directory_read_plan_upgrades()) — at most one upgrade product.
 	$upgrades = lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
-	$billing = ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month';
+	// Standard/Featured are annual; Showcase is the buyer's monthly/annual pick.
+	$billing  = lis_directory_plan_billing( $upgrades, ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month' );
 
 	// Vendor Showcase needs a pending vendor entry for payment to activate (the
 	// order hook only activates one that already exists), built from this
