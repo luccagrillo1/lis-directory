@@ -1,3 +1,7 @@
+## [0.52.1] — 2026-11-09 — Business name field shows at checkout
+
+- Found in the live check of 0.52.0: this site hides WooCommerce's Company field (Customizer → WooCommerce → Checkout), which removes it from the checkout fields entirely, so 0.52.0's "make it required" had nothing to act on. `lis_directory_require_checkout_business_name()` now adds the field back (after Last name) when the cart holds a listing, then marks it required as "Business name" with the listing's name pre-filled. Checkout for anything else is unchanged.
+
 ## [0.52.0] — 2026-11-09 — Annual-only Standard/Featured; business name on invoices
 
 Client request: Vendor Showcase (the scrolling business-card slot) stays $100/mo, with the annual option kept. Standard and Featured are annual only. Invoices should name the business.

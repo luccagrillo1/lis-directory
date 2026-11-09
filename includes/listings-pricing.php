@@ -818,14 +818,25 @@ function lis_directory_cart_listing_id() {
 /**
  * Checkout for a listing purchase: WooCommerce's optional "Company name" becomes
  * a required "Business name", pre-filled with the listing's name when the buyer
- * hasn't saved one. It lands in the order's billing address, so the business
- * shows on the invoice next to the payer. Classic (shortcode) checkout, which
- * is what this site uses; WooCommerce enforces `required` itself.
+ * hasn't saved one, and added even when the site hides the Company field. It
+ * lands in the order's billing address, so the business shows on the invoice
+ * next to the payer. Classic (shortcode) checkout, which is what this site
+ * uses; WooCommerce enforces `required` itself.
  */
 function lis_directory_require_checkout_business_name( $fields ) {
-	$listing_id = lis_directory_cart_listing_id();
-	if ( ! $listing_id || ! isset( $fields['billing']['billing_company'] ) ) {
+	if ( ! lis_directory_cart_listing_id() ) {
 		return $fields;
+	}
+	// This site hides WooCommerce's Company field (Customizer → WooCommerce →
+	// Checkout), which removes it from the fields entirely — add it back for
+	// listing purchases rather than relying on that setting.
+	if ( ! isset( $fields['billing']['billing_company'] ) ) {
+		$fields['billing']['billing_company'] = array(
+			'type'         => 'text',
+			'class'        => array( 'form-row-wide' ),
+			'autocomplete' => 'organization',
+			'priority'     => 25, // After last name (20), before country (40).
+		);
 	}
 	$fields['billing']['billing_company']['required'] = true;
 	$fields['billing']['billing_company']['label']    = __( 'Business name', 'lis-directory' );
