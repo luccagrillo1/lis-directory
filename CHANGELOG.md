@@ -1,3 +1,7 @@
+## [0.52.3] — 2026-11-09 — Switch to Annual email drafts show "$"
+
+- Seen live: the **Email draft** text read "&#36;10.00/month". `wc_price()` writes the dollar sign as an HTML entity, which a browser decodes but a `mailto:` body doesn't. The draft's amounts are now decoded to plain text, and the current monthly price says "plus tax", to match the annual line. The confirm dialogs were already correct.
+
 ## [0.52.2] — 2026-11-09 — Close the monthly back door; business name for business listings only
 
 Found in a live re-check of 0.52.0/0.52.1:

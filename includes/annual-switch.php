@@ -264,8 +264,9 @@ function lis_directory_handle_annual_switch() {
 }
 
 function lis_directory_annual_switch_email_link( array $r ) {
+	// Plain text for an email: wc_price() writes "$" as the entity &#36;.
 	$money = function ( $n ) {
-		return null === $n ? '' : wp_strip_all_tags( wc_price( $n ) );
+		return null === $n ? '' : html_entity_decode( wp_strip_all_tags( wc_price( $n ) ), ENT_QUOTES, 'UTF-8' );
 	};
 	$plan    = 'featured' === $r['tier'] ? 'Featured' : 'Standard';
 	$save    = ( null !== $r['month'] && null !== $r['year'] ) ? ( $r['month'] * 12 - $r['year'] ) : 0;
@@ -273,7 +274,7 @@ function lis_directory_annual_switch_email_link( array $r ) {
 	$first   = $r['name'] ? strtok( $r['name'], ' ' ) : 'there';
 	$subject = 'Your ' . ( $r['business'] ? $r['business'] : 'business' ) . ' listing on Living in Sandpoint';
 	$body    = "Hi {$first},\n\n"
-		. 'Thanks for listing ' . ( $r['business'] ? $r['business'] : 'your business' ) . " in our directory! Your {$plan} listing is currently billed monthly ({$money( $r['month'] )}/month).\n\n"
+		. 'Thanks for listing ' . ( $r['business'] ? $r['business'] : 'your business' ) . " in our directory! Your {$plan} listing is currently billed monthly ({$money( $r['month'] )}/month plus tax).\n\n"
 		. "We're moving listings to annual billing: {$money( $r['year'] )} per year" . ( $save > 0 ? ", which saves you {$money( $save )}" : '' ) . ".\n\n"
 		. "If that works for you, just reply and we'll switch it over. Nothing changes until {$date}, when you'd be charged {$money( $r['year'] )} (plus tax) instead of the monthly amount, then once a year after that.\n\n"
 		. "Thanks!\n";
