@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.52.3
+Stable tag: 0.52.4
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 

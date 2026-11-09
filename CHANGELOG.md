@@ -1,3 +1,7 @@
+## [0.52.4] — 2026-11-09 — Standard/Featured product pages show annual only
+
+- Seen live after 0.52.2: the cart correctly refused monthly Standard/Featured, but the public product pages still offered "Monthly" in the Billing dropdown, with no warning until Add to cart, and the heading read "From: $10.00 / month". On those two products (the annual-only tiers) the dropdown now lists only Annually, pre-selected (`woocommerce_dropdown_variation_attribute_options_args`), so an express-pay button can't pick Monthly either. The price shows the annual variation's price, e.g. "$90.00 / year" (`woocommerce_get_price_html` + `woocommerce_variable_subscription_price_html`). Vendor Showcase's page is unchanged (both periods).
+
 ## [0.52.3] — 2026-11-09 — Switch to Annual email drafts show "$"
 
 - Seen live: the **Email draft** text read "&#36;10.00/month". `wc_price()` writes the dollar sign as an HTML entity, which a browser decodes but a `mailto:` body doesn't. The draft's amounts are now decoded to plain text, and the current monthly price says "plus tax", to match the annual line. The confirm dialogs were already correct.

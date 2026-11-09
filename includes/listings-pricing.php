@@ -61,6 +61,9 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	add_filter( 'default_checkout_billing_company', 'lis_directory_default_checkout_business_name' );
 	add_filter( 'woocommerce_add_to_cart_validation', 'lis_directory_block_retired_plan_variation', 10, 4 );
 	add_filter( 'woocommerce_variation_is_active', 'lis_directory_hide_retired_plan_variation', 10, 2 );
+	add_filter( 'woocommerce_dropdown_variation_attribute_options_args', 'lis_directory_drop_retired_billing_option' );
+	add_filter( 'woocommerce_get_price_html', 'lis_directory_annual_only_price_html', 20, 2 );
+	add_filter( 'woocommerce_variable_subscription_price_html', 'lis_directory_annual_only_price_html', 20, 2 );
 	add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );
 	// Priority 99: after every handler that reacts to a paid order (listing tier,
@@ -870,6 +873,40 @@ function lis_directory_block_retired_plan_variation( $passed, $product_id, $quan
 		return false;
 	}
 	return $passed;
+}
+
+/**
+ * Annual-only tier product pages: drop "Monthly" from the Billing dropdown so it
+ * can't be picked (and an express-pay button can't use it).
+ */
+function lis_directory_drop_retired_billing_option( $args ) {
+	$product = isset( $args['product'] ) ? $args['product'] : null;
+	if ( ! $product || ! function_exists( 'lis_directory_annual_only_products' )
+		|| ! in_array( (int) $product->get_id(), lis_directory_annual_only_products(), true )
+		|| 'billing' !== sanitize_title( isset( $args['attribute'] ) ? $args['attribute'] : '' ) ) {
+		return $args;
+	}
+	$args['options'] = array_values( array_filter( (array) $args['options'], function ( $o ) {
+		return 'monthly' !== strtolower( (string) $o );
+	} ) );
+	if ( 1 === count( $args['options'] ) ) {
+		$args['selected'] = $args['options'][0]; // Pre-select Annually.
+	}
+	return $args;
+}
+
+/**
+ * Annual-only tier product pages: show the annual price instead of
+ * "From: $10.00 / month" (the range still counts the retired monthly variation).
+ */
+function lis_directory_annual_only_price_html( $html, $product ) {
+	if ( ! $product || $product->is_type( array( 'variation', 'subscription_variation' ) ) || ! function_exists( 'lis_directory_annual_only_products' )
+		|| ! in_array( (int) $product->get_id(), lis_directory_annual_only_products(), true ) ) {
+		return $html;
+	}
+	$year = lis_directory_resolve_plan_variation( $product->get_id(), 'year' );
+	$var  = $year['variation_id'] ? wc_get_product( $year['variation_id'] ) : null;
+	return $var ? $var->get_price_html() : $html;
 }
 
 /** Grey out the retired monthly option in the product page's Billing dropdown. */
