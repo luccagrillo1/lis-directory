@@ -59,6 +59,8 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	add_filter( 'woocommerce_order_item_get_formatted_meta_data', 'lis_directory_order_item_business_meta', 10, 2 );
 	add_filter( 'woocommerce_checkout_fields', 'lis_directory_require_checkout_business_name', 20 );
 	add_filter( 'default_checkout_billing_company', 'lis_directory_default_checkout_business_name' );
+	add_filter( 'woocommerce_add_to_cart_validation', 'lis_directory_block_retired_plan_variation', 10, 4 );
+	add_filter( 'woocommerce_variation_is_active', 'lis_directory_hide_retired_plan_variation', 10, 2 );
 	add_action( 'woocommerce_order_status_completed', 'lis_directory_handle_featured_listing_order' );
 	add_action( 'woocommerce_order_status_processing', 'lis_directory_handle_featured_listing_order' );
 	// Priority 99: after every handler that reacts to a paid order (listing tier,
@@ -784,7 +786,7 @@ function lis_directory_order_item_business_meta( $formatted_meta, $item ) {
 		return $formatted_meta;
 	}
 	$listing_id = (int) $item->get_meta( '_lis_listing_id' );
-	if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) ) {
+	if ( ! lis_directory_is_business_listing( $listing_id ) ) {
 		return $formatted_meta;
 	}
 	$business = get_the_title( $listing_id );
@@ -801,18 +803,81 @@ function lis_directory_order_item_business_meta( $formatted_meta, $item ) {
 }
 
 /**
- * The listing in the current cart, if any (first one found), or 0.
+ * A business listing (not a real-estate rental/sale listing, which shares the
+ * lis_listing post type) — the only kind that gets "Business name" treatment.
+ */
+function lis_directory_is_business_listing( $listing_id ) {
+	$listing_id = (int) $listing_id;
+	if ( ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) ) {
+		return false;
+	}
+	$type = function_exists( 'lis_directory_get_listing_type' ) ? (string) lis_directory_get_listing_type( $listing_id ) : '';
+	return 0 !== strpos( $type, 'real-estate' );
+}
+
+/**
+ * The business listing in the current cart, if any (first one found), or 0.
  */
 function lis_directory_cart_listing_id() {
 	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
 		return 0;
 	}
 	foreach ( WC()->cart->get_cart() as $item ) {
-		if ( ! empty( $item['lis_listing_id'] ) && 'lis_listing' === get_post_type( (int) $item['lis_listing_id'] ) ) {
+		if ( ! empty( $item['lis_listing_id'] ) && lis_directory_is_business_listing( $item['lis_listing_id'] ) ) {
 			return (int) $item['lis_listing_id'];
 		}
 	}
 	return 0;
+}
+
+/**
+ * Variation ids no longer sold: the monthly variation of each annual-only tier
+ * (Standard, Featured — see lis_directory_plan_billing()).
+ *
+ * @return int[]
+ */
+function lis_directory_retired_plan_variation_ids() {
+	static $ids = null;
+	if ( null !== $ids ) {
+		return $ids;
+	}
+	$ids = array();
+	if ( ! function_exists( 'lis_directory_annual_only_products' ) ) {
+		return $ids;
+	}
+	foreach ( lis_directory_annual_only_products() as $pid ) {
+		$month = lis_directory_resolve_plan_variation( $pid, 'month' );
+		$year  = lis_directory_resolve_plan_variation( $pid, 'year' );
+		// Only when a real monthly variation exists alongside the annual one
+		// (resolve falls back to the first child when a period is missing).
+		if ( $month['variation_id'] && $month['variation_id'] !== $year['variation_id'] && 'Monthly' === $month['attr'] ) {
+			$ids[] = (int) $month['variation_id'];
+		}
+	}
+	return $ids;
+}
+
+/**
+ * Block buying a retired monthly variation through WooCommerce's own
+ * add-to-cart (the public product page's Billing dropdown or a hand-made
+ * ?add-to-cart= link). Only the add-to-cart request is checked, so existing
+ * monthly subscriptions renew, and can be paid manually, exactly as before.
+ */
+function lis_directory_block_retired_plan_variation( $passed, $product_id, $quantity, $variation_id = 0 ) {
+	if ( $passed && $variation_id && empty( $_REQUEST['subscription_renewal'] ) && empty( $_REQUEST['resubscribe'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		&& in_array( (int) $variation_id, lis_directory_retired_plan_variation_ids(), true ) ) {
+		wc_add_notice( __( 'Standard and Featured listings are billed annually. Please choose the annual option.', 'lis-directory' ), 'error' );
+		return false;
+	}
+	return $passed;
+}
+
+/** Grey out the retired monthly option in the product page's Billing dropdown. */
+function lis_directory_hide_retired_plan_variation( $active, $variation ) {
+	if ( $active && $variation && in_array( (int) $variation->get_id(), lis_directory_retired_plan_variation_ids(), true ) ) {
+		return false;
+	}
+	return $active;
 }
 
 /**

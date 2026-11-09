@@ -1,3 +1,10 @@
+## [0.52.2] — 2026-11-09 — Close the monthly back door; business name for business listings only
+
+Found in a live re-check of 0.52.0/0.52.1:
+
+- **Monthly Standard/Featured could still be bought** through WooCommerce's own add-to-cart: the public product pages (`/product/local-directory-listing/`, `/product/feature-my-listing/`) still offered Monthly in their Billing dropdown, and a hand-made `?add-to-cart=6723&variation_id=6724` link put "$10.00 / month" in the cart. Now `woocommerce_add_to_cart_validation` refuses the monthly variation of each annual-only tier with "Standard and Featured listings are billed annually", and `woocommerce_variation_is_active` greys it out in the dropdown. Variations are found through `lis_directory_resolve_plan_variation()`, so there are no hard-coded ids. Only add-to-cart requests are checked, and resubscribe/renewal requests are exempt, so existing monthly subscriptions renew (and can be paid manually) as before. Vendor Showcase keeps both periods.
+- **Business name only for business listings.** Real-estate rentals/sales are also `lis_listing`. The required checkout "Business name" and the "Business:" line on orders now skip them (`lis_directory_is_business_listing()`). Real estate is free today, so this only matters if it's ever priced.
+
 ## [0.52.1] — 2026-11-09 — Business name field shows at checkout
 
 - Found in the live check of 0.52.0: this site hides WooCommerce's Company field (Customizer → WooCommerce → Checkout), which removes it from the checkout fields entirely, so 0.52.0's "make it required" had nothing to act on. `lis_directory_require_checkout_business_name()` now adds the field back (after Last name) when the cart holds a listing, then marks it required as "Business name" with the listing's name pre-filled. Checkout for anything else is unchanged.
