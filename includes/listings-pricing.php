@@ -865,10 +865,15 @@ function lis_directory_retired_plan_variation_ids() {
  * add-to-cart (the public product page's Billing dropdown or a hand-made
  * ?add-to-cart= link). Only the add-to-cart request is checked, so existing
  * monthly subscriptions renew, and can be paid manually, exactly as before.
+ *
+ * A bare ?add-to-cart=<variation id> link is validated as a simple product:
+ * no $variation_id, and the variation's own id arrives as $product_id. So
+ * check whichever id names the thing actually being added.
  */
 function lis_directory_block_retired_plan_variation( $passed, $product_id, $quantity, $variation_id = 0 ) {
-	if ( $passed && $variation_id && empty( $_REQUEST['subscription_renewal'] ) && empty( $_REQUEST['resubscribe'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		&& in_array( (int) $variation_id, lis_directory_retired_plan_variation_ids(), true ) ) {
+	$check_id = $variation_id ? (int) $variation_id : (int) $product_id;
+	if ( $passed && $check_id && empty( $_REQUEST['subscription_renewal'] ) && empty( $_REQUEST['resubscribe'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		&& in_array( $check_id, lis_directory_retired_plan_variation_ids(), true ) ) {
 		wc_add_notice( __( 'Standard and Featured listings are billed annually. Please choose the annual option.', 'lis-directory' ), 'error' );
 		return false;
 	}

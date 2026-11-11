@@ -1,3 +1,7 @@
+## [0.52.5] — 2026-11-11 — Bare add-to-cart links can't add monthly Standard/Featured
+
+- Found by the live re-checks: a bare `?add-to-cart=6724` (or `6727`) link, naming the monthly variation directly, still put monthly Standard/Featured in the cart. The product-page form and the Store API were already refused. WooCommerce validates such a link as a simple product, so `$variation_id` is empty and the variation's id arrives as `$product_id`; `lis_directory_block_retired_plan_variation()` now checks whichever id names the item being added. Renewal and resubscribe requests stay exempt, so existing monthly subscribers are unaffected.
+
 ## [0.52.4] — 2026-11-09 — Standard/Featured product pages show annual only
 
 - Seen live after 0.52.2: the cart correctly refused monthly Standard/Featured, but the public product pages still offered "Monthly" in the Billing dropdown, with no warning until Add to cart, and the heading read "From: $10.00 / month". On those two products (the annual-only tiers) the dropdown now lists only Annually, pre-selected (`woocommerce_dropdown_variation_attribute_options_args`), so an express-pay button can't pick Monthly either. The price shows the annual variation's price, e.g. "$90.00 / year" (`woocommerce_get_price_html` + `woocommerce_variable_subscription_price_html`). Vendor Showcase's page is unchanged (both periods).
