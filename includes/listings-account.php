@@ -337,6 +337,9 @@ function lis_directory_render_dashboard_shortcode() {
 								if ( $front_edit_url ) :
 									?>
 									<a href="<?php echo esc_url( $front_edit_url ); ?>">Edit</a>
+									<?php if ( function_exists( 'lis_directory_listing_can_choose_plan' ) && lis_directory_listing_can_choose_plan( $listing ) ) : ?>
+										<a href="<?php echo esc_url( $front_edit_url . '#lis-listing-plan-step' ); ?>"><strong>Finish &amp; choose a plan</strong></a>
+									<?php endif; ?>
 								<?php elseif ( current_user_can( 'edit_post', $listing->ID ) ) : ?>
 									<a href="<?php echo esc_url( get_edit_post_link( $listing->ID ) ); ?>">Edit</a>
 								<?php endif; ?>

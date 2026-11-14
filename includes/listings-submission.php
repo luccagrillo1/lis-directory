@@ -343,158 +343,297 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			</p>
 		</div>
 
-		<?php
-		$std_pid  = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
-		$feat_pid = (int) get_option( 'lis_directory_featured_listing_product_id' );
-		$fmt_price = function ( $price ) {
-			if ( null === $price || '' === $price ) {
-				return '—';
-			}
-			// Drop the ".00" on whole-number prices (all tiers are whole dollars),
-			// but keep decimals if a price ever isn't round.
-			$is_whole = ( (float) $price == (int) round( (float) $price ) );
-			if ( ! function_exists( 'wc_price' ) ) {
-				return '$' . ( $is_whole ? (string) (int) $price : number_format( (float) $price, 2 ) );
-			}
-			$decimals = $is_whole ? 0 : wc_get_price_decimals();
-			return wp_strip_all_tags( wc_price( $price, array( 'decimals' => $decimals ) ) );
-		};
-
-		// Plans are single-select tiers, each including the ones below it:
-		// Standard < Featured < Vendor Showcase. A card's price is the WHOLE
-		// total for that tier — Featured and Vendor Showcase are each their own
-		// flat price that already includes everything below (see
-		// lis_directory_read_plan_upgrades() / lis_directory_sync_featured_with_showcase())
-		// — so the number on the card is what checkout charges.
-		$raw_price = function ( $price ) {
-			return ( null !== $price && '' !== $price ) ? (float) $price : 0;
-		};
-		$std_m = $std_pid ? $raw_price( lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] ) : 0;
-		$std_y = $std_pid ? $raw_price( lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] ) : 0;
-
-		$plan_tiers = array();
-		if ( $std_pid ) {
-			$plan_tiers['standard'] = array(
-				'label' => 'Standard',
-				'blurb' => 'Your business listed in the directory.',
-				'm'     => $std_m,
-				'y'     => $std_y,
-			);
-		}
-		if ( $feat_pid ) {
-			$plan_tiers['featured'] = array(
-				'label' => 'Featured',
-				'blurb' => 'Everything in Standard, plus a Featured badge and priority placement.',
-				'm'     => $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] ),
-				'y'     => $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] ),
-			);
-		}
-
-		// Vendor Showcase — the exclusive one-per-category tier. Single-product
-		// model: offered whenever the product exists. The category a buyer
-		// occupies is their listing's OWN category (chosen earlier), so there's
-		// no category picker here; if that category is already taken we warn at
-		// this step (and the submit handler re-checks server-side).
-		$vs_pid = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
-		$vs_product = ( $vs_pid && function_exists( 'wc_get_product' ) ) ? wc_get_product( $vs_pid ) : null;
-		if ( $vs_product && 'publish' === $vs_product->get_status() ) {
-			$vs_month_v = lis_directory_get_showcase_variation( 0, 'month' );
-			$vs_year_v  = lis_directory_get_showcase_variation( 0, 'year' );
-			$vs_month_p = $vs_month_v && wc_get_product( $vs_month_v ) ? wc_get_product( $vs_month_v )->get_price() : null;
-			$vs_year_p  = $vs_year_v && wc_get_product( $vs_year_v ) ? wc_get_product( $vs_year_v )->get_price() : null;
-			$plan_tiers['showcase'] = array(
-				'label' => 'Vendor Showcase',
-				'blurb' => 'Everything in Featured (Standard included), plus the exclusive one-per-category slot — your logo in the showcase.',
-				'm'     => $raw_price( $vs_month_p ),
-				'y'     => $raw_price( $vs_year_p ),
-			);
-		}
-
-		// Which listing categories already have an active showcase vendor — used
-		// to warn (client-side) if the user's chosen category is occupied.
-		$vs_taken_cats = array();
-		if ( isset( $plan_tiers['showcase'] ) && function_exists( 'lis_directory_is_listing_category_showcase_taken' ) ) {
-			foreach ( $cat_terms as $ct ) {
-				if ( ! is_wp_error( $ct ) && lis_directory_is_listing_category_showcase_taken( $ct->term_id ) ) {
-					$vs_taken_cats[] = (int) $ct->term_id;
-				}
-			}
-		}
-		$vs_contact_url = apply_filters( 'lis_directory_showcase_contact_url', home_url( '/contact/' ) );
-
-		if ( ! empty( $plan_tiers ) ) :
-			$first_plan = key( $plan_tiers );
-			?>
-			<div class="lis-listing-panel" data-panel-section="Your plan" data-panel-question="Pick a plan" data-panel-hint="Each plan includes everything in the ones before it.">
-				<div class="lis-listing-plans" role="radiogroup" aria-label="Plan">
-					<?php foreach ( $plan_tiers as $key => $t ) : ?>
-						<label class="lis-listing-plan-card">
-							<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" <?php checked( $key, $first_plan ); ?> />
-							<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
-							<?php if ( lis_directory_plan_has_billing_choice( $key ) ) : ?>
-								<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $t['m'] ) . '/mo' ); ?></span>
-								<span class="lis-listing-plan-price-alt"><?php echo esc_html( 'or ' . $fmt_price( $t['y'] ) . '/yr' ); ?></span>
-							<?php else : $yearly = 'year' === lis_directory_plan_billing( $key ); ?>
-								<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $yearly ? $t['y'] : $t['m'] ) . ( $yearly ? '/yr' : '/mo' ) ); ?></span>
-							<?php endif; ?>
-							<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
-						</label>
-					<?php endforeach; ?>
-				</div>
-
-				<?php if ( isset( $plan_tiers['showcase'] ) ) : ?>
-					<div class="lis-listing-showcase-fields" hidden data-taken-cats="<?php echo esc_attr( wp_json_encode( $vs_taken_cats ) ); ?>">
-						<div class="lis-listing-showcase-occupied" hidden>
-							<p>This category is currently occupied. If you'd like to recommend a new category, or ask about filling this spot, <a href="<?php echo esc_url( $vs_contact_url ); ?>">contact us</a>.</p>
-						</div>
-						<div class="lis-listing-showcase-inputs">
-							<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Vendor Showcase billing">
-								<label><input type="radio" name="lis_listing_billing" value="month" checked /> Monthly &middot; <?php echo esc_html( $fmt_price( $plan_tiers['showcase']['m'] ) ); ?>/mo</label>
-								<label><input type="radio" name="lis_listing_billing" value="year" /> Annually &middot; <?php echo esc_html( $fmt_price( $plan_tiers['showcase']['y'] ) ); ?>/yr <span class="lis-listing-plan-save">save ~2 months</span></label>
-							</div>
-							<p class="lis-listing-showcase-note">Your Vendor Showcase card uses the tagline, logo, and business card from the <strong>Branding</strong> step. Go back and add them if you haven't — a card without a logo won't appear in the logo showcase.</p>
-						</div>
-					</div>
-				<?php endif; ?>
-			</div>
-			<script>
-			( function () {
-				var form = document.currentScript.closest( 'form' );
-				if ( ! form ) { return; }
-				var showcase = form.querySelector( '.lis-listing-showcase-fields' );
-				var taken = [];
-				if ( showcase ) {
-					try { taken = JSON.parse( showcase.getAttribute( 'data-taken-cats' ) || '[]' ); } catch ( e ) { taken = []; }
-				}
-				function sync() {
-					if ( showcase ) {
-						var on = 'showcase' === ( ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '' );
-						showcase.hidden = ! on;
-						var catSel = form.querySelector( '#lis_listing_category' );
-						var chosen = catSel ? parseInt( catSel.value, 10 ) : 0;
-						var occupied = on && chosen && taken.indexOf( chosen ) !== -1;
-						var warn = showcase.querySelector( '.lis-listing-showcase-occupied' );
-						var inputs = showcase.querySelector( '.lis-listing-showcase-inputs' );
-						if ( warn ) { warn.hidden = ! occupied; }
-						if ( inputs ) { inputs.hidden = !! occupied; }
-						var submitBtn = form.querySelector( '.lis-listing-submit-button' );
-						if ( submitBtn ) { submitBtn.disabled = !! occupied; }
-					}
-				}
-				form.querySelectorAll( 'input[name="lis_listing_plan"]' ).forEach( function ( r ) {
-					r.addEventListener( 'change', sync );
-				} );
-				var catSel = form.querySelector( '#lis_listing_category' );
-				if ( catSel ) { catSel.addEventListener( 'change', sync ); }
-				sync();
-			}() );
-			</script>
-		<?php endif; ?>
+		<?php echo lis_directory_render_plan_step( $cat_terms ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside. ?>
 
 		<p class="lis-listing-real-submit"><button type="submit" class="lis-listing-submit-button">Submit</button></p>
 	</form>
 	<?php
 	return ob_get_clean();
+}
+
+/**
+ * The "Choose your plan" step: tier cards (Standard < Featured < Vendor
+ * Showcase), Showcase billing + occupied-category warning, and the small
+ * script that keeps them in sync with #lis_listing_category. Shared by the
+ * Add Listing wizard and the edit form (for a draft that hasn't been paid
+ * for yet — see lis_directory_listing_can_choose_plan()). Returns '' when no
+ * plan product is configured.
+ *
+ * @param WP_Term[] $cat_terms        All lis_listing_category terms.
+ * @param string    $selected         Pre-selected tier key ('' = first).
+ * @param string    $selected_billing 'month' or 'year' (Showcase only).
+ */
+function lis_directory_render_plan_step( $cat_terms, $selected = '', $selected_billing = 'month' ) {
+	$cat_terms = is_array( $cat_terms ) ? $cat_terms : array();
+	ob_start();
+	$std_pid  = function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0;
+	$feat_pid = (int) get_option( 'lis_directory_featured_listing_product_id' );
+	$fmt_price = function ( $price ) {
+		if ( null === $price || '' === $price ) {
+			return '—';
+		}
+		// Drop the ".00" on whole-number prices (all tiers are whole dollars),
+		// but keep decimals if a price ever isn't round.
+		$is_whole = ( (float) $price == (int) round( (float) $price ) );
+		if ( ! function_exists( 'wc_price' ) ) {
+			return '$' . ( $is_whole ? (string) (int) $price : number_format( (float) $price, 2 ) );
+		}
+		$decimals = $is_whole ? 0 : wc_get_price_decimals();
+		return wp_strip_all_tags( wc_price( $price, array( 'decimals' => $decimals ) ) );
+	};
+
+	// Plans are single-select tiers, each including the ones below it:
+	// Standard < Featured < Vendor Showcase. A card's price is the WHOLE
+	// total for that tier — Featured and Vendor Showcase are each their own
+	// flat price that already includes everything below (see
+	// lis_directory_read_plan_upgrades() / lis_directory_sync_featured_with_showcase())
+	// — so the number on the card is what checkout charges.
+	$raw_price = function ( $price ) {
+		return ( null !== $price && '' !== $price ) ? (float) $price : 0;
+	};
+	$std_m = $std_pid ? $raw_price( lis_directory_resolve_plan_variation( $std_pid, 'month' )['price'] ) : 0;
+	$std_y = $std_pid ? $raw_price( lis_directory_resolve_plan_variation( $std_pid, 'year' )['price'] ) : 0;
+
+	$plan_tiers = array();
+	if ( $std_pid ) {
+		$plan_tiers['standard'] = array(
+			'label' => 'Standard',
+			'blurb' => 'Your business listed in the directory.',
+			'm'     => $std_m,
+			'y'     => $std_y,
+		);
+	}
+	if ( $feat_pid ) {
+		$plan_tiers['featured'] = array(
+			'label' => 'Featured',
+			'blurb' => 'Everything in Standard, plus a Featured badge and priority placement.',
+			'm'     => $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'month' )['price'] ),
+			'y'     => $raw_price( lis_directory_resolve_plan_variation( $feat_pid, 'year' )['price'] ),
+		);
+	}
+
+	// Vendor Showcase — the exclusive one-per-category tier. Single-product
+	// model: offered whenever the product exists. The category a buyer
+	// occupies is their listing's OWN category (chosen earlier), so there's
+	// no category picker here; if that category is already taken we warn at
+	// this step (and the submit handler re-checks server-side).
+	$vs_pid = function_exists( 'lis_directory_get_vendor_showcase_product_id' ) ? lis_directory_get_vendor_showcase_product_id() : 0;
+	$vs_product = ( $vs_pid && function_exists( 'wc_get_product' ) ) ? wc_get_product( $vs_pid ) : null;
+	if ( $vs_product && 'publish' === $vs_product->get_status() ) {
+		$vs_month_v = lis_directory_get_showcase_variation( 0, 'month' );
+		$vs_year_v  = lis_directory_get_showcase_variation( 0, 'year' );
+		$vs_month_p = $vs_month_v && wc_get_product( $vs_month_v ) ? wc_get_product( $vs_month_v )->get_price() : null;
+		$vs_year_p  = $vs_year_v && wc_get_product( $vs_year_v ) ? wc_get_product( $vs_year_v )->get_price() : null;
+		$plan_tiers['showcase'] = array(
+			'label' => 'Vendor Showcase',
+			'blurb' => 'Everything in Featured (Standard included), plus the exclusive one-per-category slot — your logo in the showcase.',
+			'm'     => $raw_price( $vs_month_p ),
+			'y'     => $raw_price( $vs_year_p ),
+		);
+	}
+
+	// Which listing categories already have an active showcase vendor — used
+	// to warn (client-side) if the user's chosen category is occupied.
+	$vs_taken_cats = array();
+	if ( isset( $plan_tiers['showcase'] ) && function_exists( 'lis_directory_is_listing_category_showcase_taken' ) ) {
+		foreach ( $cat_terms as $ct ) {
+			if ( ! is_wp_error( $ct ) && lis_directory_is_listing_category_showcase_taken( $ct->term_id ) ) {
+				$vs_taken_cats[] = (int) $ct->term_id;
+			}
+		}
+	}
+	$vs_contact_url = apply_filters( 'lis_directory_showcase_contact_url', home_url( '/contact/' ) );
+
+	if ( ! empty( $plan_tiers ) ) :
+		$selected_plan = ( $selected && isset( $plan_tiers[ $selected ] ) ) ? $selected : key( $plan_tiers );
+		?>
+		<div class="lis-listing-panel" id="lis-listing-plan-step" data-panel-section="Your plan" data-panel-question="Pick a plan" data-panel-hint="Each plan includes everything in the ones before it.">
+			<div class="lis-listing-plans" role="radiogroup" aria-label="Plan">
+				<?php foreach ( $plan_tiers as $key => $t ) : ?>
+					<label class="lis-listing-plan-card">
+						<input type="radio" name="lis_listing_plan" value="<?php echo esc_attr( $key ); ?>" <?php checked( $key, $selected_plan ); ?> />
+						<span class="lis-listing-plan-name"><?php echo esc_html( $t['label'] ); ?></span>
+						<?php if ( lis_directory_plan_has_billing_choice( $key ) ) : ?>
+							<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $t['m'] ) . '/mo' ); ?></span>
+							<span class="lis-listing-plan-price-alt"><?php echo esc_html( 'or ' . $fmt_price( $t['y'] ) . '/yr' ); ?></span>
+						<?php else : $yearly = 'year' === lis_directory_plan_billing( $key ); ?>
+							<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $yearly ? $t['y'] : $t['m'] ) . ( $yearly ? '/yr' : '/mo' ) ); ?></span>
+						<?php endif; ?>
+						<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
+					</label>
+				<?php endforeach; ?>
+			</div>
+
+			<?php if ( isset( $plan_tiers['showcase'] ) ) : ?>
+				<div class="lis-listing-showcase-fields" hidden data-taken-cats="<?php echo esc_attr( wp_json_encode( $vs_taken_cats ) ); ?>">
+					<div class="lis-listing-showcase-occupied" hidden>
+						<p>This category is currently occupied. If you'd like to recommend a new category, or ask about filling this spot, <a href="<?php echo esc_url( $vs_contact_url ); ?>">contact us</a>.</p>
+					</div>
+					<div class="lis-listing-showcase-inputs">
+						<div class="lis-listing-plan-billing" role="radiogroup" aria-label="Vendor Showcase billing">
+							<label><input type="radio" name="lis_listing_billing" value="month" <?php checked( 'year' !== $selected_billing ); ?> /> Monthly &middot; <?php echo esc_html( $fmt_price( $plan_tiers['showcase']['m'] ) ); ?>/mo</label>
+							<label><input type="radio" name="lis_listing_billing" value="year" <?php checked( 'year', $selected_billing ); ?> /> Annually &middot; <?php echo esc_html( $fmt_price( $plan_tiers['showcase']['y'] ) ); ?>/yr <span class="lis-listing-plan-save">save ~2 months</span></label>
+						</div>
+						<p class="lis-listing-showcase-note">Your Vendor Showcase card uses the tagline, logo, and business card from the <strong>Branding</strong> step. Go back and add them if you haven't — a card without a logo won't appear in the logo showcase.</p>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
+		<script>
+		( function () {
+			var form = document.currentScript.closest( 'form' );
+			if ( ! form ) { return; }
+			var showcase = form.querySelector( '.lis-listing-showcase-fields' );
+			var taken = [];
+			if ( showcase ) {
+				try { taken = JSON.parse( showcase.getAttribute( 'data-taken-cats' ) || '[]' ); } catch ( e ) { taken = []; }
+			}
+			function sync() {
+				if ( showcase ) {
+					var on = 'showcase' === ( ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '' );
+					showcase.hidden = ! on;
+					var catSel = form.querySelector( '#lis_listing_category' );
+					var chosen = catSel ? parseInt( catSel.value, 10 ) : 0;
+					var occupied = on && chosen && taken.indexOf( chosen ) !== -1;
+					var warn = showcase.querySelector( '.lis-listing-showcase-occupied' );
+					var inputs = showcase.querySelector( '.lis-listing-showcase-inputs' );
+					if ( warn ) { warn.hidden = ! occupied; }
+					if ( inputs ) { inputs.hidden = !! occupied; }
+					var submitBtn = form.querySelector( '.lis-listing-submit-button' );
+					if ( submitBtn ) { submitBtn.disabled = !! occupied; }
+				}
+			}
+			form.querySelectorAll( 'input[name="lis_listing_plan"]' ).forEach( function ( r ) {
+				r.addEventListener( 'change', sync );
+			} );
+			var catSel = form.querySelector( '#lis_listing_category' );
+			if ( catSel ) { catSel.addEventListener( 'change', sync ); }
+			sync();
+		}() );
+		</script>
+	<?php
+	endif;
+	return ob_get_clean();
+}
+
+/**
+ * Vendor Showcase tier: single-product model. The category the vendor
+ * occupies is the listing's OWN category — there's no separate slot picker.
+ * Mirrors that listing category to a lis_vendor_category term just-in-time so
+ * the exclusivity engine works. Appends error keys to $errors.
+ *
+ * @return array { WP_Term|null $vendor_term, int $checkout_category } —
+ *               $checkout_category is a lis_listing_category term id (for the
+ *               taken-check in the checkout URL builder), 0 when not Showcase.
+ */
+function lis_directory_resolve_showcase_vendor_term( $upgrades, $term, $term_id, &$errors ) {
+	if ( ! in_array( 'showcase', (array) $upgrades, true ) ) {
+		return array( null, 0 );
+	}
+	if ( ! $term || is_wp_error( $term ) ) {
+		$errors[] = 'category';
+		return array( null, 0 );
+	}
+	if ( function_exists( 'lis_directory_is_listing_category_showcase_taken' ) && lis_directory_is_listing_category_showcase_taken( $term_id ) ) {
+		$errors[] = 'pv_category_taken';
+		return array( null, 0 );
+	}
+	// Creates the vendor category if this is the first showcase vendor in it.
+	$vendor_term_id = function_exists( 'lis_directory_vendor_category_for_listing_category' ) ? lis_directory_vendor_category_for_listing_category( $term_id ) : 0;
+	$vendor_term    = $vendor_term_id ? get_term( $vendor_term_id, 'lis_vendor_category' ) : null;
+	if ( ! $vendor_term || is_wp_error( $vendor_term ) ) {
+		$errors[] = 'pv_category';
+		return array( null, 0 );
+	}
+	return array( $vendor_term, (int) $term_id );
+}
+
+/**
+ * Create (or, for a draft whose owner already went to checkout once, refresh)
+ * the pending Vendor Showcase entry linked to a listing, so the whole
+ * application lives in the listing form. Payment activates it (see
+ * lis_directory_handle_featured_listing_order).
+ */
+function lis_directory_save_pending_showcase_vendor( $post_id, $vendor_term, $business_name, $tagline, $email, $logo_id, $card_id ) {
+	if ( ! $vendor_term || is_wp_error( $vendor_term ) ) {
+		return 0;
+	}
+	$vendor_id = function_exists( 'lis_directory_get_vendor_for_listing' ) ? lis_directory_get_vendor_for_listing( $post_id ) : 0;
+	if ( $vendor_id && 'pending' !== get_post_meta( $vendor_id, '_lis_pv_status', true ) ) {
+		return 0; // An active/expired entry is managed elsewhere — never downgrade it here.
+	}
+	if ( $vendor_id ) {
+		wp_update_post( array( 'ID' => $vendor_id, 'post_title' => $business_name ) );
+	} else {
+		$vendor_id = wp_insert_post( array(
+			'post_type'   => 'lis_preferred_vendor',
+			'post_title'  => $business_name,
+			'post_status' => 'publish', // The CPT isn't public; it uses its own _lis_pv_status workflow.
+			'post_author' => get_current_user_id(),
+		), true );
+		if ( is_wp_error( $vendor_id ) ) {
+			return 0;
+		}
+	}
+	wp_set_post_terms( $vendor_id, array( $vendor_term->term_id ), 'lis_vendor_category' );
+	lis_directory_set_vendor_status( $vendor_id, 'pending' );
+	update_post_meta( $vendor_id, '_lis_pv_tagline', $tagline );
+	update_post_meta( $vendor_id, '_lis_pv_contact_email', $email );
+	update_post_meta( $vendor_id, '_lis_pv_link_url', get_permalink( $post_id ) );
+	update_post_meta( $vendor_id, '_lis_pv_listing_id', $post_id );
+	if ( $logo_id ) {
+		update_post_meta( $vendor_id, '_lis_pv_logo_color_id', $logo_id );
+	} else {
+		delete_post_meta( $vendor_id, '_lis_pv_logo_color_id' );
+	}
+	if ( $card_id ) {
+		update_post_meta( $vendor_id, '_lis_pv_business_card_id', $card_id );
+	} else {
+		delete_post_meta( $vendor_id, '_lis_pv_business_card_id' );
+	}
+	return (int) $vendor_id;
+}
+
+/**
+ * Record the chosen plan on an unpaid draft and return the checkout URL ('' if
+ * no purchasable product). Standard is always part of the purchase, so it's
+ * always the first entry — 'standard', 'standard,featured',
+ * 'standard,showcase', ... See the Dashboard "Plan" column
+ * (includes/listings-account.php) for where this gets displayed.
+ */
+function lis_directory_start_listing_checkout( $post_id, $upgrades, $billing, $checkout_category ) {
+	$checkout_url = function_exists( 'lis_directory_build_listing_checkout_url' )
+		? lis_directory_build_listing_checkout_url( $upgrades, $billing, $post_id, $checkout_category )
+		: '';
+	if ( '' === $checkout_url ) {
+		return '';
+	}
+	update_post_meta( $post_id, '_lis_listing_pending_tier', implode( ',', array_merge( array( 'standard' ), $upgrades ) ) );
+	update_post_meta( $post_id, '_lis_listing_pending_billing', $billing );
+	return $checkout_url;
+}
+
+/**
+ * Whether the current user may pick a plan (and go to checkout) for this
+ * listing from the edit form: their own business listing, still a draft that
+ * was never paid for — "Save & finish later", or an abandoned checkout.
+ * Expired listings renew from My Listings instead; real estate has its own flow.
+ */
+function lis_directory_listing_can_choose_plan( $listing ) {
+	$listing = get_post( $listing );
+	if ( ! $listing || 'lis_listing' !== $listing->post_type || 'draft' !== $listing->post_status ) {
+		return false;
+	}
+	if ( (int) $listing->post_author !== get_current_user_id() ) {
+		return false;
+	}
+	if ( get_post_meta( $listing->ID, '_lis_listing_expired', true ) ) {
+		return false;
+	}
+	if ( function_exists( 'lis_directory_is_real_estate_listing' ) && lis_directory_is_real_estate_listing( $listing->ID ) ) {
+		return false;
+	}
+	return true;
 }
 
 function lis_directory_listing_submission_error_message( $key ) {
@@ -594,26 +733,7 @@ function lis_directory_handle_listing_submission() {
 	// no separate slot picker. Mirror that one listing category to a
 	// lis_vendor_category term just-in-time so the exclusivity engine works.
 	// Logo/card/tagline are reused from the Branding step ($logo_id/$card_id/$tagline).
-	$vendor_term       = null;
-	$vendor_logo_id    = $logo_id;
-	$vendor_card_id    = $card_id;
-	$checkout_category = 0; // A lis_listing_category term id (for the taken-check in the checkout URL builder).
-	if ( in_array( 'showcase', $upgrades, true ) ) {
-		if ( ! $term || is_wp_error( $term ) ) {
-			$errors[] = 'category';
-		} elseif ( function_exists( 'lis_directory_is_listing_category_showcase_taken' ) && lis_directory_is_listing_category_showcase_taken( $term_id ) ) {
-			$errors[] = 'pv_category_taken';
-		} else {
-			$checkout_category = $term_id;
-			// Mirror the listing category → vendor category (creates it if this
-			// is the first showcase vendor in that category).
-			$vendor_term_id = function_exists( 'lis_directory_vendor_category_for_listing_category' ) ? lis_directory_vendor_category_for_listing_category( $term_id ) : 0;
-			$vendor_term    = $vendor_term_id ? get_term( $vendor_term_id, 'lis_vendor_category' ) : null;
-			if ( ! $vendor_term || is_wp_error( $vendor_term ) ) {
-				$errors[] = 'pv_category';
-			}
-		}
-	}
+	list( $vendor_term, $checkout_category ) = lis_directory_resolve_showcase_vendor_term( $upgrades, $term, $term_id, $errors );
 
 	if ( ! empty( $errors ) ) {
 		wp_safe_redirect( add_query_arg( 'lis_listing_error', implode( ',', array_unique( $errors ) ), $redirect_base ) );
@@ -703,37 +823,12 @@ function lis_directory_handle_listing_submission() {
 	// Vendor Showcase: create the pending vendor entry now (linked to this
 	// listing), so the whole application lives in the one wizard. Payment
 	// activates it (see lis_directory_handle_featured_listing_order).
-	if ( in_array( 'showcase', $upgrades, true ) && $vendor_term && ! is_wp_error( $vendor_term ) ) {
-		$vendor_id = wp_insert_post( array(
-			'post_type'   => 'lis_preferred_vendor',
-			'post_title'  => $business_name,
-			'post_status' => 'publish', // The CPT isn't public; it uses its own _lis_pv_status workflow.
-			'post_author' => get_current_user_id(),
-		), true );
-		if ( ! is_wp_error( $vendor_id ) ) {
-			wp_set_post_terms( $vendor_id, array( $vendor_term->term_id ), 'lis_vendor_category' );
-			lis_directory_set_vendor_status( $vendor_id, 'pending' );
-			update_post_meta( $vendor_id, '_lis_pv_tagline', $tagline );
-			update_post_meta( $vendor_id, '_lis_pv_contact_email', $email );
-			update_post_meta( $vendor_id, '_lis_pv_link_url', get_permalink( $post_id ) );
-			update_post_meta( $vendor_id, '_lis_pv_listing_id', $post_id );
-			if ( $vendor_logo_id ) {
-				update_post_meta( $vendor_id, '_lis_pv_logo_color_id', $vendor_logo_id );
-			}
-			if ( $vendor_card_id ) {
-				update_post_meta( $vendor_id, '_lis_pv_business_card_id', $vendor_card_id );
-			}
-		}
+	if ( in_array( 'showcase', $upgrades, true ) ) {
+		lis_directory_save_pending_showcase_vendor( $post_id, $vendor_term, $business_name, $tagline, $email, $logo_id, $card_id );
 	}
 
 	if ( $can_checkout ) {
-		// Standard is always part of the purchase, so it's always the first
-		// entry — 'standard', 'standard,featured', 'standard,showcase', or
-		// 'standard,featured,showcase'. See the Dashboard "Plan" column
-		// (includes/listings-account.php) for where this gets displayed.
-		update_post_meta( $post_id, '_lis_listing_pending_tier', implode( ',', array_merge( array( 'standard' ), $upgrades ) ) );
-		update_post_meta( $post_id, '_lis_listing_pending_billing', $billing );
-		$checkout_url = lis_directory_build_listing_checkout_url( $upgrades, $billing, $post_id, $checkout_category );
+		$checkout_url = lis_directory_start_listing_checkout( $post_id, $upgrades, $billing, $checkout_category );
 		if ( $checkout_url ) {
 			wp_safe_redirect( $checkout_url );
 			exit;

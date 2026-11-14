@@ -378,7 +378,28 @@ function lis_directory_render_listing_edit_form( $listing_id, $token = '' ) {
 			<?php endforeach; ?>
 		</div>
 
-		<p class="lis-listing-real-submit"><button type="submit" class="lis-listing-submit-button">Save Changes</button></p>
+		<?php
+		// An unpaid draft ("Save & finish later", or a checkout that was never
+		// completed) gets the same "Choose your plan" step as Add Listing, and
+		// saving goes on to checkout — otherwise there's no way to finish it.
+		$choose_plan = function_exists( 'lis_directory_listing_can_choose_plan' ) && lis_directory_listing_can_choose_plan( $listing_id );
+		$plan_html   = '';
+		if ( $choose_plan ) {
+			$pending_tiers = array_filter( explode( ',', (string) get_post_meta( $listing_id, '_lis_listing_pending_tier', true ) ) );
+			$pending_plan  = in_array( 'showcase', $pending_tiers, true ) ? 'showcase' : ( in_array( 'featured', $pending_tiers, true ) ? 'featured' : '' );
+			$plan_html     = lis_directory_render_plan_step( $cat_terms, $pending_plan, (string) get_post_meta( $listing_id, '_lis_listing_pending_billing', true ) );
+		}
+		if ( '' !== $plan_html ) :
+			echo $plan_html; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside.
+			?>
+			<input type="hidden" name="lis_listing_choose_plan" value="1" />
+			<p class="lis-listing-real-submit">
+				<button type="submit" class="lis-listing-submit-button">Continue to checkout</button>
+				<button type="submit" name="lis_listing_save_draft" value="1" class="lis-listing-draft-save" formnovalidate>Save &amp; finish later</button>
+			</p>
+		<?php else : ?>
+			<p class="lis-listing-real-submit"><button type="submit" class="lis-listing-submit-button">Save Changes</button></p>
+		<?php endif; ?>
 	</form>
 	<?php
 	return ob_get_clean();
@@ -438,6 +459,29 @@ function lis_directory_handle_listing_update() {
 	// checkbox clears it.
 	$new_logo_id = lis_directory_handle_logo_upload( 'lis_pv_logo_color', false, $errors );
 	$new_card_id = lis_directory_handle_business_card_upload( 'lis_pv_business_card', $errors );
+
+	// Finishing an unpaid draft: the plan step was shown, and this isn't a
+	// "Save & finish later" click. Same rules as Add Listing — at least one
+	// photo, and a free Showcase category.
+	$finishing = ! empty( $_POST['lis_listing_choose_plan'] ) && empty( $_POST['lis_listing_save_draft'] )
+		&& function_exists( 'lis_directory_listing_can_choose_plan' ) && lis_directory_listing_can_choose_plan( $listing_id );
+	$upgrades          = array();
+	$billing           = 'year';
+	$vendor_term       = null;
+	$checkout_category = 0;
+	if ( $finishing ) {
+		$upgrades = lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
+		$billing  = lis_directory_plan_billing( $upgrades, ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month' );
+		list( $vendor_term, $checkout_category ) = lis_directory_resolve_showcase_vendor_term( $upgrades, $term, $term_id, $errors );
+
+		$kept_photos = array_filter( array_map( 'absint', explode( ',', (string) get_post_meta( $listing_id, '_lis_listing_gallery_ids', true ) ) ) );
+		if ( ! empty( $_POST['lis_listing_remove_photos'] ) ) {
+			$kept_photos = array_diff( $kept_photos, array_map( 'absint', (array) wp_unslash( $_POST['lis_listing_remove_photos'] ) ) );
+		}
+		if ( empty( $kept_photos ) && empty( $new_photo_ids ) ) {
+			$errors[] = 'lis_listing_photos';
+		}
+	}
 
 	if ( ! empty( $errors ) ) {
 		wp_safe_redirect( add_query_arg( 'lis_listing_error', implode( ',', array_unique( $errors ) ), $redirect_base ) );
@@ -530,6 +574,32 @@ function lis_directory_handle_listing_update() {
 
 	lis_directory_save_submitted_hours( $listing_id );
 	lis_directory_save_submitted_features( $listing_id );
+
+	if ( $finishing ) {
+		if ( in_array( 'showcase', $upgrades, true ) ) {
+			lis_directory_save_pending_showcase_vendor(
+				$listing_id,
+				$vendor_term,
+				$business_name,
+				$edit_tagline,
+				$email,
+				(int) get_post_meta( $listing_id, '_lis_listing_logo_id', true ),
+				(int) get_post_meta( $listing_id, '_lis_listing_business_card_id', true )
+			);
+		} elseif ( function_exists( 'lis_directory_get_vendor_for_listing' ) ) {
+			// Switched away from Showcase after an abandoned checkout: drop the
+			// never-paid pending entry so it doesn't linger in the admin queue.
+			$stale_vendor = lis_directory_get_vendor_for_listing( $listing_id );
+			if ( $stale_vendor && 'pending' === get_post_meta( $stale_vendor, '_lis_pv_status', true ) ) {
+				wp_trash_post( $stale_vendor );
+			}
+		}
+		$checkout_url = lis_directory_start_listing_checkout( $listing_id, $upgrades, $billing, $checkout_category );
+		if ( $checkout_url ) {
+			wp_safe_redirect( $checkout_url );
+			exit;
+		}
+	}
 
 	wp_safe_redirect( add_query_arg( 'lis_listing_updated', '1', $redirect_base ) );
 	exit;
