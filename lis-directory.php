@@ -45,6 +45,7 @@ require_once LIS_DIRECTORY_PATH . 'includes/listings-submission.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-edit.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-search.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-account.php';
+require_once LIS_DIRECTORY_PATH . 'includes/account-menu.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-pricing.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-features.php';
 require_once LIS_DIRECTORY_PATH . 'includes/listings-expiry.php';
