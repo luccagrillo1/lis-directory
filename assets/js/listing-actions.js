@@ -25,6 +25,14 @@
 		}
 	}
 
+	// GA4 (0.56.0): the site's existing tag; nothing is sent without one.
+	function lisGa(name, params) {
+		try {
+			if (typeof window.lisTrack === 'function') { window.lisTrack(name, params); return; }
+			if (typeof window.gtag === 'function') { window.gtag('event', name, params); }
+		} catch (e) {}
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
 		recordView();
 
@@ -61,6 +69,7 @@
 					.then(function (data) {
 						if (data.success) {
 							setBookmarkState(bookmarkBtn, data.data.bookmarked);
+							lisGa(data.data.bookmarked ? 'save_listing' : 'unsave_listing', { listing_id: String(LIS_LISTING_ACTIONS.postId), listing_title: document.title });
 						}
 					})
 					.finally(function () {
@@ -71,6 +80,7 @@
 
 		if (shareBtn) {
 			shareBtn.addEventListener('click', function () {
+				lisGa('share', { method: navigator.share ? 'native' : 'copy', content_type: 'listing', item_id: window.LIS_LISTING_ACTIONS ? String(LIS_LISTING_ACTIONS.postId) : '' });
 				var shareData = {
 					title: document.title,
 					url: window.location.href
