@@ -548,7 +548,6 @@ function lis_directory_render_saved_listings_shortcode() {
 	ob_start();
 	?>
 	<div class="lis-listing-dashboard lis-saved-listings">
-		<h1>Saved</h1>
 		<?php if ( $unsaved ) : ?>
 			<p class="lis-saved-notice" role="status">Removed from your saved listings.</p>
 		<?php endif; ?>
