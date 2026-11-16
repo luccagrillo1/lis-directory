@@ -11,6 +11,11 @@
  *   back to the page the visitor came from (remembered in sessionStorage
  *   from ?redirect_to or a same-site referrer), Browse this weekend, and
  *   Submit an event.
+ * - [lis_account_settings] for /account/settings/: profile + password
+ *   links, an email-preferences placeholder, and "Delete my account", which
+ *   files a WordPress privacy erasure request (Tools → Erase Personal Data)
+ *   and emails the user a confirmation link. An admin then erases the data
+ *   and deletes the user; nothing is removed automatically.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,6 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'wp_footer', 'lis_directory_render_password_rules', 30 );
 add_action( 'wp_footer', 'lis_directory_render_signup_next_steps', 30 );
+add_shortcode( 'lis_account_settings', 'lis_directory_render_account_settings_shortcode' );
+add_action( 'admin_post_lis_directory_request_deletion', 'lis_directory_handle_request_deletion' );
 
 /**
  * WPUM's password rules as a list of array( 'id', 'label', 'test' ), where
@@ -175,4 +182,111 @@ function lis_directory_render_signup_next_steps() {
 	})();
 	</script>
 	<?php
+}
+
+function lis_directory_account_settings_url() {
+	$page = get_page_by_path( 'account/settings' );
+	return ( $page && 'publish' === $page->post_status ) ? get_permalink( $page ) : home_url( '/account/settings/' );
+}
+
+/**
+ * Is there an open (pending or confirmed) erasure request for this email?
+ */
+function lis_directory_pending_deletion_request( $email ) {
+	$q = new WP_Query(
+		array(
+			'post_type'      => 'user_request',
+			'post_name__in'  => array( 'remove_personal_data' ),
+			'title'          => $email,
+			'post_status'    => array( 'request-pending', 'request-confirmed' ),
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+	return ! empty( $q->posts );
+}
+
+function lis_directory_render_account_settings_shortcode() {
+	if ( ! is_user_logged_in() ) {
+		return '';
+	}
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+	$user    = wp_get_current_user();
+	$account = get_page_by_path( 'account' );
+	$base    = ( $account && 'publish' === $account->post_status ) ? get_permalink( $account ) : home_url( '/account/' );
+	$status  = isset( $_GET['lis_deletion'] ) ? sanitize_key( wp_unslash( $_GET['lis_deletion'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$pending = lis_directory_pending_deletion_request( $user->user_email );
+	$is_staff = user_can( $user, 'edit_others_posts' );
+	ob_start();
+	?>
+	<div class="lis-account-settings">
+		<section class="lis-account-settings-section">
+			<h2>Profile and sign-in</h2>
+			<p class="lis-account-settings-links">
+				<a href="<?php echo esc_url( add_query_arg( 'lis_view', 'profile', $base ) ); ?>">Edit name, email and photo</a>
+				<span class="lis-account-overview-sep" aria-hidden="true">&middot;</span>
+				<a href="<?php echo esc_url( add_query_arg( 'lis_view', 'password', $base ) ); ?>">Change password</a>
+			</p>
+		</section>
+
+		<section class="lis-account-settings-section">
+			<h2>Email preferences</h2>
+			<label class="lis-account-settings-check is-disabled">
+				<input type="checkbox" disabled>
+				<span>Weekly &ldquo;This weekend in Sandpoint&rdquo; email <em>(coming soon)</em></span>
+			</label>
+			<p class="lis-account-settings-note">We only email you about your account, listings and events you submit.</p>
+		</section>
+
+		<section class="lis-account-settings-section lis-account-settings-danger">
+			<h2>Delete my account</h2>
+			<?php if ( 'sent' === $status ) : ?>
+				<p class="lis-account-settings-msg is-ok" role="status">Check your inbox: we sent a link to <?php echo esc_html( $user->user_email ); ?> to confirm the request.</p>
+			<?php elseif ( 'error' === $status ) : ?>
+				<p class="lis-account-settings-msg is-error" role="alert">Something went wrong sending the request. Please try again or contact us.</p>
+			<?php endif; ?>
+			<?php if ( $is_staff ) : ?>
+				<p>Staff accounts can&rsquo;t be deleted from here. Ask a site administrator.</p>
+			<?php elseif ( $pending ) : ?>
+				<p>Your deletion request is in progress. Once you&rsquo;ve confirmed it from the email, we&rsquo;ll remove your account and personal data.</p>
+			<?php else : ?>
+				<p>We&rsquo;ll email you a link to confirm. After you confirm, a site admin removes your account and personal data, usually within a few days.</p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('Request deletion of your account? We will email you a link to confirm.');">
+					<input type="hidden" name="action" value="lis_directory_request_deletion">
+					<?php wp_nonce_field( 'lis_directory_request_deletion', 'lis_directory_deletion_nonce' ); ?>
+					<button type="submit" class="lis-account-settings-delete">Request account deletion</button>
+				</form>
+			<?php endif; ?>
+		</section>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+function lis_directory_handle_request_deletion() {
+	if ( ! is_user_logged_in() ) {
+		wp_die( 'You must be logged in to do that.' );
+	}
+	if ( ! isset( $_POST['lis_directory_deletion_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lis_directory_deletion_nonce'] ) ), 'lis_directory_request_deletion' ) ) {
+		wp_die( 'Security check failed. Please go back and try again.' );
+	}
+	$user = wp_get_current_user();
+	$back = lis_directory_account_settings_url();
+	if ( user_can( $user, 'edit_others_posts' ) ) {
+		wp_safe_redirect( $back );
+		exit;
+	}
+	if ( lis_directory_pending_deletion_request( $user->user_email ) ) {
+		wp_safe_redirect( $back );
+		exit;
+	}
+	$request_id = wp_create_user_request( $user->user_email, 'remove_personal_data' );
+	$status     = 'error';
+	if ( ! is_wp_error( $request_id ) ) {
+		$sent   = wp_send_user_request( $request_id );
+		$status = is_wp_error( $sent ) ? 'error' : 'sent';
+	}
+	wp_safe_redirect( add_query_arg( 'lis_deletion', $status, $back ) );
+	exit;
 }

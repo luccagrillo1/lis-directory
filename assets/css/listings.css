@@ -2867,3 +2867,56 @@ a.lis-account-stat:focus-visible {
 	opacity: .5;
 }
 
+
+/* [lis_account_settings] (0.55.0) */
+.lis-account-settings-section {
+	margin: 0 0 28px;
+	padding: 0 0 24px;
+	border-bottom: 1px solid rgba(0, 0, 0, .08);
+}
+.lis-account-settings-section:last-child {
+	border-bottom: 0;
+}
+.lis-account-settings-section h2 {
+	font-size: 1.15em;
+	margin: 0 0 10px;
+}
+.lis-account-settings-check {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+.lis-account-settings-check.is-disabled {
+	opacity: .65;
+}
+.lis-account-settings-note {
+	font-size: .9em;
+	opacity: .75;
+	margin: 8px 0 0;
+}
+.lis-account-settings-msg {
+	padding: 10px 14px;
+	border-radius: 8px;
+}
+.lis-account-settings-msg.is-ok {
+	background: #e8f4ec;
+	color: #1d6b38;
+}
+.lis-account-settings-msg.is-error {
+	background: #fbeaea;
+	color: #a12622;
+}
+.lis-account-settings-delete {
+	background: transparent;
+	border: 1px solid #a12622;
+	color: #a12622;
+	border-radius: 999px;
+	padding: 9px 18px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.lis-account-settings-delete:hover,
+.lis-account-settings-delete:focus-visible {
+	background: #a12622;
+	color: #fff;
+}
