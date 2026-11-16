@@ -280,7 +280,13 @@ function lis_directory_render_dashboard_shortcode() {
 	<div class="lis-listing-dashboard">
 		<h1>My Listings</h1>
 		<?php if ( empty( $listings ) ) : ?>
-			<p class="lis-listing-empty">You haven't submitted any listings yet.</p>
+			<div class="lis-account-empty">
+				<p class="lis-listing-empty">You haven't submitted any listings yet.</p>
+				<?php $add_listing_url = lis_directory_add_listing_url(); ?>
+				<?php if ( $add_listing_url ) : ?>
+					<p class="lis-account-empty-actions"><a class="lis-listing-thankyou-btn" href="<?php echo esc_url( $add_listing_url ); ?>">Add a listing</a></p>
+				<?php endif; ?>
+			</div>
 		<?php else : ?>
 			<div class="lis-listing-dashboard-filters">
 				<?php foreach ( $filter_tabs as $value => $label ) : ?>
@@ -477,6 +483,31 @@ function lis_directory_render_listing_card( $post ) {
 	</a>
 	<?php
 	return ob_get_clean();
+}
+
+/**
+ * URL of the Add Listing page (0.54.0): the page at
+ * /services/local-directory/add-listing/, else the first published page
+ * holding [lis_listing_submit]. Filter: lis_directory_add_listing_url.
+ */
+function lis_directory_add_listing_url() {
+	static $cached = null;
+	if ( null === $cached ) {
+		$page = get_page_by_path( 'services/local-directory/add-listing' );
+		if ( $page && 'publish' === $page->post_status ) {
+			$cached = get_permalink( $page );
+		} else {
+			$found  = get_posts( array(
+				'post_type'      => 'page',
+				'post_status'    => 'publish',
+				's'              => '[lis_listing_submit',
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+			) );
+			$cached = $found ? get_permalink( $found[0] ) : '';
+		}
+	}
+	return (string) apply_filters( 'lis_directory_add_listing_url', $cached );
 }
 
 /**
