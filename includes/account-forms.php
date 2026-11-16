@@ -7,6 +7,10 @@
  *   off as the user types. The rules come from WPUM's own filters, so the
  *   list always matches what the server will accept. It never blocks submit;
  *   WPUM still validates.
+ * - After sign-up: WPUM's "Registration complete" page gets next steps —
+ *   back to the page the visitor came from (remembered in sessionStorage
+ *   from ?redirect_to or a same-site referrer), Browse this weekend, and
+ *   Submit an event.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -14,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 add_action( 'wp_footer', 'lis_directory_render_password_rules', 30 );
+add_action( 'wp_footer', 'lis_directory_render_signup_next_steps', 30 );
 
 /**
  * WPUM's password rules as a list of array( 'id', 'label', 'test' ), where
@@ -92,6 +97,81 @@ function lis_directory_render_password_rules() {
 			input.addEventListener('input', update);
 			update();
 		});
+	})();
+	</script>
+	<?php
+}
+
+/**
+ * Next-step links for the "Registration complete" page. Filter
+ * `lis_directory_signup_next_steps` to change them.
+ */
+function lis_directory_signup_next_steps() {
+	$calendar = function_exists( 'lis_events_calendar_page_url' ) ? lis_events_calendar_page_url() : '';
+	if ( ! $calendar ) {
+		$calendar = home_url( '/services/event-calendar/' );
+	}
+	$submit = function_exists( 'lis_events_find_submit_page_url' ) ? lis_events_find_submit_page_url() : '';
+	$steps  = array(
+		array( 'label' => 'Browse this weekend', 'url' => add_query_arg( 'when', 'weekend', $calendar ) ),
+	);
+	if ( $submit && $submit !== $calendar ) {
+		$steps[] = array( 'label' => 'Submit an event', 'url' => $submit );
+	}
+	return (array) apply_filters( 'lis_directory_signup_next_steps', $steps );
+}
+
+function lis_directory_render_signup_next_steps() {
+	$register = function_exists( 'wpum_get_core_page_id' ) ? (int) wpum_get_core_page_id( 'register' ) : 0;
+	if ( is_admin() || ! $register || ! is_page( $register ) ) {
+		return;
+	}
+	$steps = lis_directory_signup_next_steps();
+	?>
+	<style id="lis-signup-next-css">
+	.lis-signup-next { margin: 18px 0 8px; }
+	.lis-signup-next p { margin: 0 0 12px; }
+	.lis-signup-next-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+	.lis-signup-next-actions a { display: inline-block; padding: 10px 18px; border-radius: 999px; border: 1px solid currentColor; text-decoration: none; font-weight: 600; line-height: 1.3; }
+	.lis-signup-next-actions a.is-primary { background: var(--ast-global-color-0, #1d4f5c); border-color: var(--ast-global-color-0, #1d4f5c); color: #fff; }
+	</style>
+	<script>
+	(function () {
+		var KEY = 'lis_after_signup';
+		var SKIP = /\/account\/(login|register|password-reset)\/?|\/wp-login\.php/;
+		function sameSite(u) {
+			try { var x = new URL(u, location.href); return x.origin === location.origin && !SKIP.test(x.pathname) ? x.href : ''; } catch (e) { return ''; }
+		}
+		var form = document.getElementById('wpum-submit-registration-form');
+		if (form) {
+			var q = new URLSearchParams(location.search);
+			var back = sameSite(q.get('redirect_to') || '') || sameSite(document.referrer || '');
+			try { if (back) sessionStorage.setItem(KEY, back); } catch (e) {}
+			return;
+		}
+		if (new URLSearchParams(location.search).get('registration') !== 'success') return;
+		var ok = document.querySelector('.wpum-message.success');
+		if (!ok || document.querySelector('.lis-signup-next')) return;
+		var steps = <?php echo wp_json_encode( $steps ); ?>;
+		var stored = '';
+		try { stored = sameSite(sessionStorage.getItem(KEY) || ''); sessionStorage.removeItem(KEY); } catch (e) {}
+		if (stored) steps.unshift({ label: 'Continue where you left off', url: stored });
+		var box = document.createElement('div');
+		box.className = 'lis-signup-next';
+		var p = document.createElement('p');
+		p.textContent = 'Check your inbox to confirm your email address. In the meantime:';
+		box.appendChild(p);
+		var row = document.createElement('div');
+		row.className = 'lis-signup-next-actions';
+		steps.forEach(function (s, i) {
+			var a = document.createElement('a');
+			a.href = s.url;
+			a.textContent = s.label;
+			if (i === 0) a.className = 'is-primary';
+			row.appendChild(a);
+		});
+		box.appendChild(row);
+		ok.parentNode.insertBefore(box, ok.nextSibling);
 	})();
 	</script>
 	<?php
