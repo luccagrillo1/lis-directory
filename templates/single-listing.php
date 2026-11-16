@@ -239,6 +239,15 @@ while ( have_posts() ) :
 					</div>
 				<?php endif; ?>
 
+				<?php
+				/**
+				 * Extra sections from other plugins, after FAQs (0.57.0). LIS Events
+				 * prints "Upcoming at <business>" here. Echo complete
+				 * <div class="lis-listing-section"> blocks.
+				 */
+				do_action( 'lis_directory_single_listing_sections', $post_id );
+				?>
+
 				<div class="lis-listing-section lis-listing-flag-actions">
 					<?php if ( is_user_logged_in() ) : ?>
 						<?php if ( ! $verified ) : ?>
