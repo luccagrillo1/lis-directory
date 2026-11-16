@@ -142,6 +142,23 @@ function lis_directory_card_admin_hint( $message ) {
 }
 
 /**
+ * Whether a showcase vendor is the site's own "house" slot (0.54.0) — the
+ * Living in Sandpoint entry that fills empty rotation space. True when the
+ * vendor has `_lis_pv_house` = '1' or its title matches the site name.
+ * House slots link to the About page and skip the "Sponsored — paid to be
+ * featured" tooltip, since nobody paid for them. Filter:
+ * lis_directory_vendor_is_house.
+ */
+function lis_directory_vendor_is_house( $vendor ) {
+	$vid   = is_object( $vendor ) ? (int) $vendor->ID : (int) $vendor;
+	$title = html_entity_decode( (string) get_the_title( $vid ), ENT_QUOTES, 'UTF-8' );
+	$site  = html_entity_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES, 'UTF-8' );
+	$house = '1' === (string) get_post_meta( $vid, '_lis_pv_house', true )
+		|| ( '' !== $site && 0 === strcasecmp( trim( $title ), trim( $site ) ) );
+	return (bool) apply_filters( 'lis_directory_vendor_is_house', $house, $vid );
+}
+
+/**
  * The URL a showcase item (card / logo / business card) should link to — the
  * vendor's NEW self-hosted listing, not the old Directorist one.
  *
@@ -149,8 +166,16 @@ function lis_directory_card_admin_hint( $message ) {
  * set by the wizard); (2) the stored link URL if it already points at a
  * published `lis_listing`; (3) a `lis_listing` with the same slug as the stored
  * link (the Directorist migration preserved slugs, so a `/directory/<slug>/`
- * link maps cleanly to the new `/…/<slug>/`); (4) the stored URL as-is as a last
- * resort. Returns '' if there's nothing to link to.
+ * link maps cleanly to the new `/…/<slug>/`); (4) a published `lis_listing`
+ * with the vendor's exact name; (5) for the site's own house slot, the About
+ * page; (6) the stored URL — but only if it's off-site, or an on-site URL that
+ * still resolves to a published page/post. Returns '' if there's nothing that
+ * works, so the item renders unlinked.
+ *
+ * 0.54.0: step 6 used to return any stored URL as-is. Two live slots broke
+ * that way: Living in Sandpoint's stored /listings/living-in-sandpoint/ (its
+ * listing isn't published → 404) and Talus Rock Retreat's old
+ * /talus-rock-retreat-3/ (no such post → WordPress redirected to the home page).
  */
 function lis_directory_vendor_listing_url( $vendor ) {
 	$vid = is_object( $vendor ) ? (int) $vendor->ID : (int) $vendor;
@@ -162,32 +187,66 @@ function lis_directory_vendor_listing_url( $vendor ) {
 	}
 
 	$url = (string) get_post_meta( $vid, '_lis_pv_link_url', true );
-	if ( '' === $url ) {
-		return '';
-	}
 
-	// 2) The stored link already resolves to a published lis_listing.
-	$maybe = url_to_postid( $url );
-	if ( $maybe && 'lis_listing' === get_post_type( $maybe ) && 'publish' === get_post_status( $maybe ) ) {
-		return (string) get_permalink( $maybe );
-	}
+	if ( '' !== $url ) {
+		// 2) The stored link already resolves to a published lis_listing.
+		$maybe = url_to_postid( $url );
+		if ( $maybe && 'lis_listing' === get_post_type( $maybe ) && 'publish' === get_post_status( $maybe ) ) {
+			return (string) get_permalink( $maybe );
+		}
 
-	// 3) Map the link's slug to a lis_listing of the same slug (migration kept
-	// slugs), so an old Directorist link points at the new listing instead.
-	$path = trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
-	if ( '' !== $path ) {
-		$parts = explode( '/', $path );
-		$slug  = end( $parts );
-		if ( $slug ) {
-			$match = get_page_by_path( $slug, OBJECT, 'lis_listing' );
-			if ( $match && 'publish' === get_post_status( $match ) ) {
-				return (string) get_permalink( $match );
+		// 3) Map the link's slug to a lis_listing of the same slug (migration kept
+		// slugs), so an old Directorist link points at the new listing instead.
+		$path = trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
+		if ( '' !== $path ) {
+			$parts = explode( '/', $path );
+			$slug  = end( $parts );
+			if ( $slug ) {
+				$match = get_page_by_path( $slug, OBJECT, 'lis_listing' );
+				if ( $match && 'publish' === get_post_status( $match ) ) {
+					return (string) get_permalink( $match );
+				}
 			}
 		}
 	}
 
-	// 4) Fall back to whatever was stored (may still be a Directorist link).
-	return $url;
+	// 4) A published listing with the vendor's exact name.
+	$by_title = get_posts( array(
+		'post_type'              => 'lis_listing',
+		'post_status'            => 'publish',
+		'title'                  => html_entity_decode( (string) get_the_title( $vid ), ENT_QUOTES, 'UTF-8' ),
+		'posts_per_page'         => 1,
+		'fields'                 => 'ids',
+		'no_found_rows'          => true,
+		'update_post_meta_cache' => false,
+		'update_post_term_cache' => false,
+	) );
+	if ( $by_title ) {
+		return (string) get_permalink( $by_title[0] );
+	}
+
+	// 5) The site's own slot: About page (filter: lis_directory_house_slot_url).
+	if ( lis_directory_vendor_is_house( $vid ) ) {
+		$about = get_page_by_path( 'about-us' );
+		$home  = ( $about && 'publish' === $about->post_status ) ? get_permalink( $about ) : home_url( '/' );
+		return (string) apply_filters( 'lis_directory_house_slot_url', $home, $vid );
+	}
+
+	// 6) The stored URL, only when it can't be a dead on-site link.
+	if ( '' !== $url ) {
+		$host      = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		$site_host = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+		$on_site   = '' === $host || $host === $site_host || 'www.' . $host === $site_host || $host === 'www.' . $site_host;
+		if ( ! $on_site ) {
+			return $url;
+		}
+		$post_id = url_to_postid( $url );
+		if ( $post_id && 'publish' === get_post_status( $post_id ) && is_post_type_viewable( get_post_type( $post_id ) ) ) {
+			return (string) get_permalink( $post_id );
+		}
+	}
+
+	return '';
 }
 
 /**
@@ -231,17 +290,20 @@ function lis_directory_render_vendor_card_html( $vendor ) {
 	$tag        = $link_url ? 'a' : 'div';
 	$tooltip    = 'Sponsored — this business paid to be featured here.';
 	$tooltip_id = wp_unique_id( 'lis-pv-card-tip-' );
+	$is_house   = lis_directory_vendor_is_house( $vendor );
 
 	$styles = lis_directory_get_card_styles_once();
 
 	ob_start();
 	?>
-	<div class="lis-pv-card">
-		<span class="lis-pv-card-info" tabindex="0" aria-describedby="<?php echo esc_attr( $tooltip_id ); ?>">
-			<span class="lis-pv-card-info-icon" aria-hidden="true">i</span>
-			<span class="lis-pv-card-tooltip" id="<?php echo esc_attr( $tooltip_id ); ?>" role="tooltip"><?php echo esc_html( $tooltip ); ?></span>
-		</span>
-		<<?php echo esc_html( $tag ); ?> class="lis-pv-card-inner"<?php if ( $link_url ) : ?> href="<?php echo esc_url( $link_url ); ?>" target="_blank" rel="noopener noreferrer"<?php endif; ?>>
+	<div class="lis-pv-card<?php echo $is_house ? ' lis-pv-card--house' : ''; ?>">
+		<?php if ( ! $is_house ) : ?>
+			<span class="lis-pv-card-info" tabindex="0" aria-describedby="<?php echo esc_attr( $tooltip_id ); ?>">
+				<span class="lis-pv-card-info-icon" aria-hidden="true">i</span>
+				<span class="lis-pv-card-tooltip" id="<?php echo esc_attr( $tooltip_id ); ?>" role="tooltip"><?php echo esc_html( $tooltip ); ?></span>
+			</span>
+		<?php endif; ?>
+		<<?php echo esc_html( $tag ); ?> class="lis-pv-card-inner"<?php if ( $link_url ) : ?> href="<?php echo esc_url( $link_url ); ?>"<?php echo $is_house ? '' : ' target="_blank" rel="noopener noreferrer"'; ?><?php endif; ?>>
 			<?php if ( $logo_url ) : ?>
 				<img class="lis-pv-card-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy" />
 			<?php endif; ?>
