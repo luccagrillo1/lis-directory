@@ -107,6 +107,12 @@ function lis_directory_render_job_form_shortcode() {
 		$job = get_post( $job_id );
 	}
 
+	// 0.54.0: new job posts need a confirmed email (includes/account-security.php).
+	// Editing an existing post is unaffected.
+	if ( ! $job_id && function_exists( 'lis_account_email_confirmed' ) && ! lis_account_email_confirmed() ) {
+		return lis_account_confirm_notice_html( 'a job post' );
+	}
+
 	// After a failed save, re-show what the person typed.
 	$prefill = array();
 	$errors  = array();
@@ -341,6 +347,9 @@ function lis_directory_handle_job_save() {
 	}
 	if ( $job_id && ! lis_directory_user_can_manage_job( $job_id ) ) {
 		wp_die( 'You can only edit your own job posts.' );
+	}
+	if ( ! $job_id && function_exists( 'lis_account_email_confirmed' ) && ! lis_account_email_confirmed() ) {
+		wp_die( 'Please confirm your email address before posting a job. Check your inbox for the confirmation link, or go back and use "Resend confirmation email".', 'Confirm your email', array( 'response' => 403, 'back_link' => true ) );
 	}
 
 	$src    = wp_unslash( $_POST );

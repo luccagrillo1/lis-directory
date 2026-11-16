@@ -68,6 +68,11 @@ function lis_directory_render_listing_submission_form_shortcode() {
 		return ob_get_clean();
 	}
 
+	// 0.54.0: new accounts confirm their email before submitting (includes/account-security.php).
+	if ( function_exists( 'lis_account_email_confirmed' ) && ! lis_account_email_confirmed() ) {
+		return lis_account_confirm_notice_html( 'a listing' );
+	}
+
 	$current_url  = remove_query_arg( array( 'lis_listing_submitted', 'lis_listing_error', 'lis_listing_draft_saved' ) );
 	$current_user = wp_get_current_user();
 	$cat_terms    = get_terms( array( 'taxonomy' => 'lis_listing_category', 'hide_empty' => false ) );
@@ -698,6 +703,10 @@ function lis_directory_handle_listing_submission() {
 
 	if ( ! is_user_logged_in() ) {
 		wp_die( 'You must be logged in to submit a listing.' );
+	}
+
+	if ( function_exists( 'lis_account_email_confirmed' ) && ! lis_account_email_confirmed() ) {
+		wp_die( 'Please confirm your email address before submitting a listing. Check your inbox for the confirmation link, or go back and use "Resend confirmation email".', 'Confirm your email', array( 'response' => 403, 'back_link' => true ) );
 	}
 
 	if ( ! isset( $_POST['lis_listing_submit_nonce'] ) || ! wp_verify_nonce( $_POST['lis_listing_submit_nonce'], 'lis_listing_submit' ) ) {
