@@ -78,6 +78,7 @@ function lis_directory_init_listing_pricing_woocommerce() {
 	// (no admin-post handler), so clear leftovers from an add-to-cart hook too.
 	add_action( 'woocommerce_add_to_cart', 'lis_directory_purge_foreign_plan_items_on_add', 10, 6 );
 	add_filter( 'woocommerce_cart_item_name', 'lis_directory_checkout_remove_link', 20, 3 );
+	add_filter( 'woocommerce_cart_item_name', 'lis_directory_cart_item_trial_terms', 30, 3 );
 	// Priority 100: after WooCommerce's order details and billing address.
 	add_action( 'woocommerce_thankyou', 'lis_directory_thankyou_home_button', 100 );
 
@@ -90,28 +91,62 @@ function lis_directory_init_listing_pricing_woocommerce() {
 }
 
 /**
- * Billing periods per tier (client decision, 2026-11): Standard and Featured
- * are annual only; Vendor Showcase (the scrolling business-card slot) is
- * monthly or annual, the buyer's choice. Every checkout path (Add Listing
- * wizard, claim, dashboard upsells/renewals, bundle checkout) resolves its
- * billing through here, so a stale form or a hand-edited ?billing= can't buy
- * a period we no longer sell.
+ * Billing periods per tier (client decisions, 2026-11):
+ *  - Vendor Showcase (the scrolling business-card slot): monthly or annual,
+ *    the buyer's choice.
+ *  - Standard and Featured: annual, or a "3-month start" — monthly for the
+ *    first 3 payments, after which the subscription switches itself to annual
+ *    (lis_directory_maybe_convert_trial_to_annual()). Only Add Listing and
+ *    finishing a draft offer the 3-month start; everything else (claim,
+ *    dashboard upsells/renewals, product pages) is annual.
+ * Every checkout path resolves its billing through here, so a stale form or a
+ * hand-edited ?billing= can't buy a period we don't sell. For Standard/Featured
+ * 'month' means the 3-month start and must be asked for explicitly — the
+ * default is annual.
  *
  * @param string|string[] $plan_or_upgrades 'standard'|'featured'|'showcase' or an upgrades array.
- * @param string          $requested        The buyer's pick; only honored for Showcase.
+ * @param string          $requested        'month' or 'year'.
  * @return string 'month'|'year'
  */
-function lis_directory_plan_billing( $plan_or_upgrades, $requested = 'month' ) {
+function lis_directory_plan_billing( $plan_or_upgrades, $requested = 'year' ) {
 	$tiers   = (array) $plan_or_upgrades;
-	$billing = in_array( 'showcase', $tiers, true ) ? ( 'year' === $requested ? 'year' : 'month' ) : 'year';
+	$billing = 'month' === $requested ? 'month' : 'year';
 	return ( 'month' === apply_filters( 'lis_directory_plan_billing', $billing, $tiers, $requested ) ) ? 'month' : 'year';
 }
 
 /**
- * Whether a tier lets the buyer choose monthly vs annual (Showcase only).
+ * The billing a submitted plan form asks for: Showcase posts
+ * `lis_listing_billing` (month|year); Standard/Featured post
+ * `lis_listing_start` ('trial' = 3-month start, anything else = annual).
+ *
+ * @param string[] $upgrades From lis_directory_read_plan_upgrades().
+ * @param array    $src      Unslashed request data.
+ * @return string 'month'|'year'
+ */
+function lis_directory_requested_billing( $upgrades, array $src ) {
+	if ( in_array( 'showcase', (array) $upgrades, true ) ) {
+		return ( isset( $src['lis_listing_billing'] ) && 'year' === $src['lis_listing_billing'] ) ? 'year' : 'month';
+	}
+	return ( isset( $src['lis_listing_start'] ) && 'trial' === $src['lis_listing_start'] ) ? 'month' : 'year';
+}
+
+/**
+ * Whether a tier's card shows monthly AND annual prices (Showcase).
  */
 function lis_directory_plan_has_billing_choice( $tier ) {
-	return lis_directory_plan_billing( $tier, 'month' ) !== lis_directory_plan_billing( $tier, 'year' );
+	return 'showcase' === $tier;
+}
+
+/**
+ * Whether a tier offers the 3-month monthly start (Standard, Featured).
+ */
+function lis_directory_plan_has_trial( $tier ) {
+	return in_array( $tier, array( 'standard', 'featured' ), true );
+}
+
+/** Number of monthly payments before a 3-month start switches to annual. */
+function lis_directory_trial_months() {
+	return max( 1, (int) apply_filters( 'lis_directory_trial_months', 3 ) );
 }
 
 /**
@@ -193,7 +228,7 @@ function lis_directory_get_listing_upgrade_url( $listing_id, $tier, $billing = '
  * LIS Directory Settings) — callers should hide the upgrade button entirely
  * in that case, not link to a broken checkout.
  */
-function lis_directory_get_feature_listing_url( $listing_id, $billing = 'month' ) {
+function lis_directory_get_feature_listing_url( $listing_id, $billing = 'year' ) {
 	return lis_directory_get_listing_upgrade_url( $listing_id, 'featured', $billing );
 }
 
@@ -218,7 +253,7 @@ function lis_directory_handle_bundle_checkout() {
 	$tiers      = array_values( array_unique( array_intersect( array( 'featured', 'showcase' ), array_map( 'sanitize_key', explode( ',', $tiers_raw ) ) ) ) );
 	$listing_id = isset( $_GET['lis_listing_id'] ) ? absint( $_GET['lis_listing_id'] ) : 0;
 	// The tier decides which periods are allowed (lis_directory_plan_billing()).
-	$billing    = lis_directory_plan_billing( $tiers, isset( $_GET['billing'] ) ? sanitize_key( $_GET['billing'] ) : 'month' );
+	$billing    = lis_directory_plan_billing( $tiers, isset( $_GET['billing'] ) ? sanitize_key( $_GET['billing'] ) : 'year' );
 
 	if ( empty( $tiers ) || ! $listing_id || 'lis_listing' !== get_post_type( $listing_id ) || ! function_exists( 'WC' ) ) {
 		wp_safe_redirect( home_url( '/' ) );
@@ -726,10 +761,13 @@ function lis_directory_build_listing_checkout_url( $plan_or_upgrades, $billing, 
 		'add-to-cart'    => $product_id,
 		'lis_listing_id' => (int) $listing_id,
 	);
-	$var = lis_directory_resolve_plan_variation( $product_id, lis_directory_plan_billing( 'standard' ) );
+	$var = lis_directory_resolve_plan_variation( $product_id, lis_directory_plan_billing( 'standard', $billing ) );
 	if ( $var['variation_id'] ) {
 		$args['variation_id']      = $var['variation_id'];
 		$args['attribute_billing'] = $var['attr'];
+		if ( 'Monthly' === $var['attr'] ) {
+			$args['lis_trial'] = 1; // Lets the 3-month start past lis_directory_block_retired_plan_variation().
+		}
 	}
 	return add_query_arg( $args, wc_get_checkout_url() );
 }
@@ -764,6 +802,29 @@ function lis_directory_add_listing_to_cart_item_name( $name, $cart_item, $cart_i
 	return $name . ' &mdash; Featuring: ' . esc_html( $listing_title );
 }
 
+/**
+ * For a monthly Standard/Featured line (the 3-month start), its terms in plain
+ * words: "Monthly for your first 3 months, then $90/yr …". '' otherwise.
+ */
+function lis_directory_trial_terms_text( $variation_id ) {
+	if ( ! $variation_id || ! in_array( (int) $variation_id, lis_directory_retired_plan_variation_ids(), true ) ) {
+		return '';
+	}
+	$parent = wp_get_post_parent_id( $variation_id );
+	$year   = $parent ? lis_directory_resolve_plan_variation( $parent, 'year' ) : null;
+	if ( ! $year || null === $year['price'] ) {
+		return '';
+	}
+	$price = wp_strip_all_tags( wc_price( $year['price'], array( 'decimals' => ( (float) $year['price'] == (int) $year['price'] ) ? 0 : wc_get_price_decimals() ) ) );
+	return sprintf( 'Monthly for your first %d months, then %s/yr + tax (switches automatically; cancel any time before).', lis_directory_trial_months(), $price );
+}
+
+/** Cart / checkout line: the 3-month start's terms under the product name. */
+function lis_directory_cart_item_trial_terms( $name, $cart_item, $cart_item_key ) {
+	$terms = lis_directory_trial_terms_text( isset( $cart_item['variation_id'] ) ? (int) $cart_item['variation_id'] : 0 );
+	return '' === $terms ? $name : $name . '<br /><small class="lis-trial-terms">' . esc_html( $terms ) . '</small>';
+}
+
 function lis_directory_add_listing_to_order_item_name( $name, $item ) {
 	$listing_id = $item->get_meta( '_lis_listing_id' );
 	if ( ! $listing_id ) {
@@ -791,6 +852,15 @@ function lis_directory_order_item_business_meta( $formatted_meta, $item ) {
 	$listing_id = (int) $item->get_meta( '_lis_listing_id' );
 	if ( ! lis_directory_is_business_listing( $listing_id ) ) {
 		return $formatted_meta;
+	}
+	$terms = lis_directory_trial_terms_text( (int) $item->get_variation_id() );
+	if ( '' !== $terms ) {
+		$formatted_meta[ 'lis_trial_' . $item->get_id() ] = (object) array(
+			'key'           => 'lis_trial',
+			'value'         => $terms,
+			'display_key'   => __( 'Plan', 'lis-directory' ),
+			'display_value' => wpautop( esc_html( $terms ) ),
+		);
 	}
 	$business = get_the_title( $listing_id );
 	if ( '' === $business ) {
@@ -873,11 +943,29 @@ function lis_directory_retired_plan_variation_ids() {
 function lis_directory_block_retired_plan_variation( $passed, $product_id, $quantity, $variation_id = 0 ) {
 	$check_id = $variation_id ? (int) $variation_id : (int) $product_id;
 	if ( $passed && $check_id && empty( $_REQUEST['subscription_renewal'] ) && empty( $_REQUEST['resubscribe'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		&& ! lis_directory_is_trial_add_to_cart_request()
 		&& in_array( $check_id, lis_directory_retired_plan_variation_ids(), true ) ) {
 		wc_add_notice( __( 'Standard and Featured listings are billed annually. Please choose the annual option.', 'lis-directory' ), 'error' );
 		return false;
 	}
 	return $passed;
+}
+
+/**
+ * The 3-month start's own add-to-cart link (built by
+ * lis_directory_build_listing_checkout_url()): flagged `lis_trial` and tied to
+ * a business listing the buyer owns. Anything else adding a monthly
+ * Standard/Featured variation is still refused.
+ */
+function lis_directory_is_trial_add_to_cart_request() {
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended
+	if ( empty( $_REQUEST['lis_trial'] ) || empty( $_REQUEST['lis_listing_id'] ) || ! is_user_logged_in() ) {
+		return false;
+	}
+	$listing = get_post( absint( $_REQUEST['lis_listing_id'] ) );
+	// phpcs:enable
+	return $listing && 'lis_listing' === $listing->post_type && (int) $listing->post_author === get_current_user_id()
+		&& lis_directory_is_business_listing( $listing->ID );
 }
 
 /**
@@ -916,6 +1004,11 @@ function lis_directory_annual_only_price_html( $html, $product ) {
 
 /** Grey out the retired monthly option in the product page's Billing dropdown. */
 function lis_directory_hide_retired_plan_variation( $active, $variation ) {
+	// Only the public product page's dropdown — never a cart add (the 3-month
+	// start adds the monthly variation from checkout / the bundle handler).
+	if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+		return $active;
+	}
 	if ( $active && $variation && in_array( (int) $variation->get_id(), lis_directory_retired_plan_variation_ids(), true ) ) {
 		return false;
 	}

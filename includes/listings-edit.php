@@ -386,7 +386,7 @@ function lis_directory_render_listing_edit_form( $listing_id, $token = '' ) {
 		$plan_html   = '';
 		if ( $choose_plan ) {
 			$pending_tiers = array_filter( explode( ',', (string) get_post_meta( $listing_id, '_lis_listing_pending_tier', true ) ) );
-			$pending_plan  = in_array( 'showcase', $pending_tiers, true ) ? 'showcase' : ( in_array( 'featured', $pending_tiers, true ) ? 'featured' : '' );
+			$pending_plan  = in_array( 'showcase', $pending_tiers, true ) ? 'showcase' : ( in_array( 'featured', $pending_tiers, true ) ? 'featured' : ( $pending_tiers ? 'standard' : '' ) );
 			$plan_html     = lis_directory_render_plan_step( $cat_terms, $pending_plan, (string) get_post_meta( $listing_id, '_lis_listing_pending_billing', true ) );
 		}
 		if ( '' !== $plan_html ) :
@@ -471,7 +471,7 @@ function lis_directory_handle_listing_update() {
 	$checkout_category = 0;
 	if ( $finishing ) {
 		$upgrades = lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
-		$billing  = lis_directory_plan_billing( $upgrades, ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month' );
+		$billing  = lis_directory_plan_billing( $upgrades, lis_directory_requested_billing( $upgrades, wp_unslash( $_POST ) ) );
 		list( $vendor_term, $checkout_category ) = lis_directory_resolve_showcase_vendor_term( $upgrades, $term, $term_id, $errors );
 
 		$kept_photos = array_filter( array_map( 'absint', explode( ',', (string) get_post_meta( $listing_id, '_lis_listing_gallery_ids', true ) ) ) );

@@ -351,7 +351,7 @@ function lis_directory_render_claim_plan_form( $listing_id, $token = '' ) {
 					<?php if ( lis_directory_plan_has_billing_choice( $key ) ) : ?>
 						<span class="lis-listing-plan-price"><?php echo esc_html( $fmt( $t['m'] ) . '/mo' ); ?></span>
 						<span class="lis-listing-plan-price-alt"><?php echo esc_html( 'or ' . $fmt( $t['y'] ) . '/yr' ); ?></span>
-					<?php else : $yearly = 'year' === lis_directory_plan_billing( $key ); ?>
+					<?php else : $yearly = 'year' === lis_directory_plan_billing( $key, 'year' ); ?>
 						<span class="lis-listing-plan-price"><?php echo esc_html( $fmt( $yearly ? $t['y'] : $t['m'] ) . ( $yearly ? '/yr' : '/mo' ) ); ?></span>
 					<?php endif; ?>
 					<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
@@ -411,7 +411,8 @@ function lis_directory_handle_claim_listing() {
 	// lis_directory_read_plan_upgrades()) — at most one upgrade product.
 	$upgrades = lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
 	// Standard/Featured are annual; Showcase is the buyer's monthly/annual pick.
-	$billing  = lis_directory_plan_billing( $upgrades, ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month' );
+	// (No 3-month start on claims: the claim form never posts lis_listing_start.)
+	$billing  = lis_directory_plan_billing( $upgrades, lis_directory_requested_billing( $upgrades, array_diff_key( wp_unslash( $_POST ), array( 'lis_listing_start' => 1 ) ) ) );
 
 	// Vendor Showcase needs a pending vendor entry for payment to activate (the
 	// order hook only activates one that already exists), built from this

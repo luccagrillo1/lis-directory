@@ -103,6 +103,27 @@ function lis_directory_seed_job_categories() {
 
 /* ---------- Option lists + formatting ---------- */
 
+/**
+ * What a post on the board is: an opening someone is hiring for, or a person
+ * looking for work. Stored as `_lis_job_kind`; anything else (including posts
+ * made before this existed) counts as 'hiring'.
+ */
+function lis_directory_get_job_kinds() {
+	return array(
+		'hiring'  => 'Hiring',
+		'seeking' => 'Looking for work',
+	);
+}
+
+function lis_directory_get_job_kind( $job_id ) {
+	return 'seeking' === get_post_meta( $job_id, '_lis_job_kind', true ) ? 'seeking' : 'hiring';
+}
+
+function lis_directory_job_is_seeking( $job_id ) {
+	return 'seeking' === lis_directory_get_job_kind( $job_id );
+}
+
+
 function lis_directory_get_job_employment_types() {
 	return array(
 		'full-time'  => 'Full-time',
@@ -279,6 +300,7 @@ function lis_directory_save_job_fields( $job_id, array $src ) {
 		return isset( $src[ $key ] ) ? sanitize_text_field( $src[ $key ] ) : '';
 	};
 
+	update_post_meta( $job_id, '_lis_job_kind', ( isset( $src['lis_job_kind'] ) && 'seeking' === $src['lis_job_kind'] ) ? 'seeking' : 'hiring' );
 	update_post_meta( $job_id, '_lis_job_company', $text( 'lis_job_company' ) );
 	update_post_meta( $job_id, '_lis_job_company_website', isset( $src['lis_job_company_website'] ) ? esc_url_raw( $src['lis_job_company_website'] ) : '' );
 	update_post_meta( $job_id, '_lis_job_location', $text( 'lis_job_location' ) );
@@ -314,6 +336,14 @@ function lis_directory_render_job_meta_box( $post ) {
 	$expiry_date = $expiry ? substr( $expiry, 0, 10 ) : '';
 	?>
 	<table class="form-table" role="presentation">
+		<tr><th><label for="lis_job_kind">Post type</label></th><td>
+			<select id="lis_job_kind" name="lis_job_kind">
+				<?php foreach ( lis_directory_get_job_kinds() as $value => $label ) : ?>
+					<option value="<?php echo esc_attr( $value ); ?>" <?php selected( lis_directory_get_job_kind( $post->ID ), $value ); ?>><?php echo esc_html( $label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+			<p class="description">"Looking for work" posts use Company as the person's name.</p>
+		</td></tr>
 		<tr><th><label for="lis_job_company">Company</label></th><td><input type="text" class="regular-text" id="lis_job_company" name="lis_job_company" value="<?php echo esc_attr( $m( 'company' ) ); ?>" /></td></tr>
 		<tr><th><label for="lis_job_company_website">Company website</label></th><td><input type="url" class="regular-text" id="lis_job_company_website" name="lis_job_company_website" value="<?php echo esc_attr( $m( 'company_website' ) ); ?>" placeholder="https://" /></td></tr>
 		<tr><th><label for="lis_job_employment_type">Employment type</label></th><td>
@@ -405,6 +435,9 @@ function lis_directory_job_admin_column_content( $column, $post_id ) {
 		$types = lis_directory_get_job_employment_types();
 		$type  = get_post_meta( $post_id, '_lis_job_employment_type', true );
 		echo esc_html( isset( $types[ $type ] ) ? $types[ $type ] : '' );
+		if ( lis_directory_job_is_seeking( $post_id ) ) {
+			echo ' <em>(looking for work)</em>';
+		}
 		if ( get_post_meta( $post_id, '_lis_job_filled', true ) ) {
 			echo ' <em>(filled)</em>';
 		}

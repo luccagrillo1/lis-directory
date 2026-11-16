@@ -32,19 +32,23 @@ while ( have_posts() ) :
 	$can_edit   = function_exists( 'lis_directory_user_can_manage_job' ) && lis_directory_user_can_manage_job( $job_id );
 	$edit_url   = $can_edit ? lis_directory_get_job_edit_url( $job_id ) : '';
 	$is_live    = 'publish' === get_post_status( $job_id );
+	$seeking    = lis_directory_job_is_seeking( $job_id );
 	$details    = array_filter( array(
-		'Company'   => $company,
+		( $seeking ? 'Name' : 'Company' ) => $company,
 		'Location'  => $location,
 		'Type'      => isset( $types[ $type ] ) ? $types[ $type ] : '',
 		'Workplace' => isset( $workplaces[ $workplace ] ) ? $workplaces[ $workplace ] : '',
 		'Pay'       => $salary,
 		'Category'  => $cat ? $cat->name : '',
-		'Apply by'  => $deadline ? mysql2date( get_option( 'date_format' ), $deadline . ' 00:00:00' ) : '',
+		'Apply by'  => ( $deadline && ! $seeking ) ? mysql2date( get_option( 'date_format' ), $deadline . ' 00:00:00' ) : '',
 	) );
 	?>
 	<article class="lis-job-single">
 		<p class="lis-job-back"><a href="<?php echo esc_url( get_post_type_archive_link( 'lis_job' ) ); ?>">&larr; All jobs</a></p>
 
+		<?php if ( $is_live && isset( $_GET['lis_job_posted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="lis-job-notice lis-job-notice--success">Your post is live on the job board. You can edit, renew or close it any time from My Job Postings.</div>
+		<?php endif; ?>
 		<?php if ( ! $is_live ) : ?>
 			<div class="lis-job-notice">This job isn't live — only you can see this preview.</div>
 		<?php elseif ( $filled ) : ?>
@@ -66,6 +70,7 @@ while ( have_posts() ) :
 					<?php if ( $location ) : ?> · <?php echo esc_html( $location ); ?><?php endif; ?>
 				</p>
 				<span class="lis-job-chips">
+					<?php if ( $seeking ) : ?><span class="lis-job-chip lis-job-chip--seeking">Looking for work</span><?php endif; ?>
 					<?php if ( isset( $types[ $type ] ) ) : ?><span class="lis-job-chip"><?php echo esc_html( $types[ $type ] ); ?></span><?php endif; ?>
 					<?php if ( isset( $workplaces[ $workplace ] ) ) : ?><span class="lis-job-chip"><?php echo esc_html( $workplaces[ $workplace ] ); ?></span><?php endif; ?>
 					<?php if ( $salary ) : ?><span class="lis-job-chip lis-job-chip--pay"><?php echo esc_html( $salary ); ?></span><?php endif; ?>
@@ -78,7 +83,7 @@ while ( have_posts() ) :
 
 		<div class="lis-job-single-body">
 			<div class="lis-job-single-content">
-				<h2>About the job</h2>
+				<h2><?php echo $seeking ? 'About me' : 'About the job'; ?></h2>
 				<?php the_content(); ?>
 				<?php if ( $apply && ! $filled ) : ?>
 					<div class="lis-job-single-apply lis-job-single-apply--bottom"><?php echo $apply; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
@@ -95,7 +100,7 @@ while ( have_posts() ) :
 					<dd><?php echo esc_html( get_the_date() ); ?></dd>
 				</dl>
 				<?php if ( $edit_url ) : ?>
-					<p><a class="lis-job-btn" href="<?php echo esc_url( $edit_url ); ?>">Edit this job</a></p>
+					<p><a class="lis-job-btn" href="<?php echo esc_url( $edit_url ); ?>">Edit this post</a></p>
 				<?php endif; ?>
 			</aside>
 		</div>

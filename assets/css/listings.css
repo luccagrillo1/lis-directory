@@ -2034,6 +2034,21 @@
 	display: none;
 }
 
+/* Standard / Featured: annual or the 3-month monthly start. */
+.lis-listing-plan-start {
+	flex-wrap: wrap;
+	gap: 8px 20px;
+	margin: 16px 0 12px;
+}
+
+.lis-listing-plan-start-note {
+	flex-basis: 100%;
+	margin: 0;
+	font-weight: 400;
+	font-size: 0.88em;
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+}
+
 .lis-listing-plan-save {
 	font-weight: 500;
 	font-size: 0.82em;

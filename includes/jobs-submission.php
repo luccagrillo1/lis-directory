@@ -6,11 +6,12 @@
  * submission wizard and dashboard — different form, handler, nonces and
  * shortcodes, and jobs never show up in the listing dashboard.
  *
- * Flow for a new job: saved as a draft flagged `_lis_job_awaiting_payment`
- * and sent to WooCommerce checkout for the Job Posting product; payment
- * publishes it (includes/jobs-pricing.php). If that product isn't purchasable
- * yet the job goes to `pending` and the site admin is emailed to approve it.
- * Staff who can edit others' posts publish directly, no payment.
+ * Posting is free: a new post (an opening, or a person looking for work —
+ * `_lis_job_kind`) goes live as soon as it's saved, and an expired one renews
+ * for free from the dashboard. A paid mode still exists for later: if a Job
+ * Posting product is configured and purchasable, a new job is saved as a
+ * draft flagged `_lis_job_awaiting_payment` and sent to checkout instead, and
+ * payment publishes it (includes/jobs-pricing.php).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -48,12 +49,12 @@ function lis_directory_get_job_edit_url( $job_id ) {
 function lis_directory_job_error_message( $key ) {
 	$messages = array(
 		'title'           => 'A job title is required.',
-		'company'         => 'The company name is required.',
+		'company'         => 'The company name (or, for someone looking for work, your name) is required.',
 		'description'     => 'Please describe the job.',
 		'category'        => 'Please choose a category.',
 		'employment_type' => 'Please choose an employment type.',
 		'workplace'       => 'Please choose on-site, hybrid, or remote.',
-		'apply'           => 'Tell applicants how to apply — add an application link or an email address.',
+		'apply'           => 'Add a link or an email address so people can reach you.',
 		'apply_url'       => 'The application link must start with http:// or https://.',
 		'apply_email'     => 'That application email address doesn\'t look right.',
 		'salary'          => 'Check the pay range — it can\'t be negative, and the maximum can\'t be below the minimum.',
@@ -142,7 +143,7 @@ function lis_directory_render_job_form_shortcode() {
 		echo '<div class="lis-job-notice lis-job-notice--success">Job updated.</div>';
 	}
 	if ( isset( $_GET['lis_job_submitted'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		echo '<div class="lis-job-notice lis-job-notice--success">Thanks — your job is submitted and will go live once we approve it.</div>';
+		echo '<div class="lis-job-notice lis-job-notice--success">Thanks — your post is submitted.</div>';
 	}
 	if ( $errors ) {
 		echo '<div class="lis-job-notice lis-job-notice--error"><p>Please fix the following:</p><ul>';
@@ -157,10 +158,19 @@ function lis_directory_render_job_form_shortcode() {
 			echo '<div class="lis-job-notice">This job isn\'t live yet. <a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $pay ) . '">Pay &amp; publish</a></div>';
 		}
 	}
+	$days = lis_directory_get_job_duration_days();
 	if ( $price ) {
-		$days = lis_directory_get_job_duration_days();
 		echo '<p class="lis-job-price-note">Posting a job is <strong>' . esc_html( $price ) . '</strong>' . ( $days ? ' for ' . (int) $days . ' days' : '' ) . '. You\'ll pay at checkout after you save it.</p>';
+	} elseif ( ! $job ) {
+		echo '<p class="lis-job-price-note">Posting is <strong>free</strong>. Your post goes live as soon as you save it' . ( $days ? ' and stays up for ' . (int) $days . ' days (renew free anytime from My Job Postings)' : '' ) . '.</p>';
 	}
+	$kind = isset( $prefill['lis_job_kind'] ) ? ( 'seeking' === $prefill['lis_job_kind'] ? 'seeking' : 'hiring' )
+		: ( $job ? lis_directory_get_job_kind( $job->ID ) : ( ( isset( $_GET['kind'] ) && 'seeking' === $_GET['kind'] ) ? 'seeking' : 'hiring' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	// Label that reads differently for an opening vs. someone looking for work;
+	// the inline script below swaps them when the post type changes.
+	$lbl = function ( $hiring, $seeking ) use ( $kind ) {
+		return '<span data-kind="hiring"' . ( 'seeking' === $kind ? ' hidden' : '' ) . '>' . $hiring . '</span><span data-kind="seeking"' . ( 'seeking' === $kind ? '' : ' hidden' ) . '>' . $seeking . '</span>';
+	};
 	?>
 	<form class="lis-job-form" method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="lis_directory_save_job" />
@@ -168,9 +178,16 @@ function lis_directory_render_job_form_shortcode() {
 		<input type="hidden" name="lis_job_redirect_to" value="<?php echo esc_url( $current_url ); ?>" />
 		<?php wp_nonce_field( 'lis_job_save_' . $job_id, 'lis_job_save_nonce' ); ?>
 
+		<fieldset class="lis-job-kind">
+			<legend>What are you posting?</legend>
+			<?php foreach ( lis_directory_get_job_kinds() as $value => $label ) : ?>
+				<label class="lis-job-kind-option"><input type="radio" name="lis_job_kind" value="<?php echo esc_attr( $value ); ?>" <?php checked( $kind, $value ); ?> /> <?php echo esc_html( 'hiring' === $value ? 'I\'m hiring' : 'I\'m looking for work' ); ?></label>
+			<?php endforeach; ?>
+		</fieldset>
+
 		<fieldset>
-			<legend>The job</legend>
-			<p><label for="lis_job_title">Job title *</label>
+			<legend><?php echo $lbl( 'The job', 'The work you want' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></legend>
+			<p><label for="lis_job_title"><?php echo $lbl( 'Job title *', 'What kind of work are you looking for? *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="text" id="lis_job_title" name="lis_job_title" value="<?php echo esc_attr( $title ); ?>" required /></p>
 
 			<p><label for="lis_job_category">Category *</label>
@@ -199,7 +216,7 @@ function lis_directory_render_job_form_shortcode() {
 			<p><label for="lis_job_location">Location</label>
 			<input type="text" id="lis_job_location" name="lis_job_location" value="<?php echo esc_attr( $meta( 'location' ) ); ?>" placeholder="e.g. Sandpoint, ID" /></p>
 
-			<p><label>Pay <span class="lis-job-optional">(optional, but posts with pay get more applicants)</span></label></p>
+			<p><label><?php echo $lbl( 'Pay <span class="lis-job-optional">(optional, but posts with pay get more applicants)</span>', 'Pay you\'re hoping for <span class="lis-job-optional">(optional)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label></p>
 			<div class="lis-job-form-row lis-job-form-row--pay">
 				<input type="number" step="0.01" min="0" name="lis_job_salary_min" value="<?php echo esc_attr( $meta( 'salary_min' ) ); ?>" placeholder="Min $" aria-label="Minimum pay" />
 				<input type="number" step="0.01" min="0" name="lis_job_salary_max" value="<?php echo esc_attr( $meta( 'salary_max' ) ); ?>" placeholder="Max $" aria-label="Maximum pay" />
@@ -212,7 +229,7 @@ function lis_directory_render_job_form_shortcode() {
 			</div>
 
 			<div class="lis-job-form-editor">
-				<label for="lis_job_description">Description *</label>
+				<label for="lis_job_description"><?php echo $lbl( 'Description *', 'About you * <span class="lis-job-optional">(experience, skills, availability)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 				<?php
 				wp_editor( $description, 'lis_job_description', array(
 					'textarea_name' => 'lis_job_description',
@@ -226,12 +243,12 @@ function lis_directory_render_job_form_shortcode() {
 		</fieldset>
 
 		<fieldset>
-			<legend>The company</legend>
-			<p><label for="lis_job_company">Company name *</label>
+			<legend><?php echo $lbl( 'The company', 'About you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
+			<p><label for="lis_job_company"><?php echo $lbl( 'Company name *', 'Your name *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="text" id="lis_job_company" name="lis_job_company" value="<?php echo esc_attr( $company ); ?>" required /></p>
-			<p><label for="lis_job_company_website">Company website <span class="lis-job-optional">(optional)</span></label>
+			<p><label for="lis_job_company_website"><?php echo $lbl( 'Company website', 'Website or portfolio' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <span class="lis-job-optional">(optional)</span></label>
 			<input type="url" id="lis_job_company_website" name="lis_job_company_website" value="<?php echo esc_attr( $meta( 'company_website' ) ); ?>" placeholder="https://" /></p>
-			<p><label for="lis_job_logo">Logo <span class="lis-job-optional">(optional — PNG or JPG, under 2MB)</span></label>
+			<p><label for="lis_job_logo"><?php echo $lbl( 'Logo', 'Photo' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <span class="lis-job-optional">(optional — PNG or JPG, under 2MB)</span></label>
 			<?php if ( $job && has_post_thumbnail( $job->ID ) ) : ?>
 				<span class="lis-job-form-logo"><?php echo get_the_post_thumbnail( $job->ID, 'thumbnail' ); ?> <label><input type="checkbox" name="lis_job_remove_logo" value="1" /> Remove</label></span>
 			<?php endif; ?>
@@ -239,18 +256,30 @@ function lis_directory_render_job_form_shortcode() {
 		</fieldset>
 
 		<fieldset>
-			<legend>How to apply</legend>
-			<p><label for="lis_job_apply_url">Application link</label>
+			<legend><?php echo $lbl( 'How to apply', 'How to reach you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
+			<p><label for="lis_job_apply_url"><?php echo $lbl( 'Application link', 'Link <span class="lis-job-optional">(résumé, LinkedIn, etc.)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="url" id="lis_job_apply_url" name="lis_job_apply_url" value="<?php echo esc_attr( $meta( 'apply_url' ) ); ?>" placeholder="https://" /></p>
-			<p><label for="lis_job_apply_email">Application email</label>
+			<p><label for="lis_job_apply_email"><?php echo $lbl( 'Application email', 'Email' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="email" id="lis_job_apply_email" name="lis_job_apply_email" value="<?php echo esc_attr( $meta( 'apply_email' ) ); ?>" /></p>
-			<p class="lis-job-hint">Add at least one. Applicants go straight to you — we don't collect applications.</p>
-			<p><label for="lis_job_deadline">Application deadline <span class="lis-job-optional">(optional)</span></label>
+			<p class="lis-job-hint"><?php echo $lbl( 'Add at least one. Applicants go straight to you — we don\'t collect applications.', 'Add at least one. Employers contact you directly — it\'s shown on your post.' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
+			<p data-kind="hiring"<?php echo 'seeking' === $kind ? ' hidden' : ''; ?>><label for="lis_job_deadline">Application deadline <span class="lis-job-optional">(optional)</span></label>
 			<input type="date" id="lis_job_deadline" name="lis_job_deadline" value="<?php echo esc_attr( $meta( 'deadline' ) ); ?>" /></p>
 		</fieldset>
 
-		<p><button type="submit" class="lis-job-btn lis-job-btn--primary"><?php echo $job ? 'Save changes' : 'Save &amp; continue'; ?></button></p>
+		<p><button type="submit" class="lis-job-btn lis-job-btn--primary"><?php echo $job ? 'Save changes' : ( $price ? 'Save &amp; continue' : 'Post it' ); ?></button></p>
 	</form>
+	<script>
+	( function () {
+		var form = document.currentScript.previousElementSibling;
+		if ( ! form ) { return; }
+		function sync() {
+			var k = ( form.querySelector( 'input[name="lis_job_kind"]:checked' ) || {} ).value || 'hiring';
+			form.querySelectorAll( '[data-kind]' ).forEach( function ( el ) { el.hidden = el.getAttribute( 'data-kind' ) !== k; } );
+		}
+		form.querySelectorAll( 'input[name="lis_job_kind"]' ).forEach( function ( r ) { r.addEventListener( 'change', sync ); } );
+		sync();
+	}() );
+	</script>
 	<?php
 	echo '</div>';
 	return ob_get_clean();
@@ -369,14 +398,16 @@ function lis_directory_handle_job_save() {
 		exit;
 	}
 
-	// No purchasable product yet — hold for approval and tell the admin.
-	wp_update_post( array( 'ID' => $new_id, 'post_status' => 'pending' ) );
+	// Free posting (no Job Posting product configured): live right away. The
+	// publish hook starts its posting window. The admin gets a heads-up email
+	// with an edit link, so a bad post can be pulled quickly.
+	wp_update_post( array( 'ID' => $new_id, 'post_status' => 'publish' ) );
 	wp_mail(
 		get_option( 'admin_email' ),
-		'New job awaiting approval: ' . $title,
-		"A new job was submitted and is waiting for review:\n\n" . $title . "\n" . admin_url( 'post.php?post=' . $new_id . '&action=edit' ) . "\n"
+		'New job board post: ' . $title,
+		"A new post just went live on the job board (" . ( 'seeking' === lis_directory_get_job_kind( $new_id ) ? 'looking for work' : 'hiring' ) . "):\n\n" . $title . "\n" . get_permalink( $new_id ) . "\n\nEdit or remove it: " . admin_url( 'post.php?post=' . $new_id . '&action=edit' ) . "\n"
 	);
-	wp_safe_redirect( add_query_arg( 'lis_job_submitted', '1', $back ) );
+	wp_safe_redirect( add_query_arg( 'lis_job_posted', '1', get_permalink( $new_id ) ) );
 	exit;
 }
 
@@ -410,6 +441,7 @@ function lis_directory_render_job_dashboard_shortcode() {
 		'fill'   => 'Marked as filled — it\'s off the job board.',
 		'reopen' => 'Reopened.',
 		'delete' => 'Job deleted.',
+		'renew'  => 'Renewed — it\'s back on the job board.',
 	);
 	$msg = isset( $_GET['lis_job_msg'] ) ? sanitize_key( wp_unslash( $_GET['lis_job_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
@@ -457,6 +489,9 @@ function lis_directory_render_job_dashboard_shortcode() {
 		} elseif ( $pay && ! $filled && ( 'publish' === $job->post_status || get_post_meta( $id, '_lis_job_expired', true ) ) ) {
 			echo '<a class="lis-job-dash-pay" href="' . esc_url( $pay ) . '">' . ( 'publish' === $job->post_status ? 'Extend' : 'Renew' ) . '</a>';
 		}
+		if ( ! $pay && ! $filled && 'publish' !== $job->post_status && get_post_meta( $id, '_lis_job_expired', true ) ) {
+			echo '<a class="lis-job-dash-pay" href="' . esc_url( $action( 'renew' ) ) . '">Renew (free)</a>';
+		}
 		if ( 'publish' === $job->post_status || $filled ) {
 			echo $filled
 				? '<a href="' . esc_url( $action( 'reopen' ) ) . '">Reopen</a>'
@@ -487,6 +522,12 @@ function lis_directory_handle_job_action() {
 		delete_post_meta( $job_id, '_lis_job_filled' );
 	} elseif ( 'delete' === $do ) {
 		wp_trash_post( $job_id );
+	} elseif ( 'renew' === $do ) {
+		// Free renewal only — a paid board renews through checkout instead.
+		if ( '' !== lis_directory_get_job_checkout_url( $job_id ) || ! get_post_meta( $job_id, '_lis_job_expired', true ) ) {
+			wp_die( 'This post can\'t be renewed here.' );
+		}
+		wp_update_post( array( 'ID' => $job_id, 'post_status' => 'publish' ) ); // The publish hook gives it a fresh posting window.
 	} else {
 		wp_die( 'Unknown action.' );
 	}

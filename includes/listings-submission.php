@@ -361,7 +361,8 @@ function lis_directory_render_listing_submission_form_shortcode() {
  *
  * @param WP_Term[] $cat_terms        All lis_listing_category terms.
  * @param string    $selected         Pre-selected tier key ('' = first).
- * @param string    $selected_billing 'month' or 'year' (Showcase only).
+ * @param string    $selected_billing 'month' or 'year' — the Showcase radio, or
+ *                                    with $selected set, a 3-month start pick.
  */
 function lis_directory_render_plan_step( $cat_terms, $selected = '', $selected_billing = 'month' ) {
 	$cat_terms = is_array( $cat_terms ) ? $cat_terms : array();
@@ -456,13 +457,34 @@ function lis_directory_render_plan_step( $cat_terms, $selected = '', $selected_b
 						<?php if ( lis_directory_plan_has_billing_choice( $key ) ) : ?>
 							<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $t['m'] ) . '/mo' ); ?></span>
 							<span class="lis-listing-plan-price-alt"><?php echo esc_html( 'or ' . $fmt_price( $t['y'] ) . '/yr' ); ?></span>
-						<?php else : $yearly = 'year' === lis_directory_plan_billing( $key ); ?>
-							<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $yearly ? $t['y'] : $t['m'] ) . ( $yearly ? '/yr' : '/mo' ) ); ?></span>
+						<?php else : ?>
+							<span class="lis-listing-plan-price"><?php echo esc_html( $fmt_price( $t['y'] ) . '/yr' ); ?></span>
+							<?php if ( lis_directory_plan_has_trial( $key ) && $t['m'] > 0 ) : ?>
+								<span class="lis-listing-plan-price-alt"><?php echo esc_html( 'or start at ' . $fmt_price( $t['m'] ) . '/mo for ' . lis_directory_trial_months() . ' months' ); ?></span>
+							<?php endif; ?>
 						<?php endif; ?>
 						<span class="lis-listing-plan-blurb"><?php echo esc_html( $t['blurb'] ); ?></span>
 					</label>
 				<?php endforeach; ?>
 			</div>
+
+			<?php
+			// Standard / Featured: annual, or the 3-month monthly start. One
+			// group per tier (prices differ); only the selected tier's group is
+			// shown and enabled, so exactly one `lis_listing_start` posts.
+			foreach ( $plan_tiers as $key => $t ) :
+				if ( ! lis_directory_plan_has_trial( $key ) || $t['m'] <= 0 || $t['y'] <= 0 ) {
+					continue;
+				}
+				// Annual unless re-showing a 3-month start picked earlier (edit form).
+				$trial_on = '' !== $selected && 'month' === $selected_billing && $key === $selected_plan;
+				?>
+				<div class="lis-listing-plan-billing lis-listing-plan-start" role="radiogroup" aria-label="<?php echo esc_attr( $t['label'] ); ?> billing" data-start-tier="<?php echo esc_attr( $key ); ?>" hidden>
+					<label><input type="radio" name="lis_listing_start" value="year" <?php checked( ! $trial_on ); ?> /> Annually &middot; <?php echo esc_html( $fmt_price( $t['y'] ) ); ?>/yr</label>
+					<label><input type="radio" name="lis_listing_start" value="trial" <?php checked( $trial_on ); ?> /> Start monthly &middot; <?php echo esc_html( $fmt_price( $t['m'] ) ); ?>/mo for <?php echo (int) lis_directory_trial_months(); ?> months, then <?php echo esc_html( $fmt_price( $t['y'] ) ); ?>/yr</label>
+					<p class="lis-listing-plan-start-note">Not sure yet? Start monthly. After your last monthly payment, your plan switches to annual automatically. We'll email you then, a month before the first annual charge, and you can cancel any time before it.</p>
+				</div>
+			<?php endforeach; ?>
 
 			<?php if ( isset( $plan_tiers['showcase'] ) ) : ?>
 				<div class="lis-listing-showcase-fields" hidden data-taken-cats="<?php echo esc_attr( wp_json_encode( $vs_taken_cats ) ); ?>">
@@ -489,6 +511,12 @@ function lis_directory_render_plan_step( $cat_terms, $selected = '', $selected_b
 				try { taken = JSON.parse( showcase.getAttribute( 'data-taken-cats' ) || '[]' ); } catch ( e ) { taken = []; }
 			}
 			function sync() {
+				var plan = ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '';
+				form.querySelectorAll( '[data-start-tier]' ).forEach( function ( g ) {
+					var mine = g.getAttribute( 'data-start-tier' ) === plan;
+					g.hidden = ! mine;
+					g.querySelectorAll( 'input' ).forEach( function ( i ) { i.disabled = ! mine; } );
+				} );
 				if ( showcase ) {
 					var on = 'showcase' === ( ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '' );
 					showcase.hidden = ! on;
@@ -726,7 +754,7 @@ function lis_directory_handle_listing_submission() {
 	// a "save as draft".
 	$upgrades = $is_draft ? array() : lis_directory_read_plan_upgrades( wp_unslash( $_POST ) );
 	// Standard/Featured are annual; Showcase is the buyer's monthly/annual pick.
-	$billing  = lis_directory_plan_billing( $upgrades, ( isset( $_POST['lis_listing_billing'] ) && 'year' === $_POST['lis_listing_billing'] ) ? 'year' : 'month' );
+	$billing  = lis_directory_plan_billing( $upgrades, lis_directory_requested_billing( $upgrades, wp_unslash( $_POST ) ) );
 
 	// Vendor Showcase tier: single-product model. The category the vendor
 	// occupies is the listing's OWN category ($term, chosen earlier) — there's

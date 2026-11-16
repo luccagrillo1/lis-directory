@@ -16,7 +16,7 @@ wp_enqueue_style( 'lis-directory-jobs', LIS_DIRECTORY_URL . 'assets/css/jobs.css
 get_header();
 
 $filters = lis_directory_job_read_filters( $_GET ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-$title   = is_tax( 'lis_job_category' ) ? single_term_title( '', false ) : 'Jobs';
+$title   = is_tax( 'lis_job_category' ) ? single_term_title( '', false ) : 'Local Jobs';
 ?>
 <div class="lis-job-board lis-job-archive">
 	<div class="lis-job-archive-head">
@@ -26,6 +26,10 @@ $title   = is_tax( 'lis_job_category' ) ? single_term_title( '', false ) : 'Jobs
 		echo $cta; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		?>
 	</div>
+
+	<?php if ( ! is_tax( 'lis_job_category' ) ) : ?>
+		<p class="lis-job-archive-intro">A free local job board for Sandpoint and the surrounding area: openings from local employers, and neighbors looking for work. Posting is free.</p>
+	<?php endif; ?>
 
 	<?php echo lis_directory_render_job_filter_form( get_post_type_archive_link( 'lis_job' ), $filters ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 

@@ -52,7 +52,9 @@ function lis_directory_job_read_filters( array $src ) {
 	$workplaces = lis_directory_get_job_workplaces();
 	$type       = isset( $src['job_type'] ) ? sanitize_key( wp_unslash( $src['job_type'] ) ) : '';
 	$workplace  = isset( $src['job_workplace'] ) ? sanitize_key( wp_unslash( $src['job_workplace'] ) ) : '';
+	$kind       = isset( $src['job_kind'] ) ? sanitize_key( wp_unslash( $src['job_kind'] ) ) : '';
 	return array(
+		'kind'      => isset( lis_directory_get_job_kinds()[ $kind ] ) ? $kind : '',
 		'q'         => isset( $src['job_q'] ) ? sanitize_text_field( wp_unslash( $src['job_q'] ) ) : '',
 		'cat'       => isset( $src['job_cat'] ) ? sanitize_title( wp_unslash( $src['job_cat'] ) ) : '',
 		'type'      => isset( $types[ $type ] ) ? $type : '',
@@ -74,6 +76,16 @@ function lis_directory_job_query_args( array $filters, $count = -1 ) {
 	);
 	if ( ! empty( $filters['type'] ) ) {
 		$meta[] = array( 'key' => '_lis_job_employment_type', 'value' => $filters['type'] );
+	}
+	if ( 'seeking' === ( $filters['kind'] ?? '' ) ) {
+		$meta[] = array( 'key' => '_lis_job_kind', 'value' => 'seeking' );
+	} elseif ( 'hiring' === ( $filters['kind'] ?? '' ) ) {
+		// Posts from before `_lis_job_kind` existed have no value — they're openings.
+		$meta[] = array(
+			'relation' => 'OR',
+			array( 'key' => '_lis_job_kind', 'compare' => 'NOT EXISTS' ),
+			array( 'key' => '_lis_job_kind', 'value' => 'seeking', 'compare' => '!=' ),
+		);
 	}
 	if ( ! empty( $filters['workplace'] ) ) {
 		$meta[] = array( 'key' => '_lis_job_workplace', 'value' => $filters['workplace'] );
@@ -136,6 +148,11 @@ function lis_directory_render_job_filter_form( $action_url, array $filters ) {
 	?>
 	<form class="lis-job-filters" method="get" action="<?php echo esc_url( $action_url ); ?>">
 		<input type="search" name="job_q" value="<?php echo esc_attr( $filters['q'] ); ?>" placeholder="Search jobs" aria-label="Search jobs" />
+		<select name="job_kind" aria-label="Post type">
+			<option value="">Jobs &amp; people looking</option>
+			<option value="hiring" <?php selected( $filters['kind'], 'hiring' ); ?>>Hiring</option>
+			<option value="seeking" <?php selected( $filters['kind'], 'seeking' ); ?>>Looking for work</option>
+		</select>
 		<select name="job_cat" aria-label="Category">
 			<option value="">All categories</option>
 			<?php foreach ( $cats as $term ) : ?>
@@ -189,6 +206,7 @@ function lis_directory_render_job_card( $job_id ) {
 			<span class="lis-job-card-title"><?php echo esc_html( get_the_title( $job_id ) ); ?></span>
 			<span class="lis-job-card-company"><?php echo esc_html( implode( ' · ', array_filter( array( $company, $location ) ) ) ); ?></span>
 			<span class="lis-job-chips">
+				<?php if ( lis_directory_job_is_seeking( $job_id ) ) : ?><span class="lis-job-chip lis-job-chip--seeking">Looking for work</span><?php endif; ?>
 				<?php if ( isset( $types[ $type ] ) ) : ?><span class="lis-job-chip"><?php echo esc_html( $types[ $type ] ); ?></span><?php endif; ?>
 				<?php if ( isset( $workplaces[ $workplace ] ) && 'onsite' !== $workplace ) : ?><span class="lis-job-chip"><?php echo esc_html( $workplaces[ $workplace ] ); ?></span><?php endif; ?>
 				<?php if ( $salary ) : ?><span class="lis-job-chip lis-job-chip--pay"><?php echo esc_html( $salary ); ?></span><?php endif; ?>
@@ -203,7 +221,11 @@ function lis_directory_render_job_card( $job_id ) {
 
 function lis_directory_render_job_post_cta() {
 	$url = function_exists( 'lis_directory_get_job_page_url' ) ? lis_directory_get_job_page_url( 'submit' ) : '';
-	return $url ? '<a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '">Post a job</a>' : '';
+	if ( ! $url ) {
+		return '';
+	}
+	return '<span class="lis-job-cta"><a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '">Post a job</a> '
+		. '<a class="lis-job-btn" href="' . esc_url( add_query_arg( 'kind', 'seeking', $url ) ) . '">Looking for work? Post free</a></span>';
 }
 
 /**
@@ -242,7 +264,7 @@ function lis_directory_render_job_board_shortcode( $atts ) {
 		}
 		echo '</div>';
 	} else {
-		echo '<p class="lis-job-empty">No open positions match right now.</p>';
+		echo '<p class="lis-job-empty">Nothing matches right now.</p>';
 	}
 	echo '</div>';
 	wp_reset_postdata();
@@ -255,12 +277,14 @@ function lis_directory_render_job_apply_buttons( $job_id ) {
 	$url   = get_post_meta( $job_id, '_lis_job_apply_url', true );
 	$email = get_post_meta( $job_id, '_lis_job_apply_email', true );
 	$out   = '';
+	$seek  = lis_directory_job_is_seeking( $job_id );
 	if ( $url ) {
-		$out .= '<a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener">Apply now</a> ';
+		$out .= '<a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener">' . ( $seek ? 'View profile' : 'Apply now' ) . '</a> ';
 	}
 	if ( $email ) {
-		$subject = 'Application: ' . get_the_title( $job_id );
-		$out    .= '<a class="lis-job-btn' . ( $url ? '' : ' lis-job-btn--primary' ) . '" href="mailto:' . esc_attr( antispambot( $email ) ) . '?subject=' . rawurlencode( $subject ) . '">' . ( $url ? 'Apply by email' : 'Apply now' ) . '</a>';
+		$subject = ( $seek ? 'Work opportunity: ' : 'Application: ' ) . get_the_title( $job_id );
+		$label   = $seek ? ( $url ? 'Email' : 'Contact' ) : ( $url ? 'Apply by email' : 'Apply now' );
+		$out    .= '<a class="lis-job-btn' . ( $url ? '' : ' lis-job-btn--primary' ) . '" href="mailto:' . esc_attr( antispambot( $email ) ) . '?subject=' . rawurlencode( $subject ) . '">' . $label . '</a>';
 	}
 	return $out;
 }
@@ -273,7 +297,9 @@ function lis_directory_render_job_apply_buttons( $job_id ) {
  */
 function lis_directory_get_job_jsonld( $job_id ) {
 	$post = get_post( $job_id );
-	if ( ! $post || ! lis_directory_is_job_open( $job_id ) ) {
+	// A person looking for work isn't a JobPosting — no markup (and the page
+	// gets noindex), which also keeps their contact details out of Google.
+	if ( ! $post || ! lis_directory_is_job_open( $job_id ) || lis_directory_job_is_seeking( $job_id ) ) {
 		return array();
 	}
 	$type_map = array(

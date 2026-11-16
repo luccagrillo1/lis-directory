@@ -28,6 +28,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'admin_menu', 'lis_directory_add_annual_switch_page' );
 add_action( 'admin_post_lis_directory_annual_switch', 'lis_directory_handle_annual_switch' );
+add_action( 'woocommerce_checkout_subscription_created', 'lis_directory_mark_trial_subscription', 10, 2 );
+add_action( 'woocommerce_subscription_renewal_payment_complete', 'lis_directory_maybe_convert_trial_to_annual', 10, 2 );
 
 function lis_directory_add_annual_switch_page() {
 	add_submenu_page(
@@ -48,9 +50,6 @@ function lis_directory_add_annual_switch_page() {
 function lis_directory_annual_only_products() {
 	$out = array();
 	foreach ( array( 'standard', 'featured' ) as $tier ) {
-		if ( 'year' !== lis_directory_plan_billing( $tier, 'month' ) ) {
-			continue; // Tier still offers monthly — nothing to convert.
-		}
 		$pid = 'standard' === $tier
 			? ( function_exists( 'lis_directory_get_standard_listing_product_id' ) ? lis_directory_get_standard_listing_product_id() : 0 )
 			: (int) get_option( 'lis_directory_featured_listing_product_id' );
@@ -104,7 +103,9 @@ function lis_directory_annual_switch_blocker( $sub ) {
 /**
  * One row per subscription that could be switched (or was switched here).
  *
- * @param string $period 'month' = still monthly, 'year' = switched by this page.
+ * @param string $period 'month' = still monthly (not on a 3-month start),
+ *                       'trial' = on a 3-month start, switches itself,
+ *                       'year'  = switched by this page (or a 3-month start), undoable.
  * @return array[]
  */
 function lis_directory_annual_switch_rows( $period = 'month' ) {
@@ -121,8 +122,12 @@ function lis_directory_annual_switch_rows( $period = 'month' ) {
 			'product_id'             => $pid,
 		) );
 		foreach ( (array) $subs as $sub ) {
-			if ( $period !== $sub->get_billing_period() || (int) $sub->get_billing_interval() !== 1 ) {
+			$want = 'trial' === $period ? 'month' : $period;
+			if ( $want !== $sub->get_billing_period() || (int) $sub->get_billing_interval() !== 1 ) {
 				continue;
+			}
+			if ( 'year' !== $period && ( 'trial' === $period ) !== lis_directory_is_pending_trial( $sub ) ) {
+				continue; // 3-month starts get their own list.
 			}
 			if ( 'year' === $period && ! lis_directory_annual_switch_can_undo( $sub ) ) {
 				continue; // Only annual ones this page switched, before their first annual charge.
@@ -145,6 +150,7 @@ function lis_directory_annual_switch_rows( $period = 'month' ) {
 				'month'      => null !== $month['price'] ? (float) $month['price'] : null,
 				'year'       => null !== $year['price'] ? (float) $year['price'] : null,
 				'next'       => $next ? (int) $next : 0,
+				'paid'       => (int) $sub->get_payment_count(),
 				'blocker'    => 'month' === $period
 					? ( $year['variation_id'] ? lis_directory_annual_switch_blocker( $sub ) : 'No annual price set on this product.' )
 					: '',
@@ -165,7 +171,7 @@ function lis_directory_annual_switch_rows( $period = 'month' ) {
  * @param string $to     'year' or 'month' (undo).
  * @return true|string True, or a plain-language reason it wasn't changed.
  */
-function lis_directory_switch_subscription_billing( $sub_id, $to ) {
+function lis_directory_switch_subscription_billing( $sub_id, $to, $why = '' ) {
 	if ( ! function_exists( 'wcs_get_subscription' ) ) {
 		return 'WooCommerce Subscriptions is not active.';
 	}
@@ -231,9 +237,9 @@ function lis_directory_switch_subscription_billing( $sub_id, $to ) {
 	$user = wp_get_current_user();
 	$next = $sub->get_time( 'next_payment' );
 	$sub->add_order_note( sprintf(
-		'%1$s by %2$s (LIS Directory → Switch to Annual). Was %3$s; now %4$s. Next payment date unchanged%5$s.',
+		'%1$s by %2$s. Was %3$s; now %4$s. Next payment date unchanged%5$s.',
 		'year' === $to ? 'Switched from monthly to annual billing' : 'Switched back to monthly billing (undo)',
-		$user && $user->exists() ? $user->display_name : 'an admin',
+		'' !== $why ? $why : ( ( $user && $user->exists() ? $user->display_name : 'an admin' ) . ' (LIS Directory → Switch to Annual)' ),
 		wp_strip_all_tags( wc_price( $old_total ) ) . ( 'year' === $to ? '/month' : '/year' ),
 		wp_strip_all_tags( wc_price( $sub->get_total() ) ) . ( 'year' === $to ? '/year' : '/month' ),
 		$next ? ' (' . date_i18n( get_option( 'date_format' ), $next ) . ')' : ''
@@ -298,6 +304,7 @@ function lis_directory_render_annual_switch_page() {
 		delete_transient( 'lis_annual_switch_error_' . get_current_user_id() );
 	}
 	$monthly  = lis_directory_annual_switch_rows( 'month' );
+	$trials   = lis_directory_annual_switch_rows( 'trial' );
 	$switched = lis_directory_annual_switch_rows( 'year' );
 	$button   = function ( array $r, $to ) use ( $money, $date ) {
 		$who = $r['business'] ? $r['business'] : ( $r['name'] ? $r['name'] : 'this customer' );
@@ -338,7 +345,7 @@ function lis_directory_render_annual_switch_page() {
 		<div style="max-width:760px;background:#fff;border:1px solid #c3c4c7;border-left:4px solid #2271b1;padding:12px 16px;margin:16px 0;">
 			<p style="margin-top:0"><strong>How this works</strong></p>
 			<ol style="margin-bottom:0">
-				<li>These customers pay <strong>monthly</strong> for a Standard or Featured listing. New listings are annual only now.</li>
+				<li>These customers pay <strong>monthly</strong> for a Standard or Featured listing from before the 3-month start existed. New listings are annual, or monthly for 3 payments and then annual automatically (listed further down).</li>
 				<li>Contact the customer first. <em>Email draft</em> opens your email app with a message ready to edit and send.</li>
 				<li>Once they agree, click <strong>Switch to annual</strong>. <strong>Nothing is charged right away</strong>: they keep the month they've paid for, then their card on file is charged the annual price on their next payment date, and once a year after that.</li>
 				<li>Clicked the wrong one? Use <strong>Undo</strong> in the list below the table.</li>
@@ -378,6 +385,26 @@ function lis_directory_render_annual_switch_page() {
 			</table>
 		<?php endif; ?>
 
+		<?php if ( $trials ) : ?>
+			<h2>On the 3-month start (<?php echo (int) count( $trials ); ?>)</h2>
+			<p>These switch to annual by themselves after their 3rd monthly payment, and the customer is emailed then. Nothing to do here.</p>
+			<table class="widefat striped">
+				<thead><tr><th>Business</th><th>Customer</th><th>Plan</th><th>Pays now</th><th>Monthly payments made</th><th>Next payment</th></tr></thead>
+				<tbody>
+				<?php foreach ( $trials as $r ) : ?>
+					<tr>
+						<td><strong><?php echo esc_html( $r['business'] ? $r['business'] : '(no listing linked)' ); ?></strong> &middot; <a href="<?php echo esc_url( $r['sub']->get_edit_order_url() ); ?>">#<?php echo (int) $r['sub']->get_id(); ?></a></td>
+						<td><?php echo esc_html( $r['name'] ); ?></td>
+						<td><?php echo 'featured' === $r['tier'] ? 'Featured' : 'Standard'; ?></td>
+						<td><?php echo esc_html( $money( $r['total'] ) ); ?>/mo <small>incl. tax</small></td>
+						<td><?php echo (int) $r['paid']; ?> of <?php echo (int) lis_directory_trial_months(); ?></td>
+						<td><?php echo esc_html( $date( $r['next'] ) ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
 		<?php if ( $switched ) : ?>
 			<h2>Switched on this page (<?php echo (int) count( $switched ); ?>)</h2>
 			<table class="widefat striped">
@@ -398,4 +425,103 @@ function lis_directory_render_annual_switch_page() {
 		<?php endif; ?>
 	</div>
 	<?php
+}
+
+/* ---------- 3-month start: monthly for 3 payments, then annual ---------- */
+
+/**
+ * A new checkout that bought monthly Standard or Featured is a 3-month start
+ * (the only way to buy those monthly — lis_directory_plan_billing()). Flag the
+ * subscription so it switches itself to annual. Subscriptions from before
+ * this existed have no flag and are left alone (Switch to Annual page).
+ */
+function lis_directory_mark_trial_subscription( $subscription, $order = null ) {
+	if ( ! $subscription || 'month' !== $subscription->get_billing_period() ) {
+		return;
+	}
+	foreach ( lis_directory_annual_only_products() as $pid ) {
+		if ( lis_directory_annual_switch_item( $subscription, $pid ) ) {
+			$subscription->update_meta_data( '_lis_trial_to_annual', lis_directory_trial_months() );
+			$subscription->add_order_note( sprintf( '3-month start: billed monthly for %d payments, then switches to annual automatically (LIS Directory).', lis_directory_trial_months() ) );
+			$subscription->save();
+			return;
+		}
+	}
+}
+
+/** Whether a subscription is a 3-month start that hasn't switched yet. */
+function lis_directory_is_pending_trial( $sub ) {
+	return $sub && (int) $sub->get_meta( '_lis_trial_to_annual' ) > 0 && 'month' === $sub->get_billing_period() && ! $sub->get_meta( '_lis_trial_converted' );
+}
+
+/**
+ * After each renewal payment: once a 3-month start has made its last monthly
+ * payment, switch it to annual (same in-place switch as the admin page — no
+ * charge now; the annual price is charged on the next payment date) and email
+ * the customer so they have a month's notice and can cancel. If it can't be
+ * switched automatically (coupon, a payment method that can't change amount),
+ * the site admin is emailed instead.
+ */
+function lis_directory_maybe_convert_trial_to_annual( $subscription, $last_order = null ) {
+	if ( ! lis_directory_is_pending_trial( $subscription ) ) {
+		return;
+	}
+	$months = (int) $subscription->get_meta( '_lis_trial_to_annual' );
+	if ( (int) $subscription->get_payment_count() < $months ) {
+		return;
+	}
+	$sub_id = $subscription->get_id();
+	$result = lis_directory_switch_subscription_billing( $sub_id, 'year', 'the 3-month start (automatic, after the last monthly payment)' );
+	$sub    = wcs_get_subscription( $sub_id ); // Fresh copy after the switch.
+	if ( true !== $result ) {
+		$sub->add_order_note( '3-month start could not switch to annual automatically: ' . $result );
+		$sub->update_meta_data( '_lis_trial_converted', 'failed' );
+		$sub->save();
+		wp_mail(
+			get_option( 'admin_email' ),
+			'Listing subscription needs a manual switch to annual',
+			"Subscription #{$sub_id} finished its 3 monthly payments but couldn't be switched to annual automatically:\n\n{$result}\n\n" . admin_url( 'post.php?post=' . $sub_id . '&action=edit' ) . "\n"
+		);
+		return;
+	}
+	$sub->update_meta_data( '_lis_trial_converted', time() );
+	$sub->save();
+	lis_directory_send_trial_converted_email( $sub );
+}
+
+/**
+ * "Your 3 months are up" email: what they'll be charged, when, and how to cancel.
+ */
+function lis_directory_send_trial_converted_email( $sub ) {
+	$email = $sub->get_billing_email();
+	if ( ! $email ) {
+		return;
+	}
+	$business = '';
+	$tier     = 'listing';
+	foreach ( lis_directory_annual_only_products() as $t => $pid ) {
+		$item = lis_directory_annual_switch_item( $sub, $pid );
+		if ( $item ) {
+			$tier       = 'featured' === $t ? 'Featured listing' : 'listing';
+			$listing_id = (int) $item->get_meta( '_lis_listing_id' );
+			$business   = $listing_id ? get_the_title( $listing_id ) : '';
+			break;
+		}
+	}
+	$next    = $sub->get_time( 'next_payment' );
+	$when    = $next ? date_i18n( get_option( 'date_format' ), $next ) : 'your next payment date';
+	$amount  = wp_strip_all_tags( wc_price( $sub->get_total() ) );
+	$account = function_exists( 'wc_get_account_endpoint_url' ) ? wc_get_account_endpoint_url( 'subscriptions' ) : home_url( '/' );
+	$site    = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+	$first   = $sub->get_billing_first_name();
+
+	$body  = ( $first ? "Hi {$first},\n\n" : "Hi,\n\n" );
+	$body .= 'Thanks for trying a ' . $tier . ' on ' . $site . ( $business ? ' for ' . $business : '' ) . ". Your first 3 monthly payments are done, so your plan now moves to annual billing, as described when you signed up.\n\n";
+	$body .= "On {$when}, your card on file will be charged {$amount} for a full year, then once a year after that. Nothing else changes; your listing stays live.\n\n";
+	$body .= "Don't want to continue? Cancel any time before {$when} from your account and you won't be charged:\n{$account}\n\n";
+	$body .= "Questions? Just reply to this email.\n\n{$site}\n";
+
+	wp_mail( $email, 'Your ' . $site . ' listing is switching to annual on ' . $when, $body, array( 'Reply-To: ' . get_option( 'admin_email' ) ) );
+	$sub->add_order_note( 'Emailed the customer about the switch to annual (' . $email . ').' );
+	$sub->save();
 }
