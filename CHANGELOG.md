@@ -1,3 +1,36 @@
+## [0.54.0] — 2026-11-16 — UX audit: email confirmation, no passwords in email, Saved + Overview tabs, Showcase links
+
+**Security**
+- **No plain-text password in the welcome email.** The welcome email is WP User Manager's "Registration confirmation" (third-party), whose default template ends "Password: {password}". New `includes/account-security.php` filters `wpum_get_email` to drop any text containing `{password}` and append sign-in + password-reset links when the template has none, and points the `{password}` tag at an empty callback through `wpum_email_tags`, so a later template edit can't bring it back. No WPUM files are touched.
+- **Email confirmation before submitting.** Every account registered from now on is flagged `_lis_email_unconfirmed` and emailed a one-time link (`?lis_confirm_email=<id>&key=…`; only a `wp_hash_password()` hash of the key is stored). Until it's clicked, `lis_account_email_confirmed()` is false and `[lis_listing_submit]` / its handler and new posts via `[lis_job_submit]` / its save handler are refused with a notice and a "Resend confirmation email" button (rate-limited to one per 2 minutes). Existing accounts have no flag and pass; editors/admins (`edit_others_posts`) always pass; users an admin creates in wp-admin skip it. Sign-in, browsing, saving listings and editing an existing job are not blocked. Hooks: `lis_account_require_email_confirmation`, `lis_account_email_confirmed` (filter), `lis_account_after_email_confirmed` (action), `lis_account_email_confirmed_redirect`.
+- `includes/account-security.php` ships byte-identical in LIS Events (1.9.0). A `LIS_ACCOUNT_SECURITY_VERSION` guard makes the first copy loaded win, so hooks register once with either or both plugins active. Keep the two copies in sync.
+
+**Account tabs** (the Overview / Listings / Events / Settings bar is Spectra buttons on WP pages under /account/, not plugin code)
+- `[lis_saved_listings]` (new "Saved" tab): the user's bookmarked, published listings (`_lis_listing_bookmarks`, newest first) as normal listing cards, each with an Unsave button (nonce'd `admin_post_lis_directory_unsave_listing`, works without JS, also prunes bookmarks to listings that are gone). Empty state links to the directory (`lis_directory_browse_url`).
+- `[lis_account_overview]` (Overview tab): Overview is the WPUM account page, so its `[wpum_account]` rendered the profile Settings form. The new shortcode shows counts of my events (when LIS Events is active), listings and saved listings, each linking to `/account/<slug>/` when that page exists (`lis_directory_account_page_url()`), plus Submit an event / Add a listing buttons and the email-confirmation notice if pending. When WPUM's `tab` query var is set (`/account/password/` …) or `?lis_view=profile`, it renders `[wpum_account]` instead, so profile and password editing stay reachable via "Edit profile & password".
+- My Listings empty state: primary "Add a listing" button. New `lis_directory_add_listing_url()` (the `/services/local-directory/add-listing/` page, else the first page with `[lis_listing_submit]`; filter `lis_directory_add_listing_url`).
+
+**Vendor Showcase links**
+- Why the two live slots broke: neither vendor has a published `lis_listing`, so `lis_directory_vendor_listing_url()` fell through to returning the stored `_lis_pv_link_url` as-is: Living in Sandpoint's `/listings/living-in-sandpoint/` (listing not published → 404) and Talus Rock Retreat's old `/talus-rock-retreat-3/` (no such post → WordPress redirected to the home page).
+- New order: linked listing → stored URL that is a published listing → same-slug listing → **published listing with the vendor's exact name** → **house slot → About page** → stored URL **only if off-site, or on-site and still resolving to a published page/post** → otherwise '' (item renders unlinked).
+- `lis_directory_vendor_is_house()`: `_lis_pv_house` = '1', or the vendor title equals the site name (filter `lis_directory_vendor_is_house`). House cards drop the "Sponsored — this business paid to be featured here" tooltip and open in the same tab; filter `lis_directory_house_slot_url` changes the target.
+
+**Sign-in**
+- A guest clicking Save on a listing gets the site's sign-in card (`window.lisOpenLoginCard`, from the site snippet) instead of a redirect to the login page, when the card is on the page.
+
+### Files touched
+`includes/account-security.php` (new), `lis-directory.php`, `includes/listings-submission.php`, `includes/jobs-submission.php`, `includes/listings-account.php`, `includes/shortcodes.php`, `assets/js/listing-actions.js`, `assets/css/listings.css`, version files.
+
+### Needs doing in wp-admin
+- Add a "Saved" page at `/account/saved/` with `[lis_saved_listings]`, and a "Saved" button in the Spectra tab bar on each account page.
+- On the Overview page (`/account/`, page 4361) replace `[wpum_account]` with `[lis_account_overview]`.
+- Talus Rock Retreat's slot is unlinked until it has a published listing (or an off-site Link URL).
+
+### Known limitations
+- Confirmation is checked at submit time only; changing your email address later doesn't re-trigger it.
+- The account-security file is duplicated across both plugins by design (each works alone); edit one, copy to the other.
+- Not verified on the live site: the WPUM email filter, the confirmation flow and the new shortcodes were checked with stubbed WordPress functions and `php -l`, not against a real WP install.
+
 ## [0.53.1] — 2026-11-16 — Plan step: Standard's "Annually" shows selected
 
 - Seen live right after 0.53.0: Standard and Featured each render an Annually / Start monthly pair, and both pairs share the `lis_listing_start` radio name. So Featured's pre-checked "Annually" unchecked Standard's on load, and the visible Standard pair showed nothing selected. The server already treated "nothing posted" as annual, so no wrong charge was possible. Now the visible pair always has a pick, defaulting to its own Annually.

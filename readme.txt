@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.53.1
+Stable tag: 0.54.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,15 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.54.0 =
+* Security: new accounts must confirm their email (a one-time link) before submitting a listing or posting a job. Accounts created before this update are unaffected.
+* Security: the WP User Manager welcome email no longer includes the password; it links to sign-in and password reset instead.
+* New [lis_saved_listings] for an account "Saved" tab: bookmarked listings with Unsave buttons.
+* New [lis_account_overview] for the account Overview tab: counts of your events, listings and saved items, plus Submit an event / Add a listing buttons.
+* My Listings with nothing in it now has an "Add a listing" button.
+* Vendor Showcase: slots no longer link to dead on-site URLs; the site's own Living in Sandpoint slot links to About and has no "Sponsored" tooltip.
+* Save on a listing opens the sign-in card for guests when the site has it.
 
 = 0.51.2 =
 * Paying for a subscription now clears a listing's old one-time end date, so the nightly expiry check can't unpublish a listing whose owner is still paying. The expiry check also skips any listing on an active Standard subscription.
