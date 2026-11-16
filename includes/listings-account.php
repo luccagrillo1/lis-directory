@@ -20,6 +20,8 @@ add_shortcode( 'lis_listing_author_profile', 'lis_directory_render_author_profil
 add_shortcode( 'lis_listing_dashboard', 'lis_directory_render_dashboard_shortcode' );
 add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
 add_action( 'admin_post_lis_directory_toggle_sold', 'lis_directory_handle_toggle_sold' );
+add_shortcode( 'lis_saved_listings', 'lis_directory_render_saved_listings_shortcode' );
+add_action( 'admin_post_lis_directory_unsave_listing', 'lis_directory_handle_unsave_listing' );
 
 /**
  * Lets a listing owner flip Sold/Rented from the Dashboard without needing
@@ -475,4 +477,95 @@ function lis_directory_render_listing_card( $post ) {
 	</a>
 	<?php
 	return ob_get_clean();
+}
+
+/**
+ * [lis_saved_listings] — the account "Saved" tab (0.54.0). Lists the
+ * listings the user bookmarked with the Save button on a listing page
+ * (user meta _lis_listing_bookmarks, see listings-actions.php), newest save
+ * first, each with an Unsave button. Unsave is a plain nonce'd POST so it
+ * works without JavaScript. Bookmarks pointing at listings that are no longer
+ * published are skipped (and pruned from the list on the next unsave).
+ */
+function lis_directory_render_saved_listings_shortcode() {
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+
+	if ( ! is_user_logged_in() ) {
+		ob_start();
+		?>
+		<p class="lis-listing-dashboard-login-required">
+			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">Log in</a> to see your saved listings.
+		</p>
+		<?php
+		return ob_get_clean();
+	}
+
+	$ids   = array_reverse( lis_directory_get_user_bookmarks( get_current_user_id() ) );
+	$posts = $ids ? get_posts( array(
+		'post_type'      => 'lis_listing',
+		'post_status'    => 'publish',
+		'post__in'       => $ids,
+		'orderby'        => 'post__in',
+		'posts_per_page' => -1,
+	) ) : array();
+
+	$browse_url = apply_filters( 'lis_directory_browse_url', home_url( '/services/business-directory/' ) );
+	$unsaved    = isset( $_GET['lis_unsaved'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$back       = remove_query_arg( 'lis_unsaved' );
+
+	ob_start();
+	?>
+	<div class="lis-listing-dashboard lis-saved-listings">
+		<h1>Saved</h1>
+		<?php if ( $unsaved ) : ?>
+			<p class="lis-saved-notice" role="status">Removed from your saved listings.</p>
+		<?php endif; ?>
+		<?php if ( empty( $posts ) ) : ?>
+			<div class="lis-account-empty">
+				<p class="lis-listing-empty">You haven't saved any listings yet. Tap <strong>☆ Save</strong> on a listing to keep it here.</p>
+				<p class="lis-account-empty-actions"><a class="lis-listing-thankyou-btn" href="<?php echo esc_url( $browse_url ); ?>">Browse the directory</a></p>
+			</div>
+		<?php else : ?>
+			<div class="lis-listing-grid lis-saved-grid">
+				<?php foreach ( $posts as $saved ) : ?>
+					<div class="lis-saved-item">
+						<?php echo lis_directory_render_listing_card( $saved ); // phpcs:ignore -- escaped inside the renderer. ?>
+						<form class="lis-saved-unsave" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+							<input type="hidden" name="action" value="lis_directory_unsave_listing">
+							<input type="hidden" name="listing_id" value="<?php echo esc_attr( $saved->ID ); ?>">
+							<input type="hidden" name="redirect_to" value="<?php echo esc_url( $back ); ?>">
+							<?php wp_nonce_field( 'lis_directory_unsave_' . $saved->ID, 'lis_directory_unsave_nonce' ); ?>
+							<button type="submit" class="lis-listing-thankyou-btn lis-listing-thankyou-btn--ghost lis-saved-unsave-btn" aria-label="<?php echo esc_attr( 'Unsave ' . get_the_title( $saved ) ); ?>">Unsave</button>
+						</form>
+					</div>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+function lis_directory_handle_unsave_listing() {
+	if ( ! is_user_logged_in() ) {
+		wp_die( 'You must be logged in to do that.' );
+	}
+
+	$listing_id = isset( $_POST['listing_id'] ) ? absint( $_POST['listing_id'] ) : 0;
+	if ( ! isset( $_POST['lis_directory_unsave_nonce'] ) || ! wp_verify_nonce( $_POST['lis_directory_unsave_nonce'], 'lis_directory_unsave_' . $listing_id ) ) {
+		wp_die( 'Security check failed. Please go back and try again.' );
+	}
+
+	$user_id   = get_current_user_id();
+	$bookmarks = lis_directory_get_user_bookmarks( $user_id );
+	// Also prune bookmarks to listings that no longer exist or aren't public.
+	$bookmarks = array_values( array_filter( $bookmarks, function ( $id ) use ( $listing_id ) {
+		return $id !== $listing_id && 'publish' === get_post_status( $id );
+	} ) );
+	update_user_meta( $user_id, '_lis_listing_bookmarks', $bookmarks );
+
+	$fallback = home_url( '/' );
+	$back     = isset( $_POST['redirect_to'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ), $fallback ) : $fallback;
+	wp_safe_redirect( add_query_arg( 'lis_unsaved', '1', $back ) );
+	exit;
 }

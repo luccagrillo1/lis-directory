@@ -2768,3 +2768,45 @@
 		flex: 1 1 calc(50% - 10px);
 	}
 }
+
+/* ---------- Account: Saved tab + empty states (0.54.0) ---------- */
+
+.lis-saved-item {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.lis-saved-item .lis-listing-card {
+	flex: 1 1 auto;
+}
+
+.lis-saved-unsave {
+	margin: 0;
+	text-align: right;
+}
+
+.lis-saved-unsave-btn {
+	padding: 6px 14px;
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+.lis-saved-notice {
+	margin: 0 0 16px;
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+}
+
+.lis-account-empty {
+	text-align: center;
+	padding: 24px 0 8px;
+}
+
+.lis-account-empty .lis-listing-empty {
+	padding: 16px 0 8px;
+}
+
+.lis-account-empty-actions {
+	margin: 0;
+}
+
