@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.54.2
+Stable tag: 0.55.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,15 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.55.0 =
+* The email-confirmed message shows once, closes itself after a few seconds (or with its × button), and no longer sticks in the address bar.
+* Changing your email address asks you to confirm the new one.
+* Account Password and Settings links work again (they used to land on the password-reset page).
+* The password box lists the rules (8+ characters, a capital, a number, a symbol) and ticks them off as you type.
+* After signing up: Continue where you left off, Browse this weekend and Submit an event.
+* Account settings: email preferences placeholder and "Request account deletion".
+* Public profile pages are turned off; profile photo uploads are capped at 5 MB.
 
 = 0.54.2 =
 * The Saved account tab no longer repeats "Saved" under the page title.
