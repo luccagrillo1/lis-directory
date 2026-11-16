@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.55.0
+Stable tag: 0.55.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.55.1 =
+* Vendor Showcase: the Living in Sandpoint slot links to the About page, and old Directorist links that only bounce to the homepage are dropped.
 
 = 0.55.0 =
 * The email-confirmed message shows once, closes itself after a few seconds (or with its × button), and no longer sticks in the address bar.

@@ -1,3 +1,8 @@
+## [0.55.1] — 2026-11-16 — Showcase links (live check)
+
+- House slot now links to the About page: it looked for `about-us`, but the site's page is `/about/` (tries `about`, then `about-us`).
+- Stored-URL fallback only accepts post types that render (`page`, `post`, `lis_listing`, `lis_event`, `product`; filter `lis_directory_showcase_linkable_types`). Talus Rock Retreat's `/talus-rock-retreat-3/` is an old Directorist single that Snippet #49 redirects home, so the logo is unlinked until a listing is linked to the vendor.
+
 ## [0.55.0] — 2026-11-16 — Account polish: toast, email re-confirm, working account tabs, password rules, after sign-up, settings, profiles
 
 - **Email-confirmed toast** (`includes/account-security.php`, shared with LIS Events, `LIS_ACCOUNT_SECURITY_VERSION` 1.2.0): the confirmation link now redirects with a one-time token (10-minute transient) instead of `?lis_email_confirmed=1`, so the toast only shows after a real confirmation and never on reload or a shared URL. It has a × button, closes after 5 s (9 s for errors, paused on hover), and `history.replaceState` strips the parameter.
