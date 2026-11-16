@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.54.1
+Stable tag: 0.54.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.54.2 =
+* The Saved account tab no longer repeats "Saved" under the page title.
 
 = 0.54.1 =
 * Signed-in users get an account menu on the header avatar (Account, Saved, My Events, Log out), and the same links in the mobile hamburger menu.

@@ -1,3 +1,7 @@
+## [0.54.2] — 2026-11-16 — Saved tab heading
+
+- `[lis_saved_listings]` no longer prints its own `<h1>Saved</h1>`; /account/saved/ showed "Saved" twice (page title + shortcode heading).
+
 ## [0.54.1] — 2026-11-16 — Log out everywhere: header account menu, mobile menu, Overview
 
 **Why:** the only Log out link on the site was in WP User Manager's sidebar on /account/, which went away when `[lis_account_overview]` replaced `[wpum_account]`.
