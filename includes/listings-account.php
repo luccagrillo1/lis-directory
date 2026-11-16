@@ -710,9 +710,13 @@ function lis_directory_render_account_overview_shortcode() {
 			<?php endif; ?>
 		</div>
 
-		<?php if ( shortcode_exists( 'wpum_account' ) ) : ?>
-			<p class="lis-account-overview-profile"><a href="<?php echo esc_url( $profile_url ); ?>">Edit profile &amp; password</a></p>
-		<?php endif; ?>
+		<p class="lis-account-overview-profile">
+			<?php if ( shortcode_exists( 'wpum_account' ) ) : ?>
+				<a href="<?php echo esc_url( $profile_url ); ?>">Edit profile &amp; password</a>
+				<span class="lis-account-overview-sep" aria-hidden="true">&middot;</span>
+			<?php endif; ?>
+			<a class="lis-account-logout" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">Log out</a>
+		</p>
 	</div>
 	<?php
 	return ob_get_clean();

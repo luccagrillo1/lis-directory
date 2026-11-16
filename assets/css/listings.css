@@ -2862,4 +2862,8 @@ a.lis-account-stat:focus-visible {
 .lis-account-overview-back {
 	margin: 0 0 16px;
 }
+.lis-account-overview-sep {
+	margin: 0 8px;
+	opacity: .5;
+}
 
