@@ -1,3 +1,7 @@
+## [0.56.0] — 2026-11-16 — GA4 save/share events
+
+- `assets/js/listing-actions.js`: `save_listing` / `unsave_listing` (listing_id, listing_title) after a successful bookmark toggle, `share` (method native/copy, content_type listing, item_id). Uses LIS Events 1.10.0's `window.lisTrack` when loaded, else `gtag`; nothing without a GA4 tag.
+
 ## [0.55.1] — 2026-11-16 — Showcase links (live check)
 
 - House slot now links to the About page: it looked for `about-us`, but the site's page is `/about/` (tries `about`, then `about-us`).
