@@ -176,6 +176,10 @@ function lis_directory_vendor_is_house( $vendor ) {
  * that way: Living in Sandpoint's stored /listings/living-in-sandpoint/ (its
  * listing isn't published → 404) and Talus Rock Retreat's old
  * /talus-rock-retreat-3/ (no such post → WordPress redirected to the home page).
+ * 0.55.1: the About page here is /about/ (the house slot looked for
+ * /about-us/ and fell back to home), and step 6 now only accepts post types
+ * that render (`lis_directory_showcase_linkable_types`); Talus's old URL is a
+ * Directorist single that Snippet #49 redirects home.
  */
 function lis_directory_vendor_listing_url( $vendor ) {
 	$vid = is_object( $vendor ) ? (int) $vendor->ID : (int) $vendor;
@@ -227,8 +231,14 @@ function lis_directory_vendor_listing_url( $vendor ) {
 
 	// 5) The site's own slot: About page (filter: lis_directory_house_slot_url).
 	if ( lis_directory_vendor_is_house( $vid ) ) {
-		$about = get_page_by_path( 'about-us' );
-		$home  = ( $about && 'publish' === $about->post_status ) ? get_permalink( $about ) : home_url( '/' );
+		$home = home_url( '/' );
+		foreach ( array( 'about', 'about-us' ) as $about_slug ) {
+			$about = get_page_by_path( $about_slug );
+			if ( $about && 'publish' === $about->post_status ) {
+				$home = get_permalink( $about );
+				break;
+			}
+		}
 		return (string) apply_filters( 'lis_directory_house_slot_url', $home, $vid );
 	}
 
@@ -240,8 +250,11 @@ function lis_directory_vendor_listing_url( $vendor ) {
 		if ( ! $on_site ) {
 			return $url;
 		}
-		$post_id = url_to_postid( $url );
-		if ( $post_id && 'publish' === get_post_status( $post_id ) && is_post_type_viewable( get_post_type( $post_id ) ) ) {
+		// Only types that actually render here: old Directorist singles
+		// (at_biz_dir) still resolve but Snippet #49 redirects them home.
+		$linkable = (array) apply_filters( 'lis_directory_showcase_linkable_types', array( 'page', 'post', 'lis_listing', 'lis_event', 'product' ) );
+		$post_id  = url_to_postid( $url );
+		if ( $post_id && 'publish' === get_post_status( $post_id ) && in_array( get_post_type( $post_id ), $linkable, true ) ) {
 			return (string) get_permalink( $post_id );
 		}
 	}
