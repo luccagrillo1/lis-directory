@@ -16,6 +16,11 @@
  *   files a WordPress privacy erasure request (Tools → Erase Personal Data)
  *   and emails the user a confirmation link. An admin then erases the data
  *   and deletes the user; nothing is removed automatically.
+ * - Public profiles are off: WPUM's profile page redirects (signed in → the
+ *   account page, guests → home) and the "View Profile" tab is gone. Filter
+ *   `lis_directory_hide_public_profiles` (return false) to bring them back.
+ * - Photos uploaded through WPUM forms (avatar, cover) are capped at 5 MB
+ *   (filter `lis_directory_wpum_max_upload_bytes`).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -26,6 +31,9 @@ add_action( 'wp_footer', 'lis_directory_render_password_rules', 30 );
 add_action( 'wp_footer', 'lis_directory_render_signup_next_steps', 30 );
 add_shortcode( 'lis_account_settings', 'lis_directory_render_account_settings_shortcode' );
 add_action( 'admin_post_lis_directory_request_deletion', 'lis_directory_handle_request_deletion' );
+add_action( 'template_redirect', 'lis_directory_redirect_public_profiles', 5 );
+add_filter( 'wpum_get_account_page_tabs', 'lis_directory_remove_profile_tab' );
+add_filter( 'wpum_upload_file_pre_upload', 'lis_directory_cap_wpum_upload_size', 10, 2 );
 
 /**
  * WPUM's password rules as a list of array( 'id', 'label', 'test' ), where
@@ -289,4 +297,44 @@ function lis_directory_handle_request_deletion() {
 	}
 	wp_safe_redirect( add_query_arg( 'lis_deletion', $status, $back ) );
 	exit;
+}
+
+function lis_directory_hide_public_profiles() {
+	return (bool) apply_filters( 'lis_directory_hide_public_profiles', true );
+}
+
+function lis_directory_redirect_public_profiles() {
+	if ( ! lis_directory_hide_public_profiles() || ! function_exists( 'wpum_get_core_page_id' ) ) {
+		return;
+	}
+	$profile = (int) wpum_get_core_page_id( 'profile' );
+	if ( ! $profile || ! is_page( $profile ) ) {
+		return;
+	}
+	if ( is_user_logged_in() ) {
+		$account = get_page_by_path( 'account' );
+		$dest    = ( $account && 'publish' === $account->post_status ) ? get_permalink( $account ) : home_url( '/account/' );
+	} else {
+		$dest = home_url( '/' );
+	}
+	wp_safe_redirect( $dest, 302 );
+	exit;
+}
+
+function lis_directory_remove_profile_tab( $tabs ) {
+	if ( lis_directory_hide_public_profiles() && is_array( $tabs ) ) {
+		unset( $tabs['view'] );
+	}
+	return $tabs;
+}
+
+function lis_directory_cap_wpum_upload_size( $file, $args = array() ) {
+	if ( is_wp_error( $file ) || ! is_array( $file ) || ! isset( $file['size'] ) ) {
+		return $file;
+	}
+	$max = (int) apply_filters( 'lis_directory_wpum_max_upload_bytes', 5 * MB_IN_BYTES );
+	if ( $max > 0 && (int) $file['size'] > $max ) {
+		return new WP_Error( 'upload', sprintf( 'That photo is %1$s. Please choose one under %2$s.', size_format( (int) $file['size'], 1 ), size_format( $max ) ) );
+	}
+	return $file;
 }
