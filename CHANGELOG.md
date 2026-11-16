@@ -1,3 +1,7 @@
+## [0.57.0] — 2026-11-16 — Listing sections hook
+
+- `templates/single-listing.php`: `do_action( 'lis_directory_single_listing_sections', $post_id )` after FAQs, before the flag/claim actions. LIS Events 1.11.1 hooks it for "Upcoming at <business>" (next 5 events at that venue).
+
 ## [0.56.0] — 2026-11-16 — GA4 save/share events
 
 - `assets/js/listing-actions.js`: `save_listing` / `unsave_listing` (listing_id, listing_title) after a successful bookmark toggle, `share` (method native/copy, content_type listing, item_id). Uses LIS Events 1.10.0's `window.lisTrack` when loaded, else `gtag`; nothing without a GA4 tag.
