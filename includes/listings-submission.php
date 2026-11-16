@@ -516,6 +516,12 @@ function lis_directory_render_plan_step( $cat_terms, $selected = '', $selected_b
 					var mine = g.getAttribute( 'data-start-tier' ) === plan;
 					g.hidden = ! mine;
 					g.querySelectorAll( 'input' ).forEach( function ( i ) { i.disabled = ! mine; } );
+					// The groups share one radio name, so make sure the shown one
+					// has a pick (its own "Annually" by default).
+					if ( mine && ! g.querySelector( 'input:checked' ) ) {
+						var first = g.querySelector( 'input[value="year"]' );
+						if ( first ) { first.checked = true; }
+					}
 				} );
 				if ( showcase ) {
 					var on = 'showcase' === ( ( form.querySelector( 'input[name="lis_listing_plan"]:checked' ) || {} ).value || '' );

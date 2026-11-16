@@ -1,3 +1,7 @@
+## [0.53.1] — 2026-11-16 — Plan step: Standard's "Annually" shows selected
+
+- Seen live right after 0.53.0: Standard and Featured each render an Annually / Start monthly pair, and both pairs share the `lis_listing_start` radio name. So Featured's pre-checked "Annually" unchecked Standard's on load, and the visible Standard pair showed nothing selected. The server already treated "nothing posted" as annual, so no wrong charge was possible. Now the visible pair always has a pick, defaulting to its own Annually.
+
 ## [0.53.0] — 2026-11-16 — Free job board with "Looking for work" posts; 3-month monthly start for Standard/Featured
 
 **Jobs (client request: free board for local churches and neighbors)**
