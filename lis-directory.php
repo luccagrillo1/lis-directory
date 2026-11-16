@@ -22,6 +22,7 @@ define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
 
+require_once LIS_DIRECTORY_PATH . 'includes/account-security.php';
 require_once LIS_DIRECTORY_PATH . 'includes/cpt.php';
 require_once LIS_DIRECTORY_PATH . 'includes/enforcement.php';
 require_once LIS_DIRECTORY_PATH . 'includes/meta.php';
