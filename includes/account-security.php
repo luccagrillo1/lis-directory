@@ -16,10 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( defined( 'LIS_ACCOUNT_SECURITY_VERSION' ) ) {
-	return;
-}
-define( 'LIS_ACCOUNT_SECURITY_VERSION', '1.0.0' );
+// Everything below sits inside this if-block on purpose. Top-level functions
+// in a PHP file are declared when the file is compiled, before any early
+// `return` runs, so a plain "if defined, return" guard still fatals with
+// "Cannot redeclare" when the second plugin loads its copy. Functions inside
+// a block are only declared when the block executes.
+if ( ! defined( 'LIS_ACCOUNT_SECURITY_VERSION' ) ) :
+define( 'LIS_ACCOUNT_SECURITY_VERSION', '1.0.1' );
 
 /* -------------------------------------------------------------------------
  * 1. No plain-text passwords in the WPUM welcome email.
@@ -249,3 +252,5 @@ function lis_account_render_confirm_toast() {
 	</div>
 	<?php
 }
+
+endif; // LIS_ACCOUNT_SECURITY_VERSION
