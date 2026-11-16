@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // "Cannot redeclare" when the second plugin loads its copy. Functions inside
 // a block are only declared when the block executes.
 if ( ! defined( 'LIS_ACCOUNT_SECURITY_VERSION' ) ) :
-define( 'LIS_ACCOUNT_SECURITY_VERSION', '1.1.0' );
+define( 'LIS_ACCOUNT_SECURITY_VERSION', '1.2.0' );
 
 /* -------------------------------------------------------------------------
  * 1. No plain-text passwords in the WPUM welcome email.
@@ -94,6 +94,7 @@ function lis_account_empty_email_tag() {
  * ---------------------------------------------------------------------- */
 
 add_action( 'user_register', 'lis_account_flag_new_user_unconfirmed', 20 );
+add_action( 'profile_update', 'lis_account_reconfirm_changed_email', 20, 2 );
 add_action( 'init', 'lis_account_handle_confirm_link' );
 add_action( 'admin_post_lis_account_resend_confirmation', 'lis_account_handle_resend' );
 add_action( 'wp_footer', 'lis_account_render_confirm_toast' );
@@ -111,6 +112,38 @@ function lis_account_email_confirmed( $user_id = 0 ) {
 	}
 	$confirmed = ! get_user_meta( $user_id, '_lis_email_unconfirmed', true );
 	return (bool) apply_filters( 'lis_account_email_confirmed', $confirmed, $user_id );
+}
+
+/**
+ * A changed email address has to be confirmed again (1.2.0). Runs on every
+ * profile save (WP User Manager's account form, wp-admin, REST): when the
+ * address differs from the old one, the account is flagged unconfirmed and a
+ * link goes to the NEW address. Skipped for editors/admins, for an admin
+ * editing someone else's profile, and for WordPress's own "confirm your new
+ * email" link (that click already proves the address).
+ */
+function lis_account_reconfirm_changed_email( $user_id, $old_user_data ) {
+	$user = get_userdata( $user_id );
+	if ( ! $user || ! is_object( $old_user_data ) || ! isset( $old_user_data->user_email ) ) {
+		return;
+	}
+	if ( 0 === strcasecmp( (string) $old_user_data->user_email, (string) $user->user_email ) ) {
+		return;
+	}
+	if ( user_can( $user_id, 'edit_others_posts' ) ) {
+		return;
+	}
+	if ( get_current_user_id() && get_current_user_id() !== (int) $user_id && current_user_can( 'edit_users' ) ) {
+		return;
+	}
+	if ( isset( $_GET['newuseremail'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return;
+	}
+	if ( ! apply_filters( 'lis_account_require_email_confirmation', true, $user_id ) ) {
+		return;
+	}
+	update_user_meta( $user_id, '_lis_email_unconfirmed', '1' );
+	lis_account_send_confirmation( $user_id );
 }
 
 function lis_account_flag_new_user_unconfirmed( $user_id ) {
