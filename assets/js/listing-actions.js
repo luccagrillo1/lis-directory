@@ -36,6 +36,12 @@
 
 			bookmarkBtn.addEventListener('click', function () {
 				if (!LIS_LISTING_ACTIONS.isLoggedIn) {
+					// Guests: open the site's sign-in card when it's on the page
+					// (site snippet, exposes window.lisOpenLoginCard); else go to login.
+					if (typeof window.lisOpenLoginCard === 'function') {
+						window.lisOpenLoginCard(window.location.href);
+						return;
+					}
 					window.location.href = LIS_LISTING_ACTIONS.loginUrl;
 					return;
 				}
