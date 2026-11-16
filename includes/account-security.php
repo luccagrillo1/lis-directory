@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // "Cannot redeclare" when the second plugin loads its copy. Functions inside
 // a block are only declared when the block executes.
 if ( ! defined( 'LIS_ACCOUNT_SECURITY_VERSION' ) ) :
-define( 'LIS_ACCOUNT_SECURITY_VERSION', '1.0.1' );
+define( 'LIS_ACCOUNT_SECURITY_VERSION', '1.1.0' );
 
 /* -------------------------------------------------------------------------
  * 1. No plain-text passwords in the WPUM welcome email.
@@ -174,8 +174,13 @@ function lis_account_handle_confirm_link() {
 		$ok = true;
 	}
 
+	// The toast is keyed by a one-time token, not by the URL alone: a bare
+	// ?lis_email_confirmed=1 (shared, bookmarked, reloaded) shows nothing.
+	$token = strtolower( wp_generate_password( 20, false ) );
+	set_transient( 'lis_ec_' . $token, $ok ? 'ok' : 'bad', 10 * MINUTE_IN_SECONDS );
+
 	$dest = apply_filters( 'lis_account_email_confirmed_redirect', home_url( '/' ), $user_id, $ok );
-	wp_safe_redirect( add_query_arg( 'lis_email_confirmed', $ok ? '1' : '0', $dest ) );
+	wp_safe_redirect( add_query_arg( 'lis_email_confirmed', $token, $dest ) );
 	exit;
 }
 
@@ -239,17 +244,42 @@ function lis_account_confirm_notice_html( $what = 'content' ) {
 }
 
 function lis_account_render_confirm_toast() {
-	if ( ! isset( $_GET['lis_email_confirmed'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( empty( $_GET['lis_email_confirmed'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		return;
 	}
-	$ok  = '1' === $_GET['lis_email_confirmed']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$token = sanitize_key( wp_unslash( $_GET['lis_email_confirmed'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$state = ( strlen( $token ) >= 16 ) ? get_transient( 'lis_ec_' . $token ) : false;
+	if ( false === $state ) {
+		return; // Not issued by a real confirmation click, already shown, or expired.
+	}
+	delete_transient( 'lis_ec_' . $token ); // One showing only; a reload shows nothing.
+
+	$ok  = ( 'ok' === $state );
 	$msg = $ok
 		? 'Thanks — your email is confirmed. You can now submit events, listings and jobs.'
 		: 'That confirmation link is invalid or out of date. Sign in and use "Resend confirmation email" to get a new one.';
 	?>
-	<div class="lis-account-confirm-toast" role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;max-width:calc(100vw - 32px);background:<?php echo $ok ? '#2c5240' : '#8a3a2a'; ?>;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:15px;">
-		<?php echo esc_html( $msg ); ?>
+	<div class="lis-account-confirm-toast" id="lis-account-confirm-toast" role="status" aria-live="polite" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;max-width:calc(100vw - 32px);display:flex;align-items:flex-start;gap:12px;background:<?php echo $ok ? '#2c5240' : '#8a3a2a'; ?>;color:#fff;padding:12px 12px 12px 18px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:15px;line-height:1.4;transition:opacity .25s;">
+		<span><?php echo esc_html( $msg ); ?></span>
+		<button type="button" aria-label="Dismiss" style="flex:none;background:transparent;border:0;color:#fff;font-size:20px;line-height:1;padding:0 4px;cursor:pointer;opacity:.85;">&times;</button>
 	</div>
+	<script>
+	(function () {
+		var t = document.getElementById('lis-account-confirm-toast');
+		if (!t) return;
+		try {
+			var u = new URL(window.location.href);
+			u.searchParams.delete('lis_email_confirmed');
+			window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
+		} catch (e) {}
+		var timer;
+		function close() { clearTimeout(timer); t.style.opacity = '0'; setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 260); }
+		t.querySelector('button').addEventListener('click', close);
+		timer = setTimeout(close, <?php echo $ok ? 5000 : 9000; ?>);
+		t.addEventListener('mouseenter', function () { clearTimeout(timer); });
+		t.addEventListener('mouseleave', function () { timer = setTimeout(close, 2500); });
+	})();
+	</script>
 	<?php
 }
 
