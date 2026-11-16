@@ -22,6 +22,28 @@ add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
 add_action( 'admin_post_lis_directory_toggle_sold', 'lis_directory_handle_toggle_sold' );
 add_shortcode( 'lis_saved_listings', 'lis_directory_render_saved_listings_shortcode' );
 add_shortcode( 'lis_account_overview', 'lis_directory_render_account_overview_shortcode' );
+add_filter( 'wpum_get_account_tab_url', 'lis_directory_wpum_account_tab_url', 10, 2 );
+
+/**
+ * WP User Manager's account tabs (Settings, Password) link to /account/<tab>,
+ * which 404s here and WordPress then "guesses" /account/password-reset/. Point
+ * them at the Overview page with ?lis_view= instead (0.55.0). Logout lands on
+ * the homepage.
+ */
+function lis_directory_wpum_account_tab_url( $url, $step_key ) {
+	$account = get_page_by_path( 'account' );
+	$base    = ( $account && 'publish' === $account->post_status ) ? get_permalink( $account ) : home_url( '/account/' );
+	if ( 'settings' === $step_key ) {
+		return add_query_arg( 'lis_view', 'profile', $base );
+	}
+	if ( 'password' === $step_key ) {
+		return add_query_arg( 'lis_view', 'password', $base );
+	}
+	if ( 'logout' === $step_key ) {
+		return wp_logout_url( home_url( '/' ) );
+	}
+	return $url;
+}
 add_action( 'admin_post_lis_directory_unsave_listing', 'lis_directory_handle_unsave_listing' );
 
 /**
@@ -628,7 +650,15 @@ function lis_directory_render_account_overview_shortcode() {
 	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
 
 	$wpum_tab     = (string) get_query_var( 'tab' );
-	$want_profile = isset( $_GET['lis_view'] ) && 'profile' === sanitize_key( wp_unslash( $_GET['lis_view'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$lis_view     = isset( $_GET['lis_view'] ) ? sanitize_key( wp_unslash( $_GET['lis_view'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$want_profile = in_array( $lis_view, array( 'profile', 'password' ), true );
+	if ( 'password' === $lis_view && '' === $wpum_tab ) {
+		// WPUM's /account/<tab>/ rewrite rules don't exist on this site (and
+		// would shadow the real /account/listings/, /events/, /saved/,
+		// /settings/ pages if flushed in), so its tabs are reached through
+		// ?lis_view= instead. See lis_directory_wpum_account_tab_url().
+		set_query_var( 'tab', 'password' );
+	}
 	if ( ( '' !== $wpum_tab || $want_profile ) && shortcode_exists( 'wpum_account' ) ) {
 		$back = remove_query_arg( 'lis_view' );
 		return '<p class="lis-account-overview-back"><a href="' . esc_url( $want_profile ? $back : get_permalink() ) . '">&larr; Back to Overview</a></p>' . do_shortcode( '[wpum_account]' );
