@@ -2,6 +2,7 @@
 
 - House slot now links to the About page: it looked for `about-us`, but the site's page is `/about/` (tries `about`, then `about-us`).
 - Stored-URL fallback only accepts post types that render (`page`, `post`, `lis_listing`, `lis_event`, `product`; filter `lis_directory_showcase_linkable_types`). Talus Rock Retreat's `/talus-rock-retreat-3/` is an old Directorist single that Snippet #49 redirects home, so the logo is unlinked until a listing is linked to the vendor.
+- Slug-match step: `get_page_by_path( $slug, OBJECT, 'lis_listing' )` also searches attachments; for Talus it returned the logo's attachment page (whose URL bounced home). It now requires `post_type === 'lis_listing'`.
 
 ## [0.55.0] — 2026-11-16 — Account polish: toast, email re-confirm, working account tabs, password rules, after sign-up, settings, profiles
 

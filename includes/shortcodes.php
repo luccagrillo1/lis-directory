@@ -206,8 +206,10 @@ function lis_directory_vendor_listing_url( $vendor ) {
 			$parts = explode( '/', $path );
 			$slug  = end( $parts );
 			if ( $slug ) {
+				// get_page_by_path() also searches attachments, so check the
+				// type: Talus's slug matched an image page (0.55.1).
 				$match = get_page_by_path( $slug, OBJECT, 'lis_listing' );
-				if ( $match && 'publish' === get_post_status( $match ) ) {
+				if ( $match && 'lis_listing' === $match->post_type && 'publish' === $match->post_status ) {
 					return (string) get_permalink( $match );
 				}
 			}
