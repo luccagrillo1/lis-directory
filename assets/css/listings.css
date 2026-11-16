@@ -2810,3 +2810,56 @@
 	margin: 0;
 }
 
+/* ---------- Account: Overview dashboard (0.54.0) ---------- */
+
+.lis-account-overview-title {
+	margin: 0 0 20px;
+}
+
+.lis-account-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 16px;
+	margin: 0 0 24px;
+}
+
+.lis-account-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 18px 20px;
+	border: 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8));
+	border-radius: var(--lis-dir-radius-container, var(--lis-radius-container, 12px));
+	background: var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF));
+	color: var(--lis-dir-color-text, var(--lis-ink-900, #1A1D19));
+	text-decoration: none;
+}
+
+a.lis-account-stat:hover,
+a.lis-account-stat:focus-visible {
+	border-color: var(--lis-dir-color-accent, var(--lis-pine-700, #2C5240));
+}
+
+.lis-account-stat-num {
+	font-size: 2rem;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.lis-account-stat-label {
+	color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+	font-size: 0.95rem;
+}
+
+.lis-account-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 0 0 20px;
+}
+
+.lis-account-overview-profile,
+.lis-account-overview-back {
+	margin: 0 0 16px;
+}
+

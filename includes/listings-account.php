@@ -21,6 +21,7 @@ add_shortcode( 'lis_listing_dashboard', 'lis_directory_render_dashboard_shortcod
 add_shortcode( 'lis_listing_grid', 'lis_directory_render_grid_shortcode' );
 add_action( 'admin_post_lis_directory_toggle_sold', 'lis_directory_handle_toggle_sold' );
 add_shortcode( 'lis_saved_listings', 'lis_directory_render_saved_listings_shortcode' );
+add_shortcode( 'lis_account_overview', 'lis_directory_render_account_overview_shortcode' );
 add_action( 'admin_post_lis_directory_unsave_listing', 'lis_directory_handle_unsave_listing' );
 
 /**
@@ -600,3 +601,120 @@ function lis_directory_handle_unsave_listing() {
 	wp_safe_redirect( add_query_arg( 'lis_unsaved', '1', $back ) );
 	exit;
 }
+
+/**
+ * URL of an account sub-page (/account/<slug>/) if that page is published,
+ * else ''. Filter: lis_directory_account_page_url.
+ */
+function lis_directory_account_page_url( $slug ) {
+	$page = get_page_by_path( 'account/' . $slug );
+	$url  = ( $page && 'publish' === $page->post_status ) ? get_permalink( $page ) : '';
+	return (string) apply_filters( 'lis_directory_account_page_url', $url, $slug );
+}
+
+/**
+ * [lis_account_overview] — the account Overview tab (0.54.0). Replaces
+ * [wpum_account] on the Overview page, which rendered WP User Manager's
+ * profile Settings form there.
+ *
+ * Shows counts of the user's events, listings and saved listings (each
+ * linking to its tab when that page exists) plus "Submit an event" and
+ * "Add a listing" buttons. WP User Manager's own screens still work from the
+ * same page: when WPUM's `tab` query var is set (/account/password/,
+ * /account/settings/ via WPUM routing, …) or ?lis_view=profile is present,
+ * this renders [wpum_account] instead, so profile and password editing stay
+ * reachable from the "Edit profile & password" link.
+ */
+function lis_directory_render_account_overview_shortcode() {
+	wp_enqueue_style( 'lis-directory-listings', LIS_DIRECTORY_URL . 'assets/css/listings.css', array(), LIS_DIRECTORY_VERSION );
+
+	$wpum_tab     = (string) get_query_var( 'tab' );
+	$want_profile = isset( $_GET['lis_view'] ) && 'profile' === sanitize_key( wp_unslash( $_GET['lis_view'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( ( '' !== $wpum_tab || $want_profile ) && shortcode_exists( 'wpum_account' ) ) {
+		$back = remove_query_arg( 'lis_view' );
+		return '<p class="lis-account-overview-back"><a href="' . esc_url( $want_profile ? $back : get_permalink() ) . '">&larr; Back to Overview</a></p>' . do_shortcode( '[wpum_account]' );
+	}
+
+	if ( ! is_user_logged_in() ) {
+		ob_start();
+		?>
+		<p class="lis-listing-dashboard-login-required">
+			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">Log in</a> to see your account.
+		</p>
+		<?php
+		return ob_get_clean();
+	}
+
+	$user    = wp_get_current_user();
+	$user_id = (int) $user->ID;
+
+	$listing_count = count( get_posts( array(
+		'post_type'      => 'lis_listing',
+		'post_status'    => array( 'publish', 'pending', 'draft' ),
+		'author'         => $user_id,
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'no_found_rows'  => true,
+	) ) );
+
+	$bookmarks   = lis_directory_get_user_bookmarks( $user_id );
+	$saved_count = $bookmarks ? count( get_posts( array(
+		'post_type'      => 'lis_listing',
+		'post_status'    => 'publish',
+		'post__in'       => $bookmarks,
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'no_found_rows'  => true,
+	) ) ) : 0;
+
+	$events_active = function_exists( 'lis_events_get_user_events' );
+	$event_count   = $events_active ? count( lis_events_get_user_events( $user_id ) ) : 0;
+	$submit_event  = function_exists( 'lis_events_find_submit_page_url' ) ? lis_events_find_submit_page_url() : '';
+	$add_listing   = lis_directory_add_listing_url();
+	$profile_url   = add_query_arg( 'lis_view', 'profile', get_permalink() );
+
+	$stats = array();
+	if ( $events_active ) {
+		$stats[] = array( 'My events', $event_count, lis_directory_account_page_url( 'events' ) );
+	}
+	$stats[] = array( 'My listings', $listing_count, lis_directory_account_page_url( 'listings' ) );
+	$stats[] = array( 'Saved', $saved_count, lis_directory_account_page_url( 'saved' ) );
+
+	$name = trim( $user->first_name ) !== '' ? $user->first_name : $user->display_name;
+
+	ob_start();
+	?>
+	<div class="lis-account-overview">
+		<h1 class="lis-account-overview-title">Hi, <?php echo esc_html( $name ); ?></h1>
+
+		<?php if ( function_exists( 'lis_account_email_confirmed' ) && ! lis_account_email_confirmed( $user_id ) ) : ?>
+			<?php echo lis_account_confirm_notice_html( 'events, listings or job posts' ); // phpcs:ignore -- escaped inside. ?>
+		<?php endif; ?>
+
+		<div class="lis-account-stats">
+			<?php foreach ( $stats as $stat ) : ?>
+				<?php $tag = $stat[2] ? 'a' : 'div'; ?>
+				<<?php echo esc_html( $tag ); ?> class="lis-account-stat"<?php if ( $stat[2] ) : ?> href="<?php echo esc_url( $stat[2] ); ?>"<?php endif; ?>>
+					<span class="lis-account-stat-num"><?php echo esc_html( number_format_i18n( $stat[1] ) ); ?></span>
+					<span class="lis-account-stat-label"><?php echo esc_html( $stat[0] ); ?></span>
+				</<?php echo esc_html( $tag ); ?>>
+			<?php endforeach; ?>
+		</div>
+
+		<div class="lis-account-actions">
+			<?php if ( $submit_event ) : ?>
+				<a class="lis-listing-thankyou-btn" href="<?php echo esc_url( $submit_event ); ?>">Submit an event</a>
+			<?php endif; ?>
+			<?php if ( $add_listing ) : ?>
+				<a class="lis-listing-thankyou-btn" href="<?php echo esc_url( $add_listing ); ?>">Add a listing</a>
+			<?php endif; ?>
+		</div>
+
+		<?php if ( shortcode_exists( 'wpum_account' ) ) : ?>
+			<p class="lis-account-overview-profile"><a href="<?php echo esc_url( $profile_url ); ?>">Edit profile &amp; password</a></p>
+		<?php endif; ?>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
