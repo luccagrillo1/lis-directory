@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.54.0
+Stable tag: 0.54.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,11 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.54.1 =
+* Signed-in users get an account menu on the header avatar (Account, Saved, My Events, Log out), and the same links in the mobile hamburger menu.
+* Log out link on the account Overview, next to "Edit profile & password".
+* Fix: the shared account-security file no longer fatals when LIS Events is also active.
 
 = 0.54.0 =
 * Security: new accounts must confirm their email (a one-time link) before submitting a listing or posting a job. Accounts created before this update are unaffected.

@@ -1,3 +1,15 @@
+## [0.54.1] — 2026-11-16 — Log out everywhere: header account menu, mobile menu, Overview
+
+**Why:** the only Log out link on the site was in WP User Manager's sidebar on /account/, which went away when `[lis_account_overview]` replaced `[wpum_account]`.
+
+- **Header account menu** (new `includes/account-menu.php`, signed-in users only). The header avatar is the Astra theme's Header Builder "Account" element; free Astra can only make it a link (to /profile/), so the plugin enhances it instead of the theme being edited: clicking the avatar (desktop and mobile header) opens a dropdown with the user's name, Account, Saved, My Events and Log out. Closes on outside click / Escape; `aria-haspopup` / `aria-expanded` set. Without JavaScript the avatar stays Astra's link.
+- **Mobile hamburger menu:** the same links are appended to Astra's mobile menu (theme location `mobile_menu`, `#ast-hf-mobile-menu`) via `wp_nav_menu_items`. Other menus are untouched.
+- Saved and My Events only appear when their `/account/<slug>/` page is published (`lis_directory_account_page_url()`).
+- **Overview:** Log out link next to "Edit profile & password" in `[lis_account_overview]`.
+- Every Log out link is `wp_logout_url( home_url( '/' ) )`: nonce included, lands on the homepage.
+- Filters: `lis_directory_account_menu_items`, `lis_directory_account_menu_enabled`.
+- **Fix (also in the 0.54.0 GitHub release zip):** `includes/account-security.php` wraps its body in an if-block (`LIS_ACCOUNT_SECURITY_VERSION` 1.0.1). The early-return guard let PHP declare the functions anyway, so the second plugin's copy fataled with "Cannot redeclare".
+
 ## [0.54.0] — 2026-11-16 — UX audit: email confirmation, no passwords in email, Saved + Overview tabs, Showcase links
 
 **Security**
