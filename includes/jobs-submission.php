@@ -172,6 +172,12 @@ function lis_directory_render_job_form_shortcode() {
 	}
 	$kind = isset( $prefill['lis_job_kind'] ) ? ( 'seeking' === $prefill['lis_job_kind'] ? 'seeking' : 'hiring' )
 		: ( $job ? lis_directory_get_job_kind( $job->ID ) : ( ( isset( $_GET['kind'] ) && 'seeking' === $_GET['kind'] ) ? 'seeking' : 'hiring' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	// "Looking for work" turned off (Job Settings): openings only, unless this
+	// is an existing looking-for-work post being edited.
+	$show_kinds = lis_directory_jobs_allow_seeking() || ( $job && lis_directory_job_is_seeking( $job->ID ) );
+	if ( ! $show_kinds ) {
+		$kind = 'hiring';
+	}
 	// Label that reads differently for an opening vs. someone looking for work;
 	// the inline script below swaps them when the post type changes.
 	$lbl = function ( $hiring, $seeking ) use ( $kind ) {
@@ -184,12 +190,16 @@ function lis_directory_render_job_form_shortcode() {
 		<input type="hidden" name="lis_job_redirect_to" value="<?php echo esc_url( $current_url ); ?>" />
 		<?php wp_nonce_field( 'lis_job_save_' . $job_id, 'lis_job_save_nonce' ); ?>
 
+		<?php if ( $show_kinds ) : ?>
 		<fieldset class="lis-job-kind">
 			<legend>What are you posting?</legend>
 			<?php foreach ( lis_directory_get_job_kinds() as $value => $label ) : ?>
 				<label class="lis-job-kind-option"><input type="radio" name="lis_job_kind" value="<?php echo esc_attr( $value ); ?>" <?php checked( $kind, $value ); ?> /> <?php echo esc_html( 'hiring' === $value ? 'I\'m hiring' : 'I\'m looking for work' ); ?></label>
 			<?php endforeach; ?>
 		</fieldset>
+		<?php else : ?>
+		<input type="hidden" name="lis_job_kind" value="hiring" />
+		<?php endif; ?>
 
 		<fieldset>
 			<legend><?php echo $lbl( 'The job', 'The work you want' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></legend>
@@ -279,7 +289,7 @@ function lis_directory_render_job_form_shortcode() {
 		var form = document.currentScript.previousElementSibling;
 		if ( ! form ) { return; }
 		function sync() {
-			var k = ( form.querySelector( 'input[name="lis_job_kind"]:checked' ) || {} ).value || 'hiring';
+			var k = ( form.querySelector( 'input[name="lis_job_kind"]:checked' ) || form.querySelector( 'input[name="lis_job_kind"][type="hidden"]' ) || {} ).value || 'hiring';
 			form.querySelectorAll( '[data-kind]' ).forEach( function ( el ) { el.hidden = el.getAttribute( 'data-kind' ) !== k; } );
 		}
 		form.querySelectorAll( 'input[name="lis_job_kind"]' ).forEach( function ( r ) { r.addEventListener( 'change', sync ); } );

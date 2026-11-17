@@ -28,7 +28,7 @@ $title   = is_tax( 'lis_job_category' ) ? single_term_title( '', false ) : 'Loca
 	</div>
 
 	<?php if ( ! is_tax( 'lis_job_category' ) ) : ?>
-		<p class="lis-job-archive-intro">A free local job board for Sandpoint and the surrounding area: openings from local employers, and neighbors looking for work. Posting is free.</p>
+		<p class="lis-job-archive-intro">A free local job board for Sandpoint and the surrounding area: <?php echo lis_directory_jobs_allow_seeking() ? 'openings from local employers, and neighbors looking for work' : 'openings from local employers'; ?>. Posting is free.</p>
 	<?php endif; ?>
 
 	<?php echo lis_directory_render_job_filter_form( get_post_type_archive_link( 'lis_job' ), $filters ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

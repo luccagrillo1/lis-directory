@@ -119,6 +119,11 @@ function lis_directory_get_job_kind( $job_id ) {
 	return 'seeking' === get_post_meta( $job_id, '_lis_job_kind', true ) ? 'seeking' : 'hiring';
 }
 
+/** Whether people can post that they're looking for work (Job Settings, default on). */
+function lis_directory_jobs_allow_seeking() {
+	return '0' !== (string) get_option( 'lis_directory_jobs_allow_seeking', '1' );
+}
+
 function lis_directory_job_is_seeking( $job_id ) {
 	return 'seeking' === lis_directory_get_job_kind( $job_id );
 }
@@ -300,7 +305,11 @@ function lis_directory_save_job_fields( $job_id, array $src ) {
 		return isset( $src[ $key ] ) ? sanitize_text_field( $src[ $key ] ) : '';
 	};
 
-	update_post_meta( $job_id, '_lis_job_kind', ( isset( $src['lis_job_kind'] ) && 'seeking' === $src['lis_job_kind'] ) ? 'seeking' : 'hiring' );
+	// With "looking for work" posts turned off, only a post that's already one
+	// can stay one (editors can still set it in wp-admin).
+	$seeking = isset( $src['lis_job_kind'] ) && 'seeking' === $src['lis_job_kind']
+		&& ( lis_directory_jobs_allow_seeking() || lis_directory_job_is_seeking( $job_id ) || current_user_can( 'edit_others_posts' ) );
+	update_post_meta( $job_id, '_lis_job_kind', $seeking ? 'seeking' : 'hiring' );
 	update_post_meta( $job_id, '_lis_job_company', $text( 'lis_job_company' ) );
 	update_post_meta( $job_id, '_lis_job_company_website', isset( $src['lis_job_company_website'] ) ? esc_url_raw( $src['lis_job_company_website'] ) : '' );
 	update_post_meta( $job_id, '_lis_job_location', $text( 'lis_job_location' ) );

@@ -31,6 +31,17 @@ function lis_directory_register_job_settings() {
 			'show_in_rest'      => true,
 		) );
 	}
+	register_setting( 'lis_job_settings_group', 'lis_directory_jobs_allow_seeking', array(
+		'type'              => 'string',
+		'sanitize_callback' => 'lis_directory_sanitize_jobs_allow_seeking',
+		'default'           => '1',
+		'show_in_rest'      => true,
+	) );
+}
+
+/** Checkbox value: '1' on, '0' off (an unticked box sends nothing). */
+function lis_directory_sanitize_jobs_allow_seeking( $value ) {
+	return ! empty( $value ) && '0' !== (string) $value ? '1' : '0';
 }
 
 function lis_directory_init_job_woocommerce() {
@@ -253,6 +264,14 @@ function lis_directory_render_job_settings_page() {
 					<td>
 						<input type="number" min="0" id="lis_directory_job_duration_days" name="lis_directory_job_duration_days" value="<?php echo esc_attr( lis_directory_get_job_duration_days() ); ?>" class="small-text" />
 						<p class="description">How long a posting stays live from payment/approval. 0 = never expires.</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="lis_directory_jobs_allow_seeking">"Looking for work" posts</label></th>
+					<td>
+						<input type="hidden" name="lis_directory_jobs_allow_seeking" value="0" />
+						<label><input type="checkbox" id="lis_directory_jobs_allow_seeking" name="lis_directory_jobs_allow_seeking" value="1" <?php checked( lis_directory_jobs_allow_seeking() ); ?> /> Let people post that they're looking for work</label>
+						<p class="description">Off: the form only takes job openings, and the board drops the "Looking for work? Post free" button and the hiring/looking filter. Posts already up stay up and can still be edited.</p>
 					</td>
 				</tr>
 				<tr>

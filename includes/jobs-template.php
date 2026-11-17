@@ -148,11 +148,13 @@ function lis_directory_render_job_filter_form( $action_url, array $filters ) {
 	?>
 	<form class="lis-job-filters" method="get" action="<?php echo esc_url( $action_url ); ?>">
 		<input type="search" name="job_q" value="<?php echo esc_attr( $filters['q'] ); ?>" placeholder="Search jobs" aria-label="Search jobs" />
+		<?php if ( lis_directory_jobs_allow_seeking() ) : ?>
 		<select name="job_kind" aria-label="Post type">
 			<option value="">Jobs &amp; people looking</option>
 			<option value="hiring" <?php selected( $filters['kind'], 'hiring' ); ?>>Hiring</option>
 			<option value="seeking" <?php selected( $filters['kind'], 'seeking' ); ?>>Looking for work</option>
 		</select>
+		<?php endif; ?>
 		<select name="job_cat" aria-label="Category">
 			<option value="">All categories</option>
 			<?php foreach ( $cats as $term ) : ?>
@@ -224,8 +226,11 @@ function lis_directory_render_job_post_cta() {
 	if ( ! $url ) {
 		return '';
 	}
-	return '<span class="lis-job-cta"><a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '">Post a job</a> '
-		. '<a class="lis-job-btn" href="' . esc_url( add_query_arg( 'kind', 'seeking', $url ) ) . '">Looking for work? Post free</a></span>';
+	$out = '<span class="lis-job-cta"><a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '">Post a job</a>';
+	if ( lis_directory_jobs_allow_seeking() ) {
+		$out .= ' <a class="lis-job-btn" href="' . esc_url( add_query_arg( 'kind', 'seeking', $url ) ) . '">Looking for work? Post free</a>';
+	}
+	return $out . '</span>';
 }
 
 /**
