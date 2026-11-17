@@ -1,3 +1,9 @@
+## [0.58.0] — 2026-11-16 — Turn off "looking for work" posts
+
+- Job Settings → **"Looking for work" posts** checkbox (`lis_directory_jobs_allow_seeking`, default on, REST-visible).
+- Off: `[lis_job_submit]` drops the "What are you posting?" radios (sends a hidden `hiring`), the board drops "Looking for work? Post free" and the hiring/looking filter, and the archive intro no longer mentions neighbors looking for work.
+- `lis_directory_save_job_fields` won't make a post a seeking one while it's off, unless it already is one or the user can `edit_others_posts`. Existing seeking posts stay listed and editable.
+
 ## [0.57.0] — 2026-11-16 — Listing sections hook
 
 - `templates/single-listing.php`: `do_action( 'lis_directory_single_listing_sections', $post_id )` after FAQs, before the flag/claim actions. LIS Events 1.11.1 hooks it for "Upcoming at <business>" (next 5 events at that venue).

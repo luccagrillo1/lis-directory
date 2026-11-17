@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.57.0
+Stable tag: 0.58.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.58.0 =
+* Job Settings: "Looking for work" posts checkbox. Off = the post form only takes job openings, and the board hides the "Looking for work? Post free" button and the hiring/looking filter. Existing posts stay up.
 
 = 0.57.0 =
 * Listing pages: `lis_directory_single_listing_sections` action after FAQs (LIS Events 1.11.1 prints "Upcoming at <business>" there).
