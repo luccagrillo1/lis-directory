@@ -381,9 +381,10 @@ function lis_directory_render_job_form_shortcode() {
 			preview();
 		}
 		// Live preview: the card as it will sit on the work board.
-		var card = wrap.querySelector( '.lp-card' );
+		var card = null; // the preview sits after this script, so look it up once the page is parsed
 		function txt( sel, s ) { var el = card.querySelector( sel ); if ( el ) { el.textContent = s; el.hidden = ! s; } }
 		function preview() {
+			card = card || wrap.querySelector( '.lp-card' );
 			if ( ! card ) { return; }
 			var k = kind(), title = val( 'lis_job_title' ), name = val( 'lis_job_company' ), where = val( 'lis_job_location' ), when = val( 'lis_job_when' );
 			var min = val( 'lis_job_salary_min' ), max = val( 'lis_job_salary_max' ), per = form.querySelector( '[name="lis_job_salary_period"]' );
@@ -412,6 +413,7 @@ function lis_directory_render_job_form_shortcode() {
 		form.addEventListener( 'input', preview );
 		form.addEventListener( 'change', preview );
 		sync();
+		if ( document.readyState === 'loading' ) { document.addEventListener( 'DOMContentLoaded', preview ); }
 	}() );
 	</script>
 	</div>

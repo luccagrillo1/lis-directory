@@ -1,3 +1,7 @@
+## [0.63.1] — 2026-11-21 — Post form fixes (staging only)
+
+- Kind tiles stack their title and description; live preview fills in on load (it sits after the script).
+
 ## [0.63.0] — 2026-11-21 — Post form matches the work board (staging only)
 
 - New assets/css/work-post.css: headline that changes with what you are posting, three colored tiles for gig / job / profile, numbered section cards with a colored top edge, rounded fields, town chips, clay submit button.

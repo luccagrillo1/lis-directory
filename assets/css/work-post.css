@@ -37,18 +37,18 @@ body.lis-post-page .entry-header{display:none}
 .lp .lis-job-form .lis-job-kind{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:0 0 22px;padding:0;border:0;background:none;border-radius:0}
 .lp .lis-job-kind legend{float:none;width:auto;margin:0 0 12px;padding:0;font:700 13px/1 inherit;letter-spacing:.12em;text-transform:uppercase;color:var(--lp-soft)}
 .lp .lis-job-kind legend::before{content:none}
-.lp .lp-tile{position:relative;display:grid;gap:5px;align-content:start;margin:0;padding:18px 18px 16px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1px var(--lp-line);cursor:pointer;transition:box-shadow .2s,transform .2s var(--lp-ease),background .2s}
-.lp .lp-tile:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px var(--lp-pine-200),0 10px 24px -18px rgba(22,40,31,.5)}
-.lp .lp-tile input{position:absolute;opacity:0;pointer-events:none}
-.lp .lp-tile b{font:700 19px/1.15 var(--lp-display);color:var(--lp-ink)}
-.lp .lp-tile small{font-size:14px;line-height:1.4;color:var(--lp-soft);font-weight:400}
-.lp .lp-tile::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;border-radius:14px 14px 0 0;background:var(--t);opacity:0;transition:opacity .2s}
-.lp .lp-tile--gig{--t:var(--lp-clay-400);--tb:var(--lp-clay-100)}
-.lp .lp-tile--hiring{--t:var(--lp-pine-600);--tb:var(--lp-pine-100)}
-.lp .lp-tile--seeking{--t:var(--lp-info);--tb:var(--lp-info-100)}
-.lp .lp-tile:has(input:checked){background:linear-gradient(var(--tb),var(--tb)) 0 0/100% 100% no-repeat,#fff;background:color-mix(in srgb,var(--tb) 55%,#fff);box-shadow:inset 0 0 0 2px var(--t)}
-.lp .lp-tile:has(input:checked)::before{opacity:1}
-.lp .lp-tile:has(input:focus-visible){outline:2px solid var(--lp-pine-900);outline-offset:3px}
+.lp .lis-job-form .lp-tile{position:relative;display:grid;gap:5px;align-content:start;margin:0;padding:18px 18px 16px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1px var(--lp-line);cursor:pointer;transition:box-shadow .2s,transform .2s var(--lp-ease),background .2s}
+.lp .lis-job-form .lp-tile:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px var(--lp-pine-200),0 10px 24px -18px rgba(22,40,31,.5)}
+.lp .lis-job-form .lp-tile input{position:absolute;opacity:0;pointer-events:none}
+.lp .lis-job-form .lp-tile b{font:700 19px/1.15 var(--lp-display);color:var(--lp-ink)}
+.lp .lis-job-form .lp-tile small{font-size:14px;line-height:1.4;color:var(--lp-soft);font-weight:400}
+.lp .lis-job-form .lp-tile::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;border-radius:14px 14px 0 0;background:var(--t);opacity:0;transition:opacity .2s}
+.lp .lis-job-form .lp-tile--gig{--t:var(--lp-clay-400);--tb:var(--lp-clay-100)}
+.lp .lis-job-form .lp-tile--hiring{--t:var(--lp-pine-600);--tb:var(--lp-pine-100)}
+.lp .lis-job-form .lp-tile--seeking{--t:var(--lp-info);--tb:var(--lp-info-100)}
+.lp .lis-job-form .lp-tile:has(input:checked){background:linear-gradient(var(--tb),var(--tb)) 0 0/100% 100% no-repeat,#fff;background:color-mix(in srgb,var(--tb) 55%,#fff);box-shadow:inset 0 0 0 2px var(--t)}
+.lp .lis-job-form .lp-tile:has(input:checked)::before{opacity:1}
+.lp .lis-job-form .lp-tile:has(input:focus-visible){outline:2px solid var(--lp-pine-900);outline-offset:3px}
 
 /* numbered section cards, like the board's columns */
 .lp .lis-job-form{counter-reset:lp}
