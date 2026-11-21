@@ -119,11 +119,11 @@
 	}
 
 	function press( group, attr, val ) {
-		$$( group + ' button' ).forEach( function ( b ) { b.setAttribute( 'aria-pressed', b.getAttribute( attr ) === val ? 'true' : 'false' ); } );
+		$$( group + ' button:not(.wh-dot)' ).forEach( function ( b ) { b.setAttribute( 'aria-pressed', b.getAttribute( attr ) === val ? 'true' : 'false' ); } );
 	}
 
 	root.addEventListener( 'click', function ( e ) {
-		var b = e.target.closest( '.wh-towns button' );
+		var b = e.target.closest( '.wh-towns button:not(.wh-dot)' );
 		if ( b ) { state.town = b.getAttribute( 'data-town' ); press( '.wh-towns', 'data-town', state.town ); apply(); return; }
 		b = e.target.closest( '.wh-types button' );
 		if ( b ) { state.type = b.getAttribute( 'data-type' ); press( '.wh-types', 'data-type', state.type ); apply(); return; }
@@ -218,7 +218,8 @@
 		d.type = 'button'; d.className = 'wh-dot'; d.textContent = n + 1;
 		d.setAttribute( 'aria-label', 'Tour step ' + ( n + 1 ) + ': ' + s.t );
 		d.setAttribute( 'data-step', n );
-		$( '[data-tour-step="' + s.k + '"]' ).appendChild( d );
+		var host = $( '[data-tour-step="' + s.k + '"]' );
+		if ( s.k === 'towns' ) { host.appendChild( d ); } else { host.insertBefore( d, host.firstChild ); } // first child keeps a column's last-child rounding intact
 	} );
 	showEntry();
 

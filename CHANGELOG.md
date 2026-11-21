@@ -1,3 +1,7 @@
+## [0.61.1] — 2026-11-21 — Work board fixes (staging only)
+
+- Tour step markers no longer pick up the town-chip style or get clipped on the column tops; clicking the towns marker no longer filters.
+
 ## [0.61.0] — 2026-11-21 — Work board: Jobs, Local Gigs, Available for Work (staging only)
 
 Boss's brief: three connected sections, one local workforce. Built from mockup round 2 (design 07, "The Tour"). Installed on staging for a demo; not released.

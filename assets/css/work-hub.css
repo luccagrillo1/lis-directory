@@ -48,8 +48,8 @@
 .wh-counts b{color:var(--wh-ink)}
 .wh-towns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .wh-tl{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--wh-soft);margin-right:6px}
-.wh .wh-towns button,.wh .wh-types button{all:unset;cursor:pointer;white-space:nowrap;flex:none;font-size:15px;font-weight:600;line-height:1;padding:10px 15px;border-radius:999px;color:var(--wh-pine-900);background:#fff;box-shadow:inset 0 0 0 1px var(--wh-line);transition:background .2s,color .2s,box-shadow .2s}
-.wh .wh-towns button:hover,.wh .wh-types button:hover{box-shadow:inset 0 0 0 1px var(--wh-pine-600)}
+.wh .wh-towns button:not(.wh-dot),.wh .wh-types button{all:unset;cursor:pointer;white-space:nowrap;flex:none;font-size:15px;font-weight:600;line-height:1;padding:10px 15px;border-radius:999px;color:var(--wh-pine-900);background:#fff;box-shadow:inset 0 0 0 1px var(--wh-line);transition:background .2s,color .2s,box-shadow .2s}
+.wh .wh-towns button:not(.wh-dot):hover,.wh .wh-types button:hover{box-shadow:inset 0 0 0 1px var(--wh-pine-600)}
 .wh .wh-towns button[aria-pressed="true"]{background:var(--wh-pine-900);color:#fff;box-shadow:none}
 
 /* columns */
@@ -163,4 +163,4 @@ html.wh-touring .wh-spot,html.wh-touring .wh-tip{display:block}
 }
 @media (max-width:760px){.wh{padding:32px 16px 56px}.wh-compose{grid-template-columns:1fr;padding:20px}.wh-prev{display:none}}
 @media (prefers-reduced-motion:reduce){.wh *,.wh-spot,.wh-tip{transition:none!important;animation:none!important}}
-.wh-col>:last-child{border-radius:0 0 15px 15px;overflow:hidden}
+.wh-col>:last-child:not(.wh-dot){border-radius:0 0 15px 15px;overflow:hidden}
