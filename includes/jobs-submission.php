@@ -170,19 +170,38 @@ function lis_directory_render_job_form_shortcode() {
 	} elseif ( ! $job ) {
 		echo '<p class="lis-job-price-note">Posting is <strong>free</strong>. Your post goes live as soon as you save it' . ( $days ? ' and stays up for ' . (int) $days . ' days (renew free anytime from My Job Postings)' : '' ) . '.</p>';
 	}
-	$kind = isset( $prefill['lis_job_kind'] ) ? ( 'seeking' === $prefill['lis_job_kind'] ? 'seeking' : 'hiring' )
-		: ( $job ? lis_directory_get_job_kind( $job->ID ) : ( ( isset( $_GET['kind'] ) && 'seeking' === $_GET['kind'] ) ? 'seeking' : 'hiring' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	// "Looking for work" turned off (Job Settings): openings only, unless this
-	// is an existing looking-for-work post being edited.
-	$show_kinds = lis_directory_jobs_allow_seeking() || ( $job && lis_directory_job_is_seeking( $job->ID ) );
-	if ( ! $show_kinds ) {
+	$valid_kinds = array( 'hiring', 'gig', 'seeking' );
+	$get_kind    = isset( $_GET['kind'] ) ? sanitize_key( wp_unslash( $_GET['kind'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$kind        = isset( $prefill['lis_job_kind'] ) && in_array( $prefill['lis_job_kind'], $valid_kinds, true ) ? $prefill['lis_job_kind']
+		: ( $job ? lis_directory_get_job_kind( $job->ID ) : ( in_array( $get_kind, $valid_kinds, true ) ? $get_kind : 'hiring' ) );
+	// "Looking for work" turned off (Job Settings): no seeking option, unless
+	// this is an existing looking-for-work post being edited.
+	$allow_seeking = lis_directory_jobs_allow_seeking() || ( $job && lis_directory_job_is_seeking( $job->ID ) );
+	if ( 'seeking' === $kind && ! $allow_seeking ) {
 		$kind = 'hiring';
 	}
-	// Label that reads differently for an opening vs. someone looking for work;
-	// the inline script below swaps them when the post type changes.
-	$lbl = function ( $hiring, $seeking ) use ( $kind ) {
-		return '<span data-kind="hiring"' . ( 'seeking' === $kind ? ' hidden' : '' ) . '>' . $hiring . '</span><span data-kind="seeking"' . ( 'seeking' === $kind ? '' : ' hidden' ) . '>' . $seeking . '</span>';
+	// New posts from the work board can arrive with a title and town filled in.
+	if ( ! $job && ! $prefill ) {
+		if ( '' === $title && isset( $_GET['title'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$title = sanitize_text_field( wp_unslash( $_GET['title'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		}
+		foreach ( array( 'location', 'when' ) as $k ) {
+			if ( isset( $_GET[ $k ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$prefill[ 'lis_job_' . $k ] = sanitize_text_field( wp_unslash( $_GET[ $k ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			}
+		}
+	}
+	// Labels that read differently per post type; the inline script below
+	// swaps them when the type changes. $gig falls back to the hiring text.
+	$lbl = function ( $hiring, $seeking, $gig = null ) use ( $kind ) {
+		$gig = null === $gig ? $hiring : $gig;
+		$out = '';
+		foreach ( array( 'hiring' => $hiring, 'gig' => $gig, 'seeking' => $seeking ) as $k => $text ) {
+			$out .= '<span data-kind="' . $k . '"' . ( $k === $kind ? '' : ' hidden' ) . '>' . $text . '</span>';
+		}
+		return $out;
 	};
+	$kind_labels = array( 'hiring' => 'I\'m hiring', 'gig' => 'I need a hand (a one-time gig)', 'seeking' => 'I\'m looking for work' );
 	?>
 	<form class="lis-job-form" method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="lis_directory_save_job" />
@@ -190,20 +209,17 @@ function lis_directory_render_job_form_shortcode() {
 		<input type="hidden" name="lis_job_redirect_to" value="<?php echo esc_url( $current_url ); ?>" />
 		<?php wp_nonce_field( 'lis_job_save_' . $job_id, 'lis_job_save_nonce' ); ?>
 
-		<?php if ( $show_kinds ) : ?>
 		<fieldset class="lis-job-kind">
 			<legend>What are you posting?</legend>
-			<?php foreach ( lis_directory_get_job_kinds() as $value => $label ) : ?>
-				<label class="lis-job-kind-option"><input type="radio" name="lis_job_kind" value="<?php echo esc_attr( $value ); ?>" <?php checked( $kind, $value ); ?> /> <?php echo esc_html( 'hiring' === $value ? 'I\'m hiring' : 'I\'m looking for work' ); ?></label>
+			<?php foreach ( $kind_labels as $value => $label ) : ?>
+				<?php if ( 'seeking' === $value && ! $allow_seeking ) { continue; } ?>
+				<label class="lis-job-kind-option"><input type="radio" name="lis_job_kind" value="<?php echo esc_attr( $value ); ?>" <?php checked( $kind, $value ); ?> /> <?php echo esc_html( $label ); ?></label>
 			<?php endforeach; ?>
 		</fieldset>
-		<?php else : ?>
-		<input type="hidden" name="lis_job_kind" value="hiring" />
-		<?php endif; ?>
 
 		<fieldset>
-			<legend><?php echo $lbl( 'The job', 'The work you want' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></legend>
-			<p><label for="lis_job_title"><?php echo $lbl( 'Job title *', 'What kind of work are you looking for? *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			<legend><?php echo $lbl( 'The job', 'The work you want', 'What you need done' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></legend>
+			<p><label for="lis_job_title"><?php echo $lbl( 'Job title *', 'What kind of work are you looking for? *', 'What do you need done? *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="text" id="lis_job_title" name="lis_job_title" value="<?php echo esc_attr( $title ); ?>" required /></p>
 
 			<p><label for="lis_job_category">Category *</label>
@@ -214,7 +230,7 @@ function lis_directory_render_job_form_shortcode() {
 				<?php endforeach; ?>
 			</select></p>
 
-			<div class="lis-job-form-row">
+			<div class="lis-job-form-row" data-kind-not="gig">
 				<p><label for="lis_job_employment_type">Type *</label>
 				<select id="lis_job_employment_type" name="lis_job_employment_type" required>
 					<?php foreach ( lis_directory_get_job_employment_types() as $value => $label ) : ?>
@@ -232,7 +248,10 @@ function lis_directory_render_job_form_shortcode() {
 			<p><label for="lis_job_location">Location</label>
 			<input type="text" id="lis_job_location" name="lis_job_location" value="<?php echo esc_attr( $meta( 'location' ) ); ?>" placeholder="e.g. Sandpoint, ID" /></p>
 
-			<p><label><?php echo $lbl( 'Pay <span class="lis-job-optional">(optional, but posts with pay get more applicants)</span>', 'Pay you\'re hoping for <span class="lis-job-optional">(optional)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label></p>
+			<p data-kind="gig"<?php echo 'gig' === $kind ? '' : ' hidden'; ?>><label for="lis_job_when">When</label>
+			<input type="text" id="lis_job_when" name="lis_job_when" value="<?php echo esc_attr( $meta( 'when' ) ); ?>" placeholder="e.g. This Saturday morning, or every snow day" /></p>
+
+			<p><label><?php echo $lbl( 'Pay <span class="lis-job-optional">(optional, but posts with pay get more applicants)</span>', 'Pay you\'re hoping for <span class="lis-job-optional">(optional)</span>', 'What you\'ll pay <span class="lis-job-optional">(pick &ldquo;for the job&rdquo; for a flat amount)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label></p>
 			<div class="lis-job-form-row lis-job-form-row--pay">
 				<input type="number" step="0.01" min="0" name="lis_job_salary_min" value="<?php echo esc_attr( $meta( 'salary_min' ) ); ?>" placeholder="Min $" aria-label="Minimum pay" />
 				<input type="number" step="0.01" min="0" name="lis_job_salary_max" value="<?php echo esc_attr( $meta( 'salary_max' ) ); ?>" placeholder="Max $" aria-label="Maximum pay" />
@@ -245,7 +264,7 @@ function lis_directory_render_job_form_shortcode() {
 			</div>
 
 			<div class="lis-job-form-editor">
-				<label for="lis_job_description"><?php echo $lbl( 'Description *', 'About you * <span class="lis-job-optional">(experience, skills, availability)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+				<label for="lis_job_description"><?php echo $lbl( 'Description *', 'About you * <span class="lis-job-optional">(experience, skills, availability)</span>', 'Details * <span class="lis-job-optional">(what it involves, tools on hand, how long it takes)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 				<?php
 				wp_editor( $description, 'lis_job_description', array(
 					'textarea_name' => 'lis_job_description',
@@ -259,12 +278,12 @@ function lis_directory_render_job_form_shortcode() {
 		</fieldset>
 
 		<fieldset>
-			<legend><?php echo $lbl( 'The company', 'About you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
-			<p><label for="lis_job_company"><?php echo $lbl( 'Company name *', 'Your name *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			<legend><?php echo $lbl( 'The company', 'About you', 'About you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
+			<p><label for="lis_job_company"><?php echo $lbl( 'Company name *', 'Your name *', 'Your first name *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="text" id="lis_job_company" name="lis_job_company" value="<?php echo esc_attr( $company ); ?>" required /></p>
-			<p><label for="lis_job_company_website"><?php echo $lbl( 'Company website', 'Website or portfolio' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <span class="lis-job-optional">(optional)</span></label>
+			<p data-kind-not="gig"><label for="lis_job_company_website"><?php echo $lbl( 'Company website', 'Website or portfolio' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <span class="lis-job-optional">(optional)</span></label>
 			<input type="url" id="lis_job_company_website" name="lis_job_company_website" value="<?php echo esc_attr( $meta( 'company_website' ) ); ?>" placeholder="https://" /></p>
-			<p><label for="lis_job_logo"><?php echo $lbl( 'Logo', 'Photo' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <span class="lis-job-optional">(optional — PNG or JPG, under 2MB)</span></label>
+			<p data-kind-not="gig"><label for="lis_job_logo"><?php echo $lbl( 'Logo', 'Photo' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <span class="lis-job-optional">(optional — PNG or JPG, under 2MB)</span></label>
 			<?php if ( $job && has_post_thumbnail( $job->ID ) ) : ?>
 				<span class="lis-job-form-logo"><?php echo get_the_post_thumbnail( $job->ID, 'thumbnail' ); ?> <label><input type="checkbox" name="lis_job_remove_logo" value="1" /> Remove</label></span>
 			<?php endif; ?>
@@ -272,13 +291,13 @@ function lis_directory_render_job_form_shortcode() {
 		</fieldset>
 
 		<fieldset>
-			<legend><?php echo $lbl( 'How to apply', 'How to reach you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
+			<legend><?php echo $lbl( 'How to apply', 'How to reach you', 'How neighbors reach you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
 			<p><label for="lis_job_apply_url"><?php echo $lbl( 'Application link', 'Link <span class="lis-job-optional">(résumé, LinkedIn, etc.)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="url" id="lis_job_apply_url" name="lis_job_apply_url" value="<?php echo esc_attr( $meta( 'apply_url' ) ); ?>" placeholder="https://" /></p>
 			<p><label for="lis_job_apply_email"><?php echo $lbl( 'Application email', 'Email' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="email" id="lis_job_apply_email" name="lis_job_apply_email" value="<?php echo esc_attr( $meta( 'apply_email' ) ); ?>" /></p>
-			<p class="lis-job-hint"><?php echo $lbl( 'Add at least one. Applicants go straight to you — we don\'t collect applications.', 'Add at least one. Employers contact you directly — it\'s shown on your post.' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
-			<p data-kind="hiring"<?php echo 'seeking' === $kind ? ' hidden' : ''; ?>><label for="lis_job_deadline">Application deadline <span class="lis-job-optional">(optional)</span></label>
+			<p class="lis-job-hint"><?php echo $lbl( 'Add at least one. Applicants go straight to you — we don\'t collect applications.', 'Add at least one. Employers contact you directly — it\'s shown on your post.', 'Add at least one. Neighbors contact you directly to offer a hand.' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
+			<p data-kind="hiring"<?php echo 'hiring' === $kind ? '' : ' hidden'; ?>><label for="lis_job_deadline">Application deadline <span class="lis-job-optional">(optional)</span></label>
 			<input type="date" id="lis_job_deadline" name="lis_job_deadline" value="<?php echo esc_attr( $meta( 'deadline' ) ); ?>" /></p>
 		</fieldset>
 
@@ -291,6 +310,10 @@ function lis_directory_render_job_form_shortcode() {
 		function sync() {
 			var k = ( form.querySelector( 'input[name="lis_job_kind"]:checked' ) || form.querySelector( 'input[name="lis_job_kind"][type="hidden"]' ) || {} ).value || 'hiring';
 			form.querySelectorAll( '[data-kind]' ).forEach( function ( el ) { el.hidden = el.getAttribute( 'data-kind' ) !== k; } );
+			form.querySelectorAll( '[data-kind-not]' ).forEach( function ( el ) {
+				el.hidden = el.getAttribute( 'data-kind-not' ) === k;
+				el.querySelectorAll( 'select,input' ).forEach( function ( f ) { f.disabled = el.hidden; } );
+			} );
 		}
 		form.querySelectorAll( 'input[name="lis_job_kind"]' ).forEach( function ( r ) { r.addEventListener( 'change', sync ); } );
 		sync();
@@ -424,7 +447,7 @@ function lis_directory_handle_job_save() {
 	wp_mail(
 		get_option( 'admin_email' ),
 		'New job board post: ' . $title,
-		"A new post just went live on the job board (" . ( 'seeking' === lis_directory_get_job_kind( $new_id ) ? 'looking for work' : 'hiring' ) . "):\n\n" . $title . "\n" . get_permalink( $new_id ) . "\n\nEdit or remove it: " . admin_url( 'post.php?post=' . $new_id . '&action=edit' ) . "\n"
+		"A new post just went live on the job board (" . ( 'seeking' === lis_directory_get_job_kind( $new_id ) ? 'looking for work' : lis_directory_get_job_kind( $new_id ) ) . "):\n\n" . $title . "\n" . get_permalink( $new_id ) . "\n\nEdit or remove it: " . admin_url( 'post.php?post=' . $new_id . '&action=edit' ) . "\n"
 	);
 	wp_safe_redirect( add_query_arg( 'lis_job_posted', '1', get_permalink( $new_id ) ) );
 	exit;

@@ -1,3 +1,15 @@
+## [0.61.0] — 2026-11-21 — Work board: Jobs, Local Gigs, Available for Work (staging only)
+
+Boss's brief: three connected sections, one local workforce. Built from mockup round 2 (design 07, "The Tour"). Installed on staging for a demo; not released.
+
+- **Local gigs**: a third post kind, `_lis_job_kind = gig` (one-time work posted by residents). The post form offers "I need a hand (a one-time gig)" with its own labels, a When field (`_lis_job_when`), and no type/workplace/website/logo. Pay period "for the job" added for flat amounts. Gigs get no JobPosting schema (noindex, like looking-for-work posts) and an "Offer to help" button.
+- **/jobs/ is now the work board** (`includes/work-hub.php`, `assets/css/work-hub.css`, `assets/js/work-hub.js`): headline, one search across all three, town buttons (only towns with posts), and three columns (Jobs with type chips, Local Gigs, Available for Work). The third column only shows when "looking for work" posts are on. Old filter links (`?job_cat=` etc.) and category pages keep the classic list.
+- **Filters animate**: cards that stop matching slide out, the rest close the gap (FLIP), new matches fade in. No reload.
+- **Empty states**: each column says why it's empty (nothing posted yet, or nothing in that town or search) and offers Show everything or a post button.
+- **Cross-links**: a gig shows how many neighbors do that kind of work; a person shows how many open gigs fit.
+- **Post box** at the bottom: pick gig, job or "I'm available", type a title, town and when, see a preview card, then Continue to the full form (prefilled via `?kind=&title=&location=&when=`).
+- **First-visit tour**: a quiet "Take a tour" link and numbered dots; a spotlight tour of search, towns, each column and the post box. Finishing or skipping is remembered in the browser and, for signed-in people, on their account (`lis_work_tour_done` user meta via `POST lis-directory/v1/work-tour`).
+
 ## [0.60.3] — 2026-11-20 — Cover polish: no-photo hero, Show all on the line, Safari viewer
 
 Lucca's answers: always the card (no full-bleed); a listing with no photo gets the same layout; "Show all N photos" centred on the hero's bottom edge; the viewer looked broken in Safari.

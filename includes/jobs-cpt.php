@@ -111,12 +111,31 @@ function lis_directory_seed_job_categories() {
 function lis_directory_get_job_kinds() {
 	return array(
 		'hiring'  => 'Hiring',
+		'gig'     => 'Local gig',
 		'seeking' => 'Looking for work',
 	);
 }
 
 function lis_directory_get_job_kind( $job_id ) {
-	return 'seeking' === get_post_meta( $job_id, '_lis_job_kind', true ) ? 'seeking' : 'hiring';
+	$kind = get_post_meta( $job_id, '_lis_job_kind', true );
+	return in_array( $kind, array( 'seeking', 'gig' ), true ) ? $kind : 'hiring';
+}
+
+/** A one-time job posted by a resident ("rake my yard Saturday, $60"). */
+function lis_directory_job_is_gig( $job_id ) {
+	return 'gig' === lis_directory_get_job_kind( $job_id );
+}
+
+/**
+ * Gigs don't ask for employment type or workplace. Fill sensible values in
+ * before validation so one rule set still governs every kind.
+ */
+function lis_directory_job_apply_kind_defaults( array $src ) {
+	if ( isset( $src['lis_job_kind'] ) && 'gig' === $src['lis_job_kind'] ) {
+		$src['lis_job_employment_type'] = 'temporary';
+		$src['lis_job_workplace']       = 'onsite';
+	}
+	return $src;
 }
 
 /** Whether people can post that they're looking for work (Job Settings, default on). */
@@ -156,6 +175,7 @@ function lis_directory_get_job_salary_periods() {
 		'week'  => 'per week',
 		'month' => 'per month',
 		'year'  => 'per year',
+		'job'   => 'for the job',
 	);
 }
 
@@ -254,6 +274,7 @@ function lis_directory_job_set_expiry_on_publish( $new_status, $old_status, $pos
  */
 function lis_directory_validate_job_fields( array $src ) {
 	$errors = array();
+	$src    = lis_directory_job_apply_kind_defaults( $src );
 
 	if ( '' === trim( isset( $src['lis_job_title'] ) ? $src['lis_job_title'] : '' ) ) {
 		$errors[] = 'title';
@@ -309,12 +330,15 @@ function lis_directory_save_job_fields( $job_id, array $src ) {
 	// can stay one (editors can still set it in wp-admin).
 	$seeking = isset( $src['lis_job_kind'] ) && 'seeking' === $src['lis_job_kind']
 		&& ( lis_directory_jobs_allow_seeking() || lis_directory_job_is_seeking( $job_id ) || current_user_can( 'edit_others_posts' ) );
-	update_post_meta( $job_id, '_lis_job_kind', $seeking ? 'seeking' : 'hiring' );
+	$gig     = isset( $src['lis_job_kind'] ) && 'gig' === $src['lis_job_kind'];
+	update_post_meta( $job_id, '_lis_job_kind', $seeking ? 'seeking' : ( $gig ? 'gig' : 'hiring' ) );
+	update_post_meta( $job_id, '_lis_job_when', $text( 'lis_job_when' ) );
 	update_post_meta( $job_id, '_lis_job_company', $text( 'lis_job_company' ) );
 	update_post_meta( $job_id, '_lis_job_company_website', isset( $src['lis_job_company_website'] ) ? esc_url_raw( $src['lis_job_company_website'] ) : '' );
 	update_post_meta( $job_id, '_lis_job_location', $text( 'lis_job_location' ) );
-	update_post_meta( $job_id, '_lis_job_employment_type', $text( 'lis_job_employment_type' ) );
-	update_post_meta( $job_id, '_lis_job_workplace', $text( 'lis_job_workplace' ) );
+	$src = lis_directory_job_apply_kind_defaults( $src );
+	update_post_meta( $job_id, '_lis_job_employment_type', isset( $src['lis_job_employment_type'] ) ? sanitize_text_field( $src['lis_job_employment_type'] ) : '' );
+	update_post_meta( $job_id, '_lis_job_workplace', isset( $src['lis_job_workplace'] ) ? sanitize_text_field( $src['lis_job_workplace'] ) : '' );
 
 	$min = isset( $src['lis_job_salary_min'] ) && '' !== $src['lis_job_salary_min'] ? (float) $src['lis_job_salary_min'] : '';
 	$max = isset( $src['lis_job_salary_max'] ) && '' !== $src['lis_job_salary_max'] ? (float) $src['lis_job_salary_max'] : '';
@@ -351,7 +375,7 @@ function lis_directory_render_job_meta_box( $post ) {
 					<option value="<?php echo esc_attr( $value ); ?>" <?php selected( lis_directory_get_job_kind( $post->ID ), $value ); ?>><?php echo esc_html( $label ); ?></option>
 				<?php endforeach; ?>
 			</select>
-			<p class="description">"Looking for work" posts use Company as the person's name.</p>
+			<p class="description">"Looking for work" and "Local gig" posts use Company as the person's name.</p>
 		</td></tr>
 		<tr><th><label for="lis_job_company">Company</label></th><td><input type="text" class="regular-text" id="lis_job_company" name="lis_job_company" value="<?php echo esc_attr( $m( 'company' ) ); ?>" /></td></tr>
 		<tr><th><label for="lis_job_company_website">Company website</label></th><td><input type="url" class="regular-text" id="lis_job_company_website" name="lis_job_company_website" value="<?php echo esc_attr( $m( 'company_website' ) ); ?>" placeholder="https://" /></td></tr>
@@ -382,6 +406,7 @@ function lis_directory_render_job_meta_box( $post ) {
 		</td></tr>
 		<tr><th><label for="lis_job_apply_url">Apply URL</label></th><td><input type="url" class="regular-text" id="lis_job_apply_url" name="lis_job_apply_url" value="<?php echo esc_attr( $m( 'apply_url' ) ); ?>" placeholder="https://" /></td></tr>
 		<tr><th><label for="lis_job_apply_email">Apply email</label></th><td><input type="email" class="regular-text" id="lis_job_apply_email" name="lis_job_apply_email" value="<?php echo esc_attr( $m( 'apply_email' ) ); ?>" /><p class="description">At least one of Apply URL / Apply email.</p></td></tr>
+		<tr><th><label for="lis_job_when">When (gigs)</label></th><td><input type="text" class="regular-text" id="lis_job_when" name="lis_job_when" value="<?php echo esc_attr( $m( 'when' ) ); ?>" placeholder="e.g. This Saturday morning" /></td></tr>
 		<tr><th><label for="lis_job_deadline">Application deadline</label></th><td><input type="date" id="lis_job_deadline" name="lis_job_deadline" value="<?php echo esc_attr( $m( 'deadline' ) ); ?>" /> <span class="description">Optional.</span></td></tr>
 		<tr><th><label for="lis_job_expiry_date">Listing expires</label></th><td><input type="date" id="lis_job_expiry_date" name="lis_job_expiry_date" value="<?php echo esc_attr( $expiry_date ); ?>" /><input type="hidden" name="lis_job_expiry_prev" value="<?php echo esc_attr( $expiry_date ); ?>" /> <span class="description">Set automatically on publish (Jobs &rarr; Job Settings). Clear it to never expire.</span></td></tr>
 		<tr><th>Status</th><td><label><input type="checkbox" name="lis_job_filled" value="1" <?php checked( (bool) $m( 'filled' ) ); ?> /> Position filled (hides it from the job board)</label></td></tr>
@@ -446,6 +471,8 @@ function lis_directory_job_admin_column_content( $column, $post_id ) {
 		echo esc_html( isset( $types[ $type ] ) ? $types[ $type ] : '' );
 		if ( lis_directory_job_is_seeking( $post_id ) ) {
 			echo ' <em>(looking for work)</em>';
+		} elseif ( lis_directory_job_is_gig( $post_id ) ) {
+			echo ' <em>(local gig)</em>';
 		}
 		if ( get_post_meta( $post_id, '_lis_job_filled', true ) ) {
 			echo ' <em>(filled)</em>';

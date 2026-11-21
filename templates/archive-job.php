@@ -13,6 +13,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 wp_enqueue_style( 'lis-directory-jobs', LIS_DIRECTORY_URL . 'assets/css/jobs.css', array(), LIS_DIRECTORY_VERSION );
 
+// The work board (Jobs, Local Gigs, Available for Work) on the main /jobs/ page.
+if ( function_exists( 'lis_directory_work_hub_active' ) && lis_directory_work_hub_active() ) {
+	$lis_work_hub = lis_directory_render_work_hub(); // Enqueues its assets, so render before the header.
+	get_header();
+	echo '<div class="lis-work-hub">' . $lis_work_hub . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside the renderer.
+	get_footer();
+	return;
+}
+
 get_header();
 
 $filters = lis_directory_job_read_filters( $_GET ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended

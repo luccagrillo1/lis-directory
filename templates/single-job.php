@@ -33,26 +33,29 @@ while ( have_posts() ) :
 	$edit_url   = $can_edit ? lis_directory_get_job_edit_url( $job_id ) : '';
 	$is_live    = 'publish' === get_post_status( $job_id );
 	$seeking    = lis_directory_job_is_seeking( $job_id );
+	$gig        = lis_directory_job_is_gig( $job_id );
+	$when       = get_post_meta( $job_id, '_lis_job_when', true );
 	$details    = array_filter( array(
-		( $seeking ? 'Name' : 'Company' ) => $company,
+		( $seeking ? 'Name' : ( $gig ? 'Posted by' : 'Company' ) ) => $company,
 		'Location'  => $location,
-		'Type'      => isset( $types[ $type ] ) ? $types[ $type ] : '',
-		'Workplace' => isset( $workplaces[ $workplace ] ) ? $workplaces[ $workplace ] : '',
+		'When'      => $gig ? $when : '',
+		'Type'      => ( ! $gig && isset( $types[ $type ] ) ) ? $types[ $type ] : '',
+		'Workplace' => ( ! $gig && isset( $workplaces[ $workplace ] ) ) ? $workplaces[ $workplace ] : '',
 		'Pay'       => $salary,
 		'Category'  => $cat ? $cat->name : '',
-		'Apply by'  => ( $deadline && ! $seeking ) ? mysql2date( get_option( 'date_format' ), $deadline . ' 00:00:00' ) : '',
+		'Apply by'  => ( $deadline && ! $seeking && ! $gig ) ? mysql2date( get_option( 'date_format' ), $deadline . ' 00:00:00' ) : '',
 	) );
 	?>
 	<article class="lis-job-single">
-		<p class="lis-job-back"><a href="<?php echo esc_url( get_post_type_archive_link( 'lis_job' ) ); ?>">&larr; All jobs</a></p>
+		<p class="lis-job-back"><a href="<?php echo esc_url( get_post_type_archive_link( 'lis_job' ) ); ?>">&larr; Back to the work board</a></p>
 
 		<?php if ( $is_live && isset( $_GET['lis_job_posted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 			<div class="lis-job-notice lis-job-notice--success">Your post is live on the job board. You can edit, renew or close it any time from My Job Postings.</div>
 		<?php endif; ?>
 		<?php if ( ! $is_live ) : ?>
-			<div class="lis-job-notice">This job isn't live — only you can see this preview.</div>
+			<div class="lis-job-notice">This post isn't live — only you can see this preview.</div>
 		<?php elseif ( $filled ) : ?>
-			<div class="lis-job-notice">This position has been filled.</div>
+			<div class="lis-job-notice"><?php echo $gig ? 'Someone is already on this one.' : 'This position has been filled.'; ?></div>
 		<?php endif; ?>
 
 		<header class="lis-job-single-head">
@@ -71,8 +74,9 @@ while ( have_posts() ) :
 				</p>
 				<span class="lis-job-chips">
 					<?php if ( $seeking ) : ?><span class="lis-job-chip lis-job-chip--seeking">Looking for work</span><?php endif; ?>
-					<?php if ( isset( $types[ $type ] ) ) : ?><span class="lis-job-chip"><?php echo esc_html( $types[ $type ] ); ?></span><?php endif; ?>
-					<?php if ( isset( $workplaces[ $workplace ] ) ) : ?><span class="lis-job-chip"><?php echo esc_html( $workplaces[ $workplace ] ); ?></span><?php endif; ?>
+					<?php if ( $gig ) : ?><span class="lis-job-chip lis-job-chip--gig">Local gig</span><?php if ( $when ) : ?><span class="lis-job-chip"><?php echo esc_html( $when ); ?></span><?php endif; ?><?php endif; ?>
+					<?php if ( ! $gig && isset( $types[ $type ] ) ) : ?><span class="lis-job-chip"><?php echo esc_html( $types[ $type ] ); ?></span><?php endif; ?>
+					<?php if ( ! $gig && isset( $workplaces[ $workplace ] ) ) : ?><span class="lis-job-chip"><?php echo esc_html( $workplaces[ $workplace ] ); ?></span><?php endif; ?>
 					<?php if ( $salary ) : ?><span class="lis-job-chip lis-job-chip--pay"><?php echo esc_html( $salary ); ?></span><?php endif; ?>
 				</span>
 			</div>
@@ -83,7 +87,7 @@ while ( have_posts() ) :
 
 		<div class="lis-job-single-body">
 			<div class="lis-job-single-content">
-				<h2><?php echo $seeking ? 'About me' : 'About the job'; ?></h2>
+				<h2><?php echo $seeking ? 'About me' : ( $gig ? 'What\'s needed' : 'About the job' ); ?></h2>
 				<?php the_content(); ?>
 				<?php if ( $apply && ! $filled ) : ?>
 					<div class="lis-job-single-apply lis-job-single-apply--bottom"><?php echo $apply; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>

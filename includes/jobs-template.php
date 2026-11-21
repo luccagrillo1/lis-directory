@@ -77,14 +77,14 @@ function lis_directory_job_query_args( array $filters, $count = -1 ) {
 	if ( ! empty( $filters['type'] ) ) {
 		$meta[] = array( 'key' => '_lis_job_employment_type', 'value' => $filters['type'] );
 	}
-	if ( 'seeking' === ( $filters['kind'] ?? '' ) ) {
-		$meta[] = array( 'key' => '_lis_job_kind', 'value' => 'seeking' );
+	if ( in_array( $filters['kind'] ?? '', array( 'seeking', 'gig' ), true ) ) {
+		$meta[] = array( 'key' => '_lis_job_kind', 'value' => $filters['kind'] );
 	} elseif ( 'hiring' === ( $filters['kind'] ?? '' ) ) {
 		// Posts from before `_lis_job_kind` existed have no value — they're openings.
 		$meta[] = array(
 			'relation' => 'OR',
 			array( 'key' => '_lis_job_kind', 'compare' => 'NOT EXISTS' ),
-			array( 'key' => '_lis_job_kind', 'value' => 'seeking', 'compare' => '!=' ),
+			array( 'key' => '_lis_job_kind', 'value' => array( 'seeking', 'gig' ), 'compare' => 'NOT IN' ),
 		);
 	}
 	if ( ! empty( $filters['workplace'] ) ) {
@@ -285,6 +285,15 @@ function lis_directory_render_job_apply_buttons( $job_id ) {
 	$email = get_post_meta( $job_id, '_lis_job_apply_email', true );
 	$out   = '';
 	$seek  = lis_directory_job_is_seeking( $job_id );
+	if ( lis_directory_job_is_gig( $job_id ) ) {
+		if ( $email ) {
+			$out .= '<a class="lis-job-btn lis-job-btn--primary" href="mailto:' . esc_attr( antispambot( $email ) ) . '?subject=' . rawurlencode( 'I can help: ' . get_the_title( $job_id ) ) . '">Offer to help</a> ';
+		}
+		if ( $url ) {
+			$out .= '<a class="lis-job-btn' . ( $email ? '' : ' lis-job-btn--primary' ) . '" href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener">' . ( $email ? 'More details' : 'Offer to help' ) . '</a>';
+		}
+		return $out;
+	}
 	if ( $url ) {
 		$out .= '<a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener">' . ( $seek ? 'View profile' : 'Apply now' ) . '</a> ';
 	}
@@ -306,7 +315,8 @@ function lis_directory_get_job_jsonld( $job_id ) {
 	$post = get_post( $job_id );
 	// A person looking for work isn't a JobPosting — no markup (and the page
 	// gets noindex), which also keeps their contact details out of Google.
-	if ( ! $post || ! lis_directory_is_job_open( $job_id ) || lis_directory_job_is_seeking( $job_id ) ) {
+	// A neighbor's one-time gig isn't a JobPosting either (and stays out of search).
+	if ( ! $post || ! lis_directory_is_job_open( $job_id ) || lis_directory_job_is_seeking( $job_id ) || lis_directory_job_is_gig( $job_id ) ) {
 		return array();
 	}
 	$type_map = array(

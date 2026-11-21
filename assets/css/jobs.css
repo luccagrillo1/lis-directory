@@ -194,6 +194,11 @@
 	color: var(--lis-dir-job-chip-seeking-text, #fff);
 }
 
+.lis-job-chip--gig {
+	background: var(--lis-dir-job-chip-gig-bg, var(--lis-clay-600, #A94F2C));
+	color: var(--lis-dir-job-chip-gig-text, #fff);
+}
+
 /* "I'm hiring / I'm looking for work" choice at the top of the post form. */
 .lis-job-form .lis-job-kind {
 	display: flex;
