@@ -125,7 +125,7 @@ function lis_directory_render_job_form_shortcode() {
 		delete_transient( 'lis_job_form_' . get_current_user_id() );
 	}
 
-	$meta = function ( $key ) use ( $job, $prefill ) {
+	$meta = function ( $key ) use ( $job, &$prefill ) { // by reference: the work-board GET prefill below adds to it
 		if ( isset( $prefill[ 'lis_job_' . $key ] ) ) {
 			return $prefill[ 'lis_job_' . $key ];
 		}

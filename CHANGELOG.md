@@ -1,3 +1,7 @@
+## [0.61.2] — 2026-11-21 — Work board fixes (staging only)
+
+- Posting from the work board now carries Where and When into the form, not just the title.
+
 ## [0.61.1] — 2026-11-21 — Work board fixes (staging only)
 
 - Tour step markers no longer pick up the town-chip style or get clipped on the column tops; clicking the towns marker no longer filters.
