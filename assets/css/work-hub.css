@@ -175,3 +175,4 @@ html.wh-touring .wh-spot,html.wh-touring .wh-tip{display:block}
 .wh-av--photo{background:var(--wh-pine-100)}
 .wh-person .wh-meta{flex-direction:column;align-items:flex-start;gap:2px}
 .wh-person .wh-meta i{display:none}
+.wh-person .wh-txt small{white-space:normal;overflow:visible;text-overflow:clip}

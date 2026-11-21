@@ -1,6 +1,6 @@
-## [0.62.1] — 2026-11-21 — Profile card tidy (staging only)
+## [0.62.2] — 2026-11-21 — Profile card tidy (staging only)
 
-- Profile cards stack "Works in" and availability on their own lines instead of wrapping with a stray dot.
+- Profile cards stack "Works in" and availability on their own lines (each in its own span), and the headline wraps instead of cutting off.
 
 ## [0.62.0] — 2026-11-21 — Available for Work profiles (staging only)
 

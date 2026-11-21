@@ -253,7 +253,7 @@ function lis_directory_work_hub_person( array $it, $attrs, array $by_cat ) {
 		$meta[] = esc_html( $it['avail'] );
 	}
 	if ( $meta ) {
-		echo '<p class="wh-meta">' . implode( '<i aria-hidden="true"></i>', $meta ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- parts escaped above.
+		echo '<p class="wh-meta"><span>' . implode( '</span><span>', $meta ) . '</span></p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- parts escaped above.
 	}
 
 	$n = ( $it['cat'] && isset( $by_cat[ $it['cat'] ] ) ) ? $by_cat[ $it['cat'] ] : array();
