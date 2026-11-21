@@ -173,3 +173,5 @@ html.wh-touring .wh-spot,html.wh-touring .wh-tip{display:block}
 .wh-person .wh-meta,.wh-person .wh-bridge{padding-left:52px;margin-left:0}
 .wh-person .wh-skills{padding-left:52px}
 .wh-av--photo{background:var(--wh-pine-100)}
+.wh-person .wh-meta{flex-direction:column;align-items:flex-start;gap:2px}
+.wh-person .wh-meta i{display:none}

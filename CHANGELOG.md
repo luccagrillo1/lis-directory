@@ -1,3 +1,7 @@
+## [0.62.1] — 2026-11-21 — Profile card tidy (staging only)
+
+- Profile cards stack "Works in" and availability on their own lines instead of wrapping with a stray dot.
+
 ## [0.62.0] — 2026-11-21 — Available for Work profiles (staging only)
 
 - "Looking for work" posts are now profiles: skills (required, up to 10, searchable), towns they will work in, and availability. Type and Workplace are no longer asked.
