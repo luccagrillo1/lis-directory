@@ -135,7 +135,8 @@ function lis_directory_gallery_photo_is_cover_worthy( $photo ) {
  * so the header below leaves it out.
  */
 function lis_directory_gallery_owns_title( $post_id ) {
-	return 'cover' === lis_directory_gallery_style() && lis_directory_listing_photo_ids( $post_id );
+	// Cover renders its hero (and the <h1>) even for a listing with no photo.
+	return 'cover' === lis_directory_gallery_style();
 }
 
 function lis_directory_enqueue_gallery_assets() {
@@ -212,13 +213,13 @@ function lis_directory_gallery_all_button( $count, $class = '' ) {
 function lis_directory_render_listing_gallery( $post_id ) {
 	$style = lis_directory_gallery_style();
 	$ids   = lis_directory_listing_photo_ids( $post_id );
-	if ( ! $ids || 'classic' === $style ) {
+	if ( 'classic' === $style ) {
 		return '';
 	}
 	$photos = array_values( array_filter( array_map( function ( $id ) use ( $post_id ) {
 		return lis_directory_gallery_photo( $id, $post_id );
 	}, $ids ) ) );
-	if ( ! $photos ) {
+	if ( ! $photos && 'cover' !== $style ) {
 		return '';
 	}
 	lis_directory_enqueue_gallery_assets();
@@ -273,14 +274,18 @@ function lis_directory_render_listing_gallery( $post_id ) {
  */
 function lis_directory_render_gallery_cover( $post_id, $photos ) {
 	$count   = count( $photos );
-	$lead    = $photos[0];
+	$lead    = $count ? $photos[0] : null;
 	/*
 	 * The cover photo shows at the shape it was uploaded, as a card. Filling
 	 * the whole hero (cropped, with parallax) is opt-in:
 	 * add_filter( 'lis_directory_gallery_cover_fill', '__return_true' ).
 	 */
-	$fill    = apply_filters( 'lis_directory_gallery_cover_fill', false, $lead, $post_id ) && lis_directory_gallery_photo_is_cover_worthy( $lead );
-	$shape   = $lead['ratio'] >= 1.15 ? 'is-landscape' : ( $lead['ratio'] <= 0.87 ? 'is-portrait' : 'is-square' );
+	$fill    = $lead && apply_filters( 'lis_directory_gallery_cover_fill', false, $lead, $post_id ) && lis_directory_gallery_photo_is_cover_worthy( $lead );
+	if ( ! $lead ) {
+		$shape = 'is-empty'; // No photo: same hero, title only.
+	} else {
+		$shape = $lead['ratio'] >= 1.15 ? 'is-landscape' : ( $lead['ratio'] <= 0.87 ? 'is-portrait' : 'is-square' );
+	}
 	$tagline = get_post_meta( $post_id, '_lis_listing_tagline', true );
 	$terms   = get_the_terms( $post_id, 'lis_listing_category' );
 	$cat     = ( $terms && ! is_wp_error( $terms ) ) ? $terms[0] : null;
@@ -294,7 +299,7 @@ function lis_directory_render_gallery_cover( $post_id, $photos ) {
 					<?php echo lis_directory_gallery_img( $lead, '100vw', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'data-lis-parallax' => '' ) ); // phpcs:ignore -- core-built <img>. ?>
 				</a>
 				<div class="lis-gal-cover-scrim" aria-hidden="true"></div>
-			<?php else : ?>
+			<?php elseif ( $lead ) : ?>
 				<div class="lis-gal-ambient-plate" style="background-image:url('<?php echo esc_url( $lead['plate'] ); ?>')" aria-hidden="true"></div>
 				<?php echo lis_directory_gallery_link_open( $lead, 0, 'lis-gal-cover-card' ); // phpcs:ignore -- escaped inside helper. ?>
 					<?php echo lis_directory_gallery_img( $lead, '(max-width: 720px) 92vw, 680px', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'style' => 'max-width:min(100%,' . (int) $lead['w'] . 'px)' ) ); // phpcs:ignore -- core-built <img>. ?>

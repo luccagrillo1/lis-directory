@@ -1,3 +1,11 @@
+## [0.60.3] — 2026-11-20 — Cover polish: no-photo hero, Show all on the line, Safari viewer
+
+Lucca's answers: always the card (no full-bleed); a listing with no photo gets the same layout; "Show all N photos" centred on the hero's bottom edge; the viewer looked broken in Safari.
+
+- **No photo**: with Cover on, a listing with no photos renders the same hero (category, title, tagline) on a soft wash (`is-empty`) instead of the old header. `lis_directory_gallery_owns_title()` no longer requires photos.
+- **Show all**: `align-self: center` in the thumbnail row, so its centre sits on the hero's bottom edge like the thumbnails. It now has a solid background.
+- **Viewer (Safari)**: Safari doesn't resolve `max-height: 100%` on an `<img>` in a `1fr` grid row, so the photo spilled off the bottom. The image is now sized from the viewport (`100dvh - 162px`, `100vw - 168px`), the dialog is `position: fixed; inset: 0` and opaque, and the theme's `<button>` padding/min-width is reset inside `.lis-lb`, so the close and arrow buttons are round again.
+
 ## [0.60.2] — 2026-11-20 — Admin gallery box styles
 
 - The wp-admin listing Gallery box never had styles: its CSS lived in front-end `listings.css`. `lis_directory_admin_enqueue()` now adds an inline style: thumbnails in a row, × to remove, the first photo outlined with a "★ Cover" label, "Make cover" on the rest.

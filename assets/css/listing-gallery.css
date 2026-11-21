@@ -324,6 +324,16 @@ body.single-lis_listing .lis-gal--cover .lis-gal-cover-title,
 	align-items: center;
 	height: clamp(380px, 56vh, 600px);
 }
+/* No photo: the same hero, title only, on a soft wash. */
+.lis-gal--cover.is-empty { --lis-card-w: 0px; }
+.lis-gal--cover.is-empty .lis-gal-cover-stage {
+	height: clamp(260px, 38vh, 400px);
+	background:
+		radial-gradient(120% 140% at 85% 20%, rgba(44, 82, 64, .16), transparent 60%),
+		radial-gradient(90% 120% at 10% 100%, rgba(196, 120, 84, .12), transparent 60%),
+		var(--lis-dir-color-canvas, #F3F1EA);
+}
+.lis-gal--cover.is-empty .lis-gal-cover-copy { padding-right: var(--lis-gal-pad); }
 .lis-gal--cover.is-framed .lis-gal-ambient-plate { z-index: -2; opacity: .7; }
 .lis-gal--cover.is-framed .lis-gal-cover-stage::after {
 	content: "";
@@ -399,7 +409,13 @@ body.single-lis_listing .lis-gal--cover.is-framed .lis-gal-cover-title,
 	color: #fff;
 	font-weight: 700;
 }
-.lis-gal-cover-thumbs .lis-gal-all { align-self: flex-end; margin-left: 6px; }
+/* "Show all" sits centred on the hero's bottom edge, like the thumbnails. */
+.lis-gal-cover-thumbs .lis-gal-all {
+	align-self: center;
+	margin-left: 6px;
+	background: rgba(255, 255, 255, .94);
+	box-shadow: 0 6px 18px -8px rgba(22, 40, 31, .35);
+}
 
 @media (max-width: 720px) {
 	.lis-gal-cover-stage { height: min(78vh, 560px); }
@@ -440,18 +456,23 @@ body.lis-gal-filmstrip-active { overflow-x: clip; }
 /* ---------- Lightbox ---------- */
 
 .lis-lb {
+	position: fixed;
+	inset: 0;
 	width: 100vw;
+	height: 100vh;
 	height: 100dvh;
 	max-width: none;
 	max-height: none;
 	margin: 0;
 	padding: 0;
 	border: 0;
-	background: rgba(10, 18, 14, .94);
+	border-radius: 0;
+	background: #0d1612 !important;
 	color: #fff;
 	overflow: hidden;
+	box-shadow: none;
 }
-.lis-lb::backdrop { background: rgba(10, 18, 14, .6); }
+.lis-lb::backdrop { background: #0d1612; }
 .lis-lb[open] { display: grid; grid-template-rows: auto 1fr auto; animation: lis-lb-in .22s var(--lis-gal-ease, ease) both; }
 @keyframes lis-lb-in { from { opacity: 0; } to { opacity: 1; } }
 .lis-lb-top {
@@ -475,20 +496,48 @@ body.lis-gal-filmstrip-active { overflow-x: clip; }
 	place-items: center;
 	transition: background .2s ease;
 }
-.lis-lb-close:hover, .lis-lb-nav:hover { background: rgba(255, 255, 255, .16); }
+/* The theme styles every <button> (padding, min-width, colours): reset. */
+.lis-lb button {
+	min-width: 0 !important;
+	min-height: 0 !important;
+	margin: 0;
+	padding: 0 !important;
+	line-height: 1 !important;
+	letter-spacing: 0;
+	text-transform: none;
+	box-shadow: none;
+}
+.lis-lb .lis-lb-close, .lis-lb .lis-lb-nav {
+	width: 46px !important;
+	height: 46px !important;
+	background: rgba(255, 255, 255, .08) !important;
+	color: #fff !important;
+}
+.lis-lb .lis-lb-strip button { background: none !important; }
+.lis-lb .lis-lb-close:hover, .lis-lb .lis-lb-nav:hover { background: rgba(255, 255, 255, .18) !important; }
 .lis-lb-close:focus-visible, .lis-lb-nav:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .lis-lb-stage {
 	position: relative;
-	display: grid;
-	place-items: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	min-height: 0;
-	padding: 0 76px;
+	overflow: hidden;
+	padding: 0 84px;
 	touch-action: pan-y;
 }
+/* Explicit viewport maths: Safari won't resolve max-height:100% on an <img>
+   inside a 1fr grid row, and the photo overflowed the screen. Room left =
+   top bar (74px) + thumbnail strip (88px). */
 .lis-lb-img {
-	max-width: 100%;
-	max-height: 100%;
+	display: block;
+	width: auto;
+	height: auto;
+	max-width: calc(100vw - 168px);
+	max-height: calc(100vh - 162px);
+	max-height: calc(100dvh - 162px);
 	object-fit: contain;
+	box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .8);
 	border-radius: 8px;
 	user-select: none;
 	-webkit-user-drag: none;
@@ -522,6 +571,7 @@ body.lis-gal-filmstrip-active { overflow-x: clip; }
 .lis-lb-strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (max-width: 720px) {
 	.lis-lb-stage { padding: 0 8px; }
+	.lis-lb-img { max-width: calc(100vw - 16px); }
 	.lis-lb-nav { display: none; }
 	.lis-lb-strip button { width: 44px; height: 44px; }
 }
