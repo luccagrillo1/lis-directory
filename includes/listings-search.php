@@ -20,6 +20,77 @@ add_shortcode( 'lis_listing_search', 'lis_directory_render_search_form_shortcode
 add_action( 'pre_get_posts', 'lis_directory_apply_search_filters' );
 add_action( 'pre_get_posts', 'lis_directory_set_listings_page_size', PHP_INT_MAX );
 add_filter( 'infinite_scroll_archive_supported', 'lis_directory_disable_infinite_scroll_on_listings', 99 );
+add_filter( 'posts_search', 'lis_directory_loose_posts_search', 10, 2 );
+
+/**
+ * Apostrophes characters stripped from both the keyword and the listing text,
+ * so "eichardts", "eichardt's" and "eichardt’s" (smart punctuation on
+ * Apple keyboards) all find "Eichardt's". Includes the HTML entities that
+ * can sit in saved content.
+ */
+function lis_directory_search_apostrophes() {
+	return array( "'", "\u{2019}", "\u{2018}", "\u{02BC}", '`', "\u{00B4}", '&#8217;', '&#8216;', '&#039;', '&#39;', '&rsquo;', '&lsquo;' );
+}
+
+/**
+ * Replaces core's keyword WHERE for listing searches with the same per-term
+ * AND/OR shape (title, excerpt, content; "-term" excludes) but compares with
+ * apostrophes removed on both sides. Uses core's own parsed search_terms.
+ */
+function lis_directory_loose_posts_search( $search, $query ) {
+	if ( ! $query->get( 'lis_loose_search' ) ) {
+		return $search;
+	}
+	$terms = (array) $query->get( 'search_terms' );
+	if ( empty( $terms ) ) {
+		return $search;
+	}
+
+	global $wpdb;
+	$marks = lis_directory_search_apostrophes();
+
+	$normalize = function ( $column ) use ( $wpdb, $marks ) {
+		$sql = $column;
+		foreach ( $marks as $mark ) {
+			$sql = $wpdb->prepare( "REPLACE({$sql}, %s, '')", $mark ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- column expression built here.
+		}
+		return $sql;
+	};
+	$columns = array(
+		$normalize( "{$wpdb->posts}.post_title" ),
+		$normalize( "{$wpdb->posts}.post_excerpt" ),
+		$normalize( "{$wpdb->posts}.post_content" ),
+	);
+
+	$clauses = array();
+	foreach ( $terms as $term ) {
+		$exclude = ( strlen( $term ) > 1 && '-' === $term[0] );
+		if ( $exclude ) {
+			$term = substr( $term, 1 );
+		}
+		$term = trim( str_replace( $marks, '', $term ) );
+		if ( '' === $term ) {
+			continue;
+		}
+		$like  = '%' . $wpdb->esc_like( $term ) . '%';
+		$op    = $exclude ? 'NOT LIKE' : 'LIKE';
+		$glue  = $exclude ? ' AND ' : ' OR ';
+		$parts = array();
+		foreach ( $columns as $col ) {
+			$parts[] = $wpdb->prepare( "{$col} {$op} %s", $like ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- normalized column expression.
+		}
+		$clauses[] = '(' . implode( $glue, $parts ) . ')';
+	}
+	if ( empty( $clauses ) ) {
+		return $search;
+	}
+
+	$where = ' AND (' . implode( ' AND ', $clauses ) . ')';
+	if ( ! is_user_logged_in() ) {
+		$where .= " AND ({$wpdb->posts}.post_password = '')";
+	}
+	return $where;
+}
 
 /**
  * Jetpack Infinite Scroll is on for the site and claims the listings archive
@@ -323,6 +394,10 @@ function lis_directory_apply_search_filters( $query ) {
 
 	if ( ! empty( $_GET['lis_q'] ) ) {
 		$query->set( 's', sanitize_text_field( wp_unslash( $_GET['lis_q'] ) ) );
+		// Apostrophe-insensitive matching (lis_directory_loose_posts_search()).
+		// A query var, not is_main_query(), because templates/archive-listing.php
+		// runs its own WP_Query rebuilt from these query vars.
+		$query->set( 'lis_loose_search', true );
 	}
 
 	$tax_query = array();

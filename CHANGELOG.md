@@ -1,3 +1,8 @@
+## [0.59.1] — 2026-11-20 — Apostrophe-insensitive listing search
+
+- Keyword search on the listings archive strips apostrophes (straight ', curly ’ ‘, ʼ, `, ´ and their HTML entities) from both the search terms and the title/excerpt/content before matching, so "eichardts", "eichardt's" and "eichardt’s" (smart punctuation on Apple keyboards) all find "Eichardt's". Before, only the exact stored character matched.
+- `lis_directory_loose_posts_search()` on `posts_search`, switched on by the `lis_loose_search` query var that `lis_directory_apply_search_filters()` sets alongside `s` (so the archive template's own WP_Query gets it too). Same per-term AND, `-term` excludes.
+
 ## [0.59.0] — 2026-11-17 — Vendor ticker motion
 
 - `assets/js/vendor-ticker.js` rewritten (markup unchanged):

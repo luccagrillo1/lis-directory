@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.59.0
+Stable tag: 0.59.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.59.1 =
+* Listing search ignores apostrophes: "eichardts", "eichardt's" and "eichardt’s" all find Eichardt's.
 
 = 0.59.0 =
 * Vendor ticker: page scroll no longer freezes over it, steady speed, no gaps with few vendors, eased hover, drag to scrub, equal-weight logos.
