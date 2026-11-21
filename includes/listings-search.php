@@ -21,6 +21,17 @@ add_action( 'pre_get_posts', 'lis_directory_apply_search_filters' );
 add_action( 'pre_get_posts', 'lis_directory_set_listings_page_size', PHP_INT_MAX );
 add_filter( 'infinite_scroll_archive_supported', 'lis_directory_disable_infinite_scroll_on_listings', 99 );
 add_filter( 'posts_search', 'lis_directory_loose_posts_search', 10, 2 );
+add_action( 'pre_get_posts', 'lis_directory_loose_site_search' );
+
+/**
+ * The site-wide header search (?s=) gets the same apostrophe-insensitive
+ * matching, so "eichardts" finds Eichardt's there too. Front end only.
+ */
+function lis_directory_loose_site_search( $query ) {
+	if ( ! is_admin() && $query->is_main_query() && $query->is_search() ) {
+		$query->set( 'lis_loose_search', true );
+	}
+}
 
 /**
  * Apostrophes characters stripped from both the keyword and the listing text,
@@ -177,27 +188,103 @@ function lis_directory_get_price_tiers() {
  */
 function lis_directory_get_sort_options() {
 	return array(
+		// ID breaks ties: the Directorist migration published ~110 listings
+		// with identical dates, and MySQL returns ties in no fixed order.
 		'newest'     => array(
 			'label'   => 'Newest',
-			'orderby' => 'date',
+			'orderby' => array( 'date' => 'DESC', 'ID' => 'DESC' ),
 			'order'   => 'DESC',
 		),
 		'oldest'     => array(
 			'label'   => 'Oldest',
-			'orderby' => 'date',
+			'orderby' => array( 'date' => 'ASC', 'ID' => 'ASC' ),
 			'order'   => 'ASC',
 		),
 		'title_asc'  => array(
 			'label'   => 'A → Z',
-			'orderby' => 'title',
+			'orderby' => array( 'title' => 'ASC', 'ID' => 'ASC' ),
 			'order'   => 'ASC',
 		),
 		'title_desc' => array(
 			'label'   => 'Z → A',
-			'orderby' => 'title',
+			'orderby' => array( 'title' => 'DESC', 'ID' => 'DESC' ),
 			'order'   => 'DESC',
 		),
 	);
+}
+
+/**
+ * The sort the visitor picked (?lis_sort=), else Newest. Newest is applied
+ * explicitly, keyword searches included (core would otherwise sort a search by
+ * relevance while the Sort By box still says "Newest").
+ */
+function lis_directory_current_sort_key() {
+	$options = lis_directory_get_sort_options();
+	$sort    = isset( $_GET['lis_sort'] ) ? sanitize_key( wp_unslash( $_GET['lis_sort'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only sort param.
+	return isset( $options[ $sort ] ) ? $sort : 'newest';
+}
+
+/**
+ * Empty-state text: a search that matched nothing says so, with the keyword.
+ */
+function lis_directory_listing_empty_message() {
+	$f = lis_directory_listing_request_filters();
+	if ( '' !== $f['s'] ) {
+		return sprintf( 'No listings match "%s". Try a shorter word or a different category.', $f['s'] );
+	}
+	if ( $f['tax_query'] || $f['meta_query'] || $f['open_now'] ) {
+		return 'No listings match these filters.';
+	}
+	return 'No listings here yet.';
+}
+
+function lis_directory_current_sort_option() {
+	$options = lis_directory_get_sort_options();
+	return $options[ lis_directory_current_sort_key() ];
+}
+
+/**
+ * The [lis_listing_search] filters from the request, as WP_Query pieces.
+ * Shared by the archive (lis_directory_apply_search_filters()) and
+ * [lis_listing_grid] so both answer the same form the same way.
+ */
+function lis_directory_listing_request_filters() {
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only filter params.
+	$out = array(
+		's'          => '',
+		'tax_query'  => array(),
+		'meta_query' => array(),
+		'open_now'   => ! empty( $_GET['lis_open_now'] ),
+	);
+	if ( isset( $_GET['lis_q'] ) ) {
+		$out['s'] = trim( sanitize_text_field( wp_unslash( $_GET['lis_q'] ) ) );
+	}
+	if ( ! empty( $_GET['lis_category'] ) ) {
+		$out['tax_query'][] = array(
+			'taxonomy' => 'lis_listing_category',
+			'field'    => 'slug',
+			'terms'    => sanitize_title( wp_unslash( $_GET['lis_category'] ) ),
+		);
+	}
+	if ( ! empty( $_GET['lis_feature'] ) ) {
+		$out['tax_query'][] = array(
+			'taxonomy' => 'lis_listing_feature',
+			'field'    => 'slug',
+			'terms'    => array_map( 'sanitize_title', (array) wp_unslash( $_GET['lis_feature'] ) ),
+			'operator' => 'AND', // Every ticked feature, not just any one.
+		);
+	}
+	if ( count( $out['tax_query'] ) > 1 ) {
+		$out['tax_query']['relation'] = 'AND';
+	}
+	if ( ! empty( $_GET['lis_price'] ) ) {
+		$price = sanitize_text_field( wp_unslash( $_GET['lis_price'] ) );
+		if ( isset( lis_directory_get_price_tiers()[ $price ] ) ) {
+			$out['meta_query'][] = array( 'key' => '_lis_listing_price', 'value' => $price );
+		}
+	}
+	// phpcs:enable
+	return $out;
 }
 
 function lis_directory_render_search_form_shortcode( $atts ) {
@@ -227,6 +314,18 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 	ob_start();
 	?>
 	<form class="lis-listing-search-form" method="get" action="<?php echo esc_url( $action ); ?>">
+		<?php
+		// A GET form drops its action's own query string, so carry it as fields
+		// (e.g. ?page_id=123 on a site without pretty permalinks).
+		parse_str( (string) wp_parse_url( $action, PHP_URL_QUERY ), $action_args );
+		foreach ( $action_args as $arg_key => $arg_value ) :
+			if ( is_scalar( $arg_value ) && 0 !== strpos( $arg_key, 'lis_' ) ) :
+				?>
+				<input type="hidden" name="<?php echo esc_attr( $arg_key ); ?>" value="<?php echo esc_attr( $arg_value ); ?>" />
+				<?php
+			endif;
+		endforeach;
+		?>
 		<div class="lis-listing-search-row">
 			<input type="text" name="lis_q" class="lis-listing-search-input" placeholder="What are you looking for?" value="<?php echo esc_attr( $current_q ); ?>" />
 
@@ -310,9 +409,7 @@ function lis_directory_render_search_form_shortcode( $atts ) {
  */
 function lis_directory_render_listing_toolbar() {
 	$sort_options = lis_directory_get_sort_options();
-	$current_sort = isset( $_GET['lis_sort'] ) && isset( $sort_options[ sanitize_key( wp_unslash( $_GET['lis_sort'] ) ) ] )
-		? sanitize_key( wp_unslash( $_GET['lis_sort'] ) )
-		: 'newest';
+	$current_sort = lis_directory_current_sort_key();
 	$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
 	?>
 	<div class="lis-listing-toolbar">
@@ -376,6 +473,10 @@ function lis_directory_apply_search_filters( $query ) {
 	// explicitly with lis_type.
 	$exclude_real_estate = function_exists( 'lis_directory_not_real_estate_clause' );
 
+	$sort_option = lis_directory_current_sort_option();
+	$query->set( 'orderby', $sort_option['orderby'] );
+	$query->set( 'order', $sort_option['order'] );
+
 	if ( ! $has_any_filter ) {
 		if ( $exclude_real_estate ) {
 			$query->set( 'meta_query', array( lis_directory_not_real_estate_clause() ) );
@@ -383,76 +484,31 @@ function lis_directory_apply_search_filters( $query ) {
 		return;
 	}
 
-	if ( ! empty( $_GET['lis_sort'] ) ) {
-		$sort_options = lis_directory_get_sort_options();
-		$sort         = sanitize_key( wp_unslash( $_GET['lis_sort'] ) );
-		if ( isset( $sort_options[ $sort ] ) ) {
-			$query->set( 'orderby', $sort_options[ $sort ]['orderby'] );
-			$query->set( 'order', $sort_options[ $sort ]['order'] );
-		}
-	}
-
-	if ( ! empty( $_GET['lis_q'] ) ) {
-		$query->set( 's', sanitize_text_field( wp_unslash( $_GET['lis_q'] ) ) );
+	$filters = lis_directory_listing_request_filters();
+	if ( '' !== $filters['s'] ) {
+		$query->set( 's', $filters['s'] );
 		// Apostrophe-insensitive matching (lis_directory_loose_posts_search()).
 		// A query var, not is_main_query(), because templates/archive-listing.php
 		// runs its own WP_Query rebuilt from these query vars.
 		$query->set( 'lis_loose_search', true );
 	}
-
-	$tax_query = array();
-
-	if ( ! empty( $_GET['lis_category'] ) ) {
-		$tax_query[] = array(
-			'taxonomy' => 'lis_listing_category',
-			'field'    => 'slug',
-			'terms'    => sanitize_title( wp_unslash( $_GET['lis_category'] ) ),
-		);
+	if ( $filters['tax_query'] ) {
+		$query->set( 'tax_query', $filters['tax_query'] );
 	}
 
-	if ( ! empty( $_GET['lis_feature'] ) ) {
-		$tax_query[] = array(
-			'taxonomy' => 'lis_listing_feature',
-			'field'    => 'slug',
-			'terms'    => array_map( 'sanitize_title', (array) wp_unslash( $_GET['lis_feature'] ) ),
-		);
-	}
-
-	if ( ! empty( $tax_query ) ) {
-		if ( count( $tax_query ) > 1 ) {
-			$tax_query['relation'] = 'AND';
-		}
-		$query->set( 'tax_query', $tax_query );
-	}
-
-	$meta_query = array();
+	$meta_query = $filters['meta_query'];
 	$typed      = false;
-
 	if ( ! empty( $_GET['lis_type'] ) ) {
 		$types = lis_directory_get_listing_types();
 		$type  = sanitize_key( wp_unslash( $_GET['lis_type'] ) );
 		if ( isset( $types[ $type ] ) ) {
 			$typed        = true;
-			$meta_query[] = array(
-				'key'   => '_lis_listing_type',
-				'value' => $type,
-			);
+			$meta_query[] = lis_directory_listing_type_clause( $type );
 		}
 	}
 	if ( ! $typed && $exclude_real_estate ) {
 		$meta_query[] = lis_directory_not_real_estate_clause();
 	}
-
-	if ( ! empty( $_GET['lis_price'] ) ) {
-		$price = sanitize_text_field( wp_unslash( $_GET['lis_price'] ) );
-		if ( isset( lis_directory_get_price_tiers()[ $price ] ) ) {
-			$meta_query[] = array(
-				'key'   => '_lis_listing_price',
-				'value' => $price,
-			);
-		}
-	}
-
 	if ( ! empty( $meta_query ) ) {
 		if ( count( $meta_query ) > 1 ) {
 			$meta_query['relation'] = 'AND';

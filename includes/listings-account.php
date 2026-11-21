@@ -122,9 +122,10 @@ function lis_directory_render_grid_shortcode( $atts ) {
 	$show_search = ( 'no' !== $atts['search'] ) && ( '' !== $type || 'yes' === $atts['search'] );
 	$search_html = '';
 	if ( $show_search ) {
-		$search_html = $type
-			? do_shortcode( '[lis_listing_search directory="' . esc_attr( $type ) . '"]' )
-			: do_shortcode( '[lis_listing_search]' );
+		// The form submits back to this page (not the archive), and this grid
+		// applies the same filters, so a search started here stays here.
+		$here        = get_permalink();
+		$search_html = do_shortcode( '[lis_listing_search' . ( $type ? ' directory="' . esc_attr( $type ) . '"' : '' ) . ( $here ? ' redirect="' . esc_url( $here ) . '"' : '' ) . ']' );
 	}
 
 	$query_args = array(
@@ -136,22 +137,44 @@ function lis_directory_render_grid_shortcode( $atts ) {
 	);
 
 	if ( $type ) {
-		$query_args['meta_query'] = array( array( 'key' => '_lis_listing_type', 'value' => $type ) );
+		$query_args['meta_query'] = array( lis_directory_listing_type_clause( $type ) );
 	} elseif ( function_exists( 'lis_directory_not_real_estate_clause' ) ) {
 		// An all-types grid is the business directory; real estate has its own pages.
 		$query_args['meta_query'] = array( lis_directory_not_real_estate_clause() );
 	}
 
-	if ( ! empty( $_GET['lis_sort'] ) ) {
-		$sort_options = lis_directory_get_sort_options();
-		$sort         = sanitize_key( wp_unslash( $_GET['lis_sort'] ) );
-		if ( isset( $sort_options[ $sort ] ) ) {
-			$query_args['orderby'] = $sort_options[ $sort ]['orderby'];
-			$query_args['order']   = $sort_options[ $sort ]['order'];
-		}
+	$sort_option           = lis_directory_current_sort_option();
+	$query_args['orderby'] = $sort_option['orderby'];
+	$query_args['order']   = $sort_option['order'];
+
+	// Keyword, category, features, price and open-now from [lis_listing_search]
+	// (before 0.59.2 this grid ignored them: the Local Directory hero sent
+	// ?lis_q=pub here and got every listing back).
+	$filters = lis_directory_listing_request_filters();
+	if ( '' !== $filters['s'] ) {
+		$query_args['s']                = $filters['s'];
+		$query_args['lis_loose_search'] = true;
+	}
+	if ( $filters['tax_query'] ) {
+		$query_args['tax_query'] = $filters['tax_query'];
+	}
+	if ( $filters['meta_query'] ) {
+		$query_args['meta_query'] = array_merge( array( 'relation' => 'AND' ), $query_args['meta_query'] ?? array(), $filters['meta_query'] );
+	}
+	if ( $filters['open_now'] ) {
+		// Open-now is computed per listing after the query, so fetch all.
+		$query_args['posts_per_page'] = -1;
+		$query_args['nopaging']       = true;
 	}
 
 	$grid_query   = new WP_Query( $query_args );
+	if ( $filters['open_now'] ) {
+		$grid_query->posts         = array_values( array_filter( $grid_query->posts, function ( $p ) {
+			return true === lis_directory_is_listing_open_now( $p->ID );
+		} ) );
+		$grid_query->post_count    = count( $grid_query->posts );
+		$grid_query->max_num_pages = 1;
+	}
 	$listings     = $grid_query->posts;
 	$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );
 
@@ -160,7 +183,7 @@ function lis_directory_render_grid_shortcode( $atts ) {
 		<div class="lis-listing-grid-search"><?php echo $search_html; // phpcs:ignore -- built from the search shortcode, escaped there. ?></div>
 	<?php endif; ?>
 	<?php if ( empty( $listings ) ) : ?>
-		<p class="lis-listing-empty">No listings here yet.</p>
+		<p class="lis-listing-empty"><?php echo esc_html( lis_directory_listing_empty_message() ); ?></p>
 	<?php else : ?>
 		<?php if ( function_exists( 'lis_directory_render_listing_toolbar' ) ) : ?>
 			<?php lis_directory_render_listing_toolbar(); ?>

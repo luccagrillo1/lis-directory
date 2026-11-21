@@ -100,7 +100,8 @@ function lis_directory_job_query_args( array $filters, $count = -1 ) {
 		'meta_query'     => $meta,
 	);
 	if ( ! empty( $filters['q'] ) ) {
-		$args['s'] = $filters['q'];
+		$args['s']                = $filters['q'];
+		$args['lis_loose_search'] = true; // Apostrophe-insensitive (listings-search.php).
 	}
 	if ( ! empty( $filters['cat'] ) ) {
 		$args['tax_query'] = array( array( 'taxonomy' => 'lis_job_category', 'field' => 'slug', 'terms' => $filters['cat'] ) );
@@ -129,6 +130,7 @@ function lis_directory_job_board_main_query( $query ) {
 	$query->set( 'order', 'DESC' );
 	if ( isset( $args['s'] ) ) {
 		$query->set( 's', $args['s'] );
+		$query->set( 'lis_loose_search', true );
 	}
 	if ( isset( $args['tax_query'] ) && ! $query->is_tax( 'lis_job_category' ) ) {
 		$query->set( 'tax_query', $args['tax_query'] );

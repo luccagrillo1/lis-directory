@@ -813,6 +813,7 @@ function lis_directory_handle_listing_submission() {
 		wp_set_post_terms( $post_id, array( $term->term_id ), 'lis_listing_category' );
 	}
 
+	update_post_meta( $post_id, '_lis_listing_type', 'local-business' );
 	update_post_meta( $post_id, '_lis_listing_address', $address );
 	update_post_meta( $post_id, '_lis_listing_phone', $phone );
 	update_post_meta( $post_id, '_lis_listing_website', $website );

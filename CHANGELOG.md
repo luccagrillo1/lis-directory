@@ -1,3 +1,15 @@
+## [0.59.2] — 2026-11-20 — Search audit: every listing search path fixed
+
+Lucca's report: searching "pub" from the Local Directory hero landed on All Listings showing every business; searching again from there gave "No listings"; only /listings/ worked.
+
+- **All Listings grid ignored the search.** `[lis_listing_grid]` (Local Directory → All Listings, where the hero form's `redirect` points) never read `lis_q`, category, features, price or open-now. It now applies all of them through the new shared `lis_directory_listing_request_filters()`, which the archive uses too. The grid's own search form now submits back to the grid page instead of jumping to /listings/.
+- **New listings were invisible to the Local Directory.** The Add Listing form never saved `_lis_listing_type`, so Eichardt's, Headlights by Lily, Uptown Bagel and Know Thy Medicine were left out of `type="local-business"` grids and of `lis_type=local-business` searches. New `lis_directory_listing_type_clause()` treats a missing or empty type as local-business (matching `lis_directory_get_listing_type()`). The submission handler now saves the type, and a one-time `admin_init` backfill sets it on existing listings (option `lis_directory_type_backfill_v1` records the count).
+- **Newest is the real default.** It's applied explicitly on the archive, category archives and grids, keyword searches included (before, core sorted searches by relevance while the box said "Newest"). Every sort breaks ties on ID, because the ~110 migrated listings share one publish date and came back in a different order on each load. New `lis_directory_current_sort_key()` / `_option()`.
+- **Apostrophe-insensitive matching** (0.59.1) now also covers the site-wide header search (`?s=`) and the jobs board keyword box (`job_q`).
+- Features filter: ticking several features now means listings with all of them (operator AND), not any one of them.
+- Empty state says why: `No listings match "pub"…` for a keyword, "No listings match these filters." for filters. `lis_directory_listing_empty_message()`.
+- `[lis_listing_search]`: a `redirect` URL's own query args are carried as hidden fields (a GET form drops them).
+
 ## [0.59.1] — 2026-11-20 — Apostrophe-insensitive listing search
 
 - Keyword search on the listings archive strips apostrophes (straight ', curly ’ ‘, ʼ, `, ´ and their HTML entities) from both the search terms and the title/excerpt/content before matching, so "eichardts", "eichardt's" and "eichardt’s" (smart punctuation on Apple keyboards) all find "Eichardt's". Before, only the exact stored character matched.

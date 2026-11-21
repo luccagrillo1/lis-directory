@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.59.1
+Stable tag: 0.59.2
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.59.2 =
+* Search audit: the Local Directory "All Listings" page now applies the search (keyword, category, features, open now) instead of showing everything; new listings from Add Listing show in the Local Directory; Newest is the real default sort with a stable order; apostrophe-insensitive matching also in the header search and jobs board; "no results" messages say what was searched.
 
 = 0.59.1 =
 * Listing search ignores apostrophes: "eichardts", "eichardt's" and "eichardt’s" all find Eichardt's.

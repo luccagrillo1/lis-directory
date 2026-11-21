@@ -160,7 +160,7 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 
 		<?php wp_enqueue_script( 'lis-directory-listing-view-toggle', LIS_DIRECTORY_URL . 'assets/js/listing-view-toggle.js', array(), LIS_DIRECTORY_VERSION, true ); ?>
 	<?php else : ?>
-		<p class="lis-listing-empty">No listings here yet.</p>
+		<p class="lis-listing-empty"><?php echo esc_html( lis_directory_listing_empty_message() ); ?></p>
 	<?php endif; ?>
 </div>
 <?php

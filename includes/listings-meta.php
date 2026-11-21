@@ -62,6 +62,51 @@ function lis_directory_get_listing_type( $post_id ) {
 	return isset( $types[ $type ] ) ? $type : 'local-business';
 }
 
+/**
+ * meta_query clause for one listing type. A listing with no type (or an empty
+ * one) is a local business everywhere else (lis_directory_get_listing_type()),
+ * so the local-business clause matches those too. Before 0.59.2 the Add
+ * Listing form never saved a type, so new listings were missing from
+ * [lis_listing_grid type="local-business"] and its keyword search.
+ */
+function lis_directory_listing_type_clause( $type ) {
+	if ( 'local-business' !== $type ) {
+		return array( 'key' => '_lis_listing_type', 'value' => $type );
+	}
+	return array(
+		'relation' => 'OR',
+		array( 'key' => '_lis_listing_type', 'compare' => 'NOT EXISTS' ),
+		array( 'key' => '_lis_listing_type', 'value' => array( '', 'local-business' ), 'compare' => 'IN' ),
+	);
+}
+
+/**
+ * One-time: give every listing saved without a type the local-business type
+ * it already behaved as (see lis_directory_listing_type_clause()).
+ */
+add_action( 'admin_init', 'lis_directory_backfill_listing_types' );
+function lis_directory_backfill_listing_types() {
+	if ( get_option( 'lis_directory_type_backfill_v1' ) ) {
+		return;
+	}
+	$ids = get_posts( array(
+		'post_type'        => 'lis_listing',
+		'post_status'      => 'any',
+		'posts_per_page'   => -1,
+		'fields'           => 'ids',
+		'suppress_filters' => true,
+		'meta_query'       => array(
+			'relation' => 'OR',
+			array( 'key' => '_lis_listing_type', 'compare' => 'NOT EXISTS' ),
+			array( 'key' => '_lis_listing_type', 'value' => '' ),
+		),
+	) );
+	foreach ( $ids as $id ) {
+		update_post_meta( $id, '_lis_listing_type', 'local-business' );
+	}
+	update_option( 'lis_directory_type_backfill_v1', count( $ids ) . ' @ ' . gmdate( 'c' ), false );
+}
+
 function lis_directory_get_employment_types() {
 	return array(
 		'full-time' => 'Full-time',
