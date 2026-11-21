@@ -40,3 +40,13 @@
 		display: none;
 	}
 }
+
+/* Drag-to-scrub (vendor-ticker.js). */
+.lis-pv-ticker {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.lis-pv-ticker.is-dragging {
+	cursor: grabbing;
+}

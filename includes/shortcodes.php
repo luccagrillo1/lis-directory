@@ -571,10 +571,15 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
  */
 function lis_directory_render_vendor_logo_html( $vendor, $tone = 'color' ) {
 	$logo_id  = lis_directory_vendor_branding_id( $vendor->ID, '_lis_listing_logo_id', '_lis_pv_logo_color_id' );
-	$logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+	$logo_src = $logo_id ? wp_get_attachment_image_src( $logo_id, 'medium' ) : false;
+	$logo_url = $logo_src ? $logo_src[0] : '';
 	if ( ! $logo_url ) {
 		return '';
 	}
+	// Intrinsic size lets vendor-ticker.js size every logo to the same visual
+	// weight before the image loads, so the row never reflows mid-scroll.
+	$logo_w = ! empty( $logo_src[1] ) ? (int) $logo_src[1] : 0;
+	$logo_h = ! empty( $logo_src[2] ) ? (int) $logo_src[2] : 0;
 
 	$link_url = lis_directory_vendor_listing_url( $vendor );
 	$name     = get_the_title( $vendor );
@@ -584,7 +589,7 @@ function lis_directory_render_vendor_logo_html( $vendor, $tone = 'color' ) {
 	ob_start();
 	?>
 	<<?php echo esc_html( $tag ); ?> class="lis-pv-ticker-logo-item"<?php if ( $link_url ) : ?> href="<?php echo esc_url( $link_url ); ?>" target="_blank" rel="noopener noreferrer"<?php endif; ?>>
-		<img class="lis-pv-ticker-logo<?php echo esc_attr( $tone_class ); ?>" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy" />
+		<img class="lis-pv-ticker-logo<?php echo esc_attr( $tone_class ); ?>" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>"<?php if ( $logo_w && $logo_h ) : ?> width="<?php echo esc_attr( $logo_w ); ?>" height="<?php echo esc_attr( $logo_h ); ?>"<?php endif; ?> loading="lazy" decoding="async" />
 	</<?php echo esc_html( $tag ); ?>>
 	<?php
 	return ob_get_clean();

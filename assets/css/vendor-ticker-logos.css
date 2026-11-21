@@ -31,3 +31,11 @@
 .lis-pv-ticker-logo--white {
 	filter: brightness(0) invert(1);
 }
+
+/* Keep the logo's own aspect ratio from its width/height attributes (no-JS
+   fallback); vendor-ticker.js then sizes each one to equal visual weight. */
+.lis-pv-ticker-logo {
+	width: auto;
+	height: auto;
+	-webkit-user-drag: none;
+}

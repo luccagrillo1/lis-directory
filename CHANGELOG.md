@@ -1,3 +1,16 @@
+## [0.59.0] — 2026-11-17 — Vendor ticker motion
+
+- `assets/js/vendor-ticker.js` rewritten (markup unchanged):
+  - A vertical mouse wheel over the ticker scrolls the page again. Only a horizontal swipe (or shift + wheel) scrubs the row; before, every wheel tick was captured, so page scrolling froze while the cursor crossed it.
+  - Constant 34 px/s instead of "one loop per 40s" (3 vendors crawled at ~20 px/s).
+  - Clones extra copies of the group so the row always covers the visible width plus one loop; with few vendors the right end used to run out of logos.
+  - Hover/focus eases to a stop and back (~0.5s) instead of snapping.
+  - Drag/swipe scrubs with momentum (`touch-action: pan-y`, so vertical swipes still scroll); a drag doesn't open the logo link.
+  - Frame loop stops off-screen and in hidden tabs; frame delta is clamped so there's no leap after a stall.
+  - Under reduced motion it now returns before animating but still reveals the track.
+- Logo style: each logo is sized to equal visual weight (width ∝ √aspect, base 92px, max 210×96). `lis_directory_render_vendor_logo_html()` outputs `width`/`height` from the attachment so sizing happens before load, with no reflow.
+- CSS: `.lis-pv-ticker` is `user-select:none`, `.is-dragging` gets `cursor:grabbing`, `.lis-pv-ticker-logo` is `width/height:auto` (keeps aspect without JS).
+
 ## [0.58.0] — 2026-11-16 — Turn off "looking for work" posts
 
 - Job Settings → **"Looking for work" posts** checkbox (`lis_directory_jobs_allow_seeking`, default on, REST-visible).
