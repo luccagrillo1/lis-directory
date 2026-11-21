@@ -106,6 +106,17 @@ function lis_directory_render_settings_page() {
 					</td>
 				</tr>
 				<tr>
+					<th><label for="lis_directory_gallery_style">Listing photo layout</label></th>
+					<td>
+						<select id="lis_directory_gallery_style" name="lis_directory_gallery_style">
+							<?php foreach ( lis_directory_gallery_styles() as $value => $label ) : ?>
+								<option value="<?php echo esc_attr( $value ); ?>" <?php selected( get_option( 'lis_directory_gallery_style', 'classic' ), $value ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description">How photos show at the top of each listing page. Any layout other than Classic also adds Call / Directions / Website buttons and today's hours. Preview one page without saving: add <code>?lis_gallery=mosaic</code> (or filmstrip, cover, classic) to a listing URL while logged in.</p>
+					</td>
+				</tr>
+				<tr>
 					<th><label for="lis_directory_google_maps_api_key">Google Maps API Key</label></th>
 					<td>
 						<input type="text" id="lis_directory_google_maps_api_key" name="lis_directory_google_maps_api_key" class="regular-text" value="<?php echo esc_attr( get_option( 'lis_directory_google_maps_api_key' ) ); ?>" />

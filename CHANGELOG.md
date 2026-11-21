@@ -1,3 +1,14 @@
+## [0.60.0] — 2026-11-20 — Listing photo layouts
+
+Lucca's report: Headlights by Lily showed 4 tall cropped photos in a row plus an orphan 5th with empty grey space. Cause: the site skin forces `.lis-listing-gallery-img` to `clamp(240px,42vw,480px)` inside an auto-fit grid.
+
+- New `includes/listing-gallery.php` + `assets/css/listing-gallery.css` + `assets/js/listing-gallery.js`. Setting `lis_directory_gallery_style` (Settings → Listing photo layout): `classic` (default, old markup untouched), `mosaic`, `filmstrip`, `cover`. Editors can preview any layout on a listing with `?lis_gallery=<style>`.
+- **Mosaic**: one photo sits whole in an "ambient" frame (its own blurred colours fill the letterbox, never cropped); 2–5+ photos get planned grids with no empty cells and a "+N" tile; phones get a swipe carousel with a counter.
+- **Filmstrip**: full-bleed rail, every photo at its natural shape, arrows + counter, aligned to the text column.
+- **Cover**: wide, large photos become a full-width hero with the name over a scrim and gentle parallax; small, square, portrait or logo photos sit as a tilted card on a blurred plate beside the name; overlapping thumbnails.
+- Full-screen viewer (`<dialog>`): arrows, keys, swipe, thumbnails, preloads neighbours, Esc returns focus. Photos stay plain links without JS.
+- When a new layout is on: Call / Directions / Website buttons, an "Open now · until 9 pm" line, today's row highlighted in Hours, sticky sidebar on wide screens. Reduced motion turns off parallax and smooth scrolling.
+
 ## [0.59.2] — 2026-11-20 — Search audit: every listing search path fixed
 
 Lucca's report: searching "pub" from the Local Directory hero landed on All Listings showing every business; searching again from there gave "No listings"; only /listings/ worked.

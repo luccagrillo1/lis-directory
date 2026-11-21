@@ -83,9 +83,17 @@ while ( have_posts() ) :
 
 	$video_embed_url = lis_directory_video_embed_url( $video_url );
 	?>
+	<?php
+	$gallery_html = function_exists( 'lis_directory_render_listing_gallery' ) ? lis_directory_render_listing_gallery( $post_id ) : '';
+	$hero_title   = $gallery_html && function_exists( 'lis_directory_gallery_owns_title' ) && lis_directory_gallery_owns_title( $post_id );
+	$hours_line   = function_exists( 'lis_directory_listing_hours_status_line' ) ? lis_directory_listing_hours_status_line( $post_id ) : '';
+	$today_key    = array_keys( LIS_DIRECTORY_WEEKDAYS )[ (int) current_time( 'N' ) - 1 ];
+	?>
 	<div class="lis-listing-single">
 
-		<?php if ( ! empty( $gallery_ids ) ) : ?>
+		<?php if ( $gallery_html ) : ?>
+			<?php echo $gallery_html; // phpcs:ignore -- built and escaped in includes/listing-gallery.php. ?>
+		<?php elseif ( ! empty( $gallery_ids ) ) : ?>
 			<div class="lis-listing-gallery-strip">
 				<?php foreach ( $gallery_ids as $attachment_id ) : ?>
 					<?php echo wp_get_attachment_image( $attachment_id, 'large', false, array( 'class' => 'lis-listing-gallery-img', 'alt' => lis_directory_listing_image_alt( $attachment_id, $post_id ) ) ); ?>
@@ -99,8 +107,10 @@ while ( have_posts() ) :
 
 		<div class="lis-listing-header">
 			<div>
-				<h1 class="lis-listing-title"><?php the_title(); ?></h1>
-				<?php $lis_tagline = get_post_meta( get_the_ID(), '_lis_listing_tagline', true ); ?>
+				<?php if ( ! $hero_title ) : ?>
+					<h1 class="lis-listing-title"><?php the_title(); ?></h1>
+				<?php endif; ?>
+				<?php $lis_tagline = $hero_title ? '' : get_post_meta( get_the_ID(), '_lis_listing_tagline', true ); ?>
 				<?php if ( $lis_tagline ) : ?>
 					<p class="lis-listing-tagline"><?php echo esc_html( $lis_tagline ); ?></p>
 				<?php endif; ?>
@@ -109,7 +119,7 @@ while ( have_posts() ) :
 					<?php if ( $featured ) : ?><span class="lis-listing-badge lis-listing-badge--featured">Featured</span><?php endif; ?>
 					<?php if ( $popular ) : ?><span class="lis-listing-badge lis-listing-badge--popular">Popular</span><?php endif; ?>
 					<?php if ( $verified ) : ?><span class="lis-listing-badge lis-listing-badge--verified">✓ Owner Verified</span><?php endif; ?>
-					<?php if ( $category ) : ?><a class="lis-listing-category-badge" href="<?php echo esc_url( get_term_link( $category ) ); ?>"><?php echo esc_html( $category->name ); ?></a><?php endif; ?>
+					<?php if ( $category && ! $hero_title ) : ?><a class="lis-listing-category-badge" href="<?php echo esc_url( get_term_link( $category ) ); ?>"><?php echo esc_html( $category->name ); ?></a><?php endif; ?>
 					<?php if ( null !== $is_open ) : ?>
 						<span class="lis-listing-open-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>">
 							<?php echo $is_open ? 'Open now' : 'Closed now'; ?>
@@ -127,6 +137,9 @@ while ( have_posts() ) :
 		</div>
 
 		<?php
+		if ( $gallery_html && function_exists( 'lis_directory_render_listing_quick_actions' ) ) {
+			echo lis_directory_render_listing_quick_actions( $post_id ); // phpcs:ignore -- escaped inside helper.
+		}
 		$offer_url = '';
 		if ( function_exists( 'lis_directory_listing_is_active_showcase' ) && lis_directory_listing_is_active_showcase( $post_id ) ) {
 			$offer_url = get_post_meta( $post_id, '_lis_listing_offer_url', true );
@@ -296,7 +309,7 @@ while ( have_posts() ) :
 
 			</div>
 
-			<div class="lis-listing-sidebar">
+			<div class="lis-listing-sidebar<?php echo $gallery_html ? ' is-sticky' : ''; ?>">
 				<?php if ( $address || $phone || $website || $email ) : ?>
 					<div class="lis-listing-meta">
 						<?php if ( $address ) : ?>
@@ -349,10 +362,15 @@ while ( have_posts() ) :
 
 				<?php if ( array_filter( $week ) ) : ?>
 					<div class="lis-listing-hours-box">
-						<h2>Business Hours <?php if ( null !== $is_open ) : ?><span class="lis-listing-open-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>"><?php echo $is_open ? 'Open now' : 'Closed'; ?></span><?php endif; ?></h2>
+						<?php if ( $gallery_html && $hours_line ) : ?>
+							<h2>Hours</h2>
+							<p class="lis-listing-hours-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>"><?php echo esc_html( $hours_line ); ?></p>
+						<?php else : ?>
+							<h2>Business Hours <?php if ( null !== $is_open ) : ?><span class="lis-listing-open-status <?php echo $is_open ? 'is-open' : 'is-closed'; ?>"><?php echo $is_open ? 'Open now' : 'Closed'; ?></span><?php endif; ?></h2>
+						<?php endif; ?>
 						<table class="lis-listing-hours-table-display">
 							<?php foreach ( LIS_DIRECTORY_WEEKDAYS as $day => $label ) : ?>
-								<tr>
+								<tr<?php echo ( $gallery_html && $day === $today_key ) ? ' class="is-today"' : ''; ?>>
 									<td><?php echo esc_html( $label ); ?></td>
 									<td>
 										<?php if ( $week[ $day ] ) : ?>
