@@ -67,7 +67,14 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				return;
 			}
 			preview.innerHTML = '';
-			Array.prototype.slice.call( input.files || [] ).forEach( function ( file ) {
+			// Forms that let the owner pick a cover photo mark the preview
+			// with data-photos-cover. Each new photo gets a "Cover" radio
+			// (value new-<index in input.files>), in the same group as the
+			// existing photos' radios on the edit form.
+			var wantsCover = preview.hasAttribute( 'data-photos-cover' );
+			var form = input.form;
+			var anyChecked = wantsCover && form && form.querySelector( 'input[name="lis_listing_cover_photo"]:checked:not([value^="new-"])' );
+			Array.prototype.slice.call( input.files || [] ).forEach( function ( file, index ) {
 				if ( ! OK_TYPE.test( file.type ) ) {
 					return;
 				}
@@ -80,6 +87,21 @@ document.addEventListener( 'DOMContentLoaded', function () {
 					URL.revokeObjectURL( img.src );
 				} );
 				item.appendChild( img );
+				if ( wantsCover ) {
+					var label = document.createElement( 'label' );
+					label.className = 'lis-photo-cover-choice';
+					var radio = document.createElement( 'input' );
+					radio.type = 'radio';
+					radio.name = 'lis_listing_cover_photo';
+					radio.value = 'new-' + index;
+					if ( ! anyChecked ) {
+						radio.checked = true;
+						anyChecked = true;
+					}
+					label.appendChild( radio );
+					label.appendChild( document.createTextNode( ' Cover' ) );
+					item.appendChild( label );
+				}
 				preview.appendChild( item );
 			} );
 		}

@@ -75,6 +75,32 @@ function lis_directory_listing_photo_ids( $post_id ) {
 }
 
 /**
+ * Move the photo the owner marked "Cover" (POST lis_listing_cover_photo) to
+ * the front: the first photo is the listing's cover everywhere (featured
+ * image, cards, the photo hero). The value is an attachment ID for a photo
+ * already on the listing, or "new-N" for the Nth file in this upload.
+ *
+ * @param int[] $ids          Gallery IDs in order.
+ * @param int[] $new_by_index File index => attachment ID for this upload.
+ * @return int[]
+ */
+function lis_directory_cover_photo_first( $ids, $new_by_index = array() ) {
+	$ids    = array_values( array_map( 'intval', (array) $ids ) );
+	$choice = isset( $_POST['lis_listing_cover_photo'] ) ? sanitize_text_field( wp_unslash( $_POST['lis_listing_cover_photo'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification -- callers verify their form nonce.
+	$cover  = 0;
+	if ( preg_match( '/^new-(\d+)$/', $choice, $m ) ) {
+		$cover = isset( $new_by_index[ (int) $m[1] ] ) ? (int) $new_by_index[ (int) $m[1] ] : 0;
+	} elseif ( ctype_digit( $choice ) ) {
+		$cover = (int) $choice;
+	}
+	if ( $cover && in_array( $cover, $ids, true ) ) {
+		$ids = array_values( array_diff( $ids, array( $cover ) ) );
+		array_unshift( $ids, $cover );
+	}
+	return $ids;
+}
+
+/**
  * What the layouts need about one photo.
  */
 function lis_directory_gallery_photo( $attachment_id, $post_id ) {
@@ -240,22 +266,28 @@ function lis_directory_render_listing_gallery( $post_id ) {
 }
 
 /**
- * Cover layout: a full-bleed photo hero carrying the <h1>. A landscape,
- * high-resolution first photo fills the frame and drifts slower than the page
- * on scroll; anything else (logo, portrait, small) sits whole as a framed card
- * on its own blurred plate, with the title beside it.
+ * Cover layout: a hero carrying the <h1>. The cover photo (the listing's
+ * first photo) sits whole, straight, at its own aspect ratio as a card on a
+ * blurred plate of itself, with the title beside it. The card's width follows
+ * the photo's shape (landscape / square / portrait).
  */
 function lis_directory_render_gallery_cover( $post_id, $photos ) {
 	$count   = count( $photos );
 	$lead    = $photos[0];
-	$fill    = lis_directory_gallery_photo_is_cover_worthy( $lead );
+	/*
+	 * The cover photo shows at the shape it was uploaded, as a card. Filling
+	 * the whole hero (cropped, with parallax) is opt-in:
+	 * add_filter( 'lis_directory_gallery_cover_fill', '__return_true' ).
+	 */
+	$fill    = apply_filters( 'lis_directory_gallery_cover_fill', false, $lead, $post_id ) && lis_directory_gallery_photo_is_cover_worthy( $lead );
+	$shape   = $lead['ratio'] >= 1.15 ? 'is-landscape' : ( $lead['ratio'] <= 0.87 ? 'is-portrait' : 'is-square' );
 	$tagline = get_post_meta( $post_id, '_lis_listing_tagline', true );
 	$terms   = get_the_terms( $post_id, 'lis_listing_category' );
 	$cat     = ( $terms && ! is_wp_error( $terms ) ) ? $terms[0] : null;
 
 	ob_start();
 	?>
-	<section class="lis-gal lis-gal--cover <?php echo $fill ? 'is-fill' : 'is-framed'; ?>" data-lis-gallery data-count="<?php echo (int) $count; ?>">
+	<section class="lis-gal lis-gal--cover <?php echo $fill ? 'is-fill' : 'is-framed ' . esc_attr( $shape ); ?>" data-lis-gallery data-count="<?php echo (int) $count; ?>">
 		<div class="lis-gal-cover-stage">
 			<?php if ( $fill ) : ?>
 				<?php echo lis_directory_gallery_link_open( $lead, 0, 'lis-gal-cover-photo' ); // phpcs:ignore -- escaped inside helper. ?>
@@ -265,7 +297,7 @@ function lis_directory_render_gallery_cover( $post_id, $photos ) {
 			<?php else : ?>
 				<div class="lis-gal-ambient-plate" style="background-image:url('<?php echo esc_url( $lead['plate'] ); ?>')" aria-hidden="true"></div>
 				<?php echo lis_directory_gallery_link_open( $lead, 0, 'lis-gal-cover-card' ); // phpcs:ignore -- escaped inside helper. ?>
-					<?php echo lis_directory_gallery_img( $lead, '(max-width: 720px) 80vw, 520px', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'style' => 'max-width:min(100%,' . (int) $lead['w'] . 'px)' ) ); // phpcs:ignore -- core-built <img>. ?>
+					<?php echo lis_directory_gallery_img( $lead, '(max-width: 720px) 92vw, 680px', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'style' => 'max-width:min(100%,' . (int) $lead['w'] . 'px)' ) ); // phpcs:ignore -- core-built <img>. ?>
 				</a>
 			<?php endif; ?>
 			<div class="lis-gal-cover-copy">

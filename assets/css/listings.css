@@ -1015,6 +1015,26 @@
 	display: block;
 }
 
+.lis-listing-gallery-cover {
+	display: block;
+	width: 100%;
+	margin-top: 4px;
+	padding: 2px 0;
+	font-size: 11px;
+	border: 1px solid var(--lis-dir-color-line, #DEDFD8);
+	border-radius: 4px;
+	background: #fff;
+	cursor: pointer;
+}
+.lis-listing-gallery-thumb:first-child .lis-listing-gallery-cover {
+	background: var(--lis-dir-color-accent, #2C5240);
+	border-color: transparent;
+	color: #fff;
+	pointer-events: none;
+}
+.lis-listing-gallery-thumb:first-child .lis-listing-gallery-cover { font-size: 0; }
+.lis-listing-gallery-thumb:first-child .lis-listing-gallery-cover::after { content: "\2605  Cover"; font-size: 11px; }
+
 .lis-listing-gallery-remove {
 	position: absolute;
 	top: -6px;
@@ -1762,6 +1782,7 @@
 }
 
 .lis-listing-photos-preview-item {
+	position: relative;
 	width: 84px;
 	height: 84px;
 	border-radius: var(--lis-dir-thumb-radius, var(--lis-dir-radius-control, var(--lis-radius-control, 6px)));
@@ -1774,6 +1795,30 @@
 	height: 100%;
 	object-fit: cover;
 	display: block;
+}
+
+.lis-photo-cover-choice {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 600;
+}
+.lis-listing-photos-preview-item .lis-photo-cover-choice {
+	position: absolute;
+	left: 4px;
+	bottom: 4px;
+	padding: 2px 6px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, .92);
+	font-size: 11px;
+	line-height: 1.4;
+	cursor: pointer;
+}
+.lis-listing-photos-preview-item .lis-photo-cover-choice input { margin: 0; }
+.lis-listing-edit-gallery-item:has(.lis-photo-cover-choice input:checked) img,
+.lis-listing-photos-preview-item:has(.lis-photo-cover-choice input:checked) {
+	outline: 3px solid var(--lis-dir-color-accent, #2C5240);
+	outline-offset: 2px;
 }
 
 .lis-listing-photos-error {

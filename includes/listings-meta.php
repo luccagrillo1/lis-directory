@@ -355,6 +355,7 @@ function lis_directory_render_listing_meta_box( $post ) {
 					<?php endforeach; ?>
 				</div>
 				<button type="button" class="button lis-listing-gallery-select">Select Images</button>
+				<p class="description">The first photo is the cover (main photo) everywhere. Use “Make cover” to change it.</p>
 				<p class="description">Pick as many as you like — shown as a strip at the top of the listing page.</p>
 			</td>
 		</tr>
@@ -563,6 +564,7 @@ function lis_directory_render_gallery_thumb( $attachment_id ) {
 	<span class="lis-listing-gallery-thumb" data-id="<?php echo esc_attr( $attachment_id ); ?>">
 		<img src="<?php echo esc_url( $url ); ?>" />
 		<button type="button" class="lis-listing-gallery-remove" aria-label="Remove">&times;</button>
+		<button type="button" class="lis-listing-gallery-cover">Make cover</button>
 	</span>
 	<?php
 }
@@ -599,6 +601,10 @@ function lis_directory_save_listing_meta_box( $post_id ) {
 	if ( isset( $_POST['lis_listing_gallery_ids'] ) ) {
 		$ids = array_filter( array_map( 'absint', explode( ',', wp_unslash( $_POST['lis_listing_gallery_ids'] ) ) ) );
 		update_post_meta( $post_id, '_lis_listing_gallery_ids', implode( ',', $ids ) );
+		// The first photo is the cover: keep the featured image in step.
+		if ( $ids ) {
+			set_post_thumbnail( $post_id, reset( $ids ) );
+		}
 	}
 	if ( isset( $_POST['lis_listing_services'] ) ) {
 		update_post_meta( $post_id, '_lis_listing_services', sanitize_textarea_field( wp_unslash( $_POST['lis_listing_services'] ) ) );

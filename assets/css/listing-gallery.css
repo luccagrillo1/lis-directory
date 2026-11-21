@@ -317,6 +317,9 @@ body.single-lis_listing .lis-gal--cover .lis-gal-cover-title,
 
 /* Framed variant: logo / portrait / small photo sits whole as a card,
    title on the left. */
+.lis-gal--cover.is-framed { --lis-card-w: min(40vw, 460px); }
+.lis-gal--cover.is-framed.is-landscape { --lis-card-w: min(50vw, 660px); }
+.lis-gal--cover.is-framed.is-portrait { --lis-card-w: min(32vw, 380px); }
 .lis-gal--cover.is-framed .lis-gal-cover-stage {
 	align-items: center;
 	height: clamp(380px, 56vh, 600px);
@@ -332,7 +335,7 @@ body.single-lis_listing .lis-gal--cover .lis-gal-cover-title,
 .lis-gal--cover.is-framed .lis-gal-cover-copy {
 	color: var(--lis-gal-ink);
 	padding-bottom: 0;
-	padding-right: calc(var(--lis-gal-pad) + min(42vw, 480px));
+	padding-right: calc(var(--lis-gal-pad) + var(--lis-card-w) + 32px);
 }
 body.single-lis_listing .lis-gal--cover.is-framed .lis-gal-cover-title,
 .lis-gal--cover.is-framed .lis-gal-cover-title,
@@ -342,18 +345,19 @@ body.single-lis_listing .lis-gal--cover.is-framed .lis-gal-cover-title,
 	position: absolute;
 	right: var(--lis-gal-pad);
 	top: 50%;
-	width: min(42vw, 480px);
-	height: 78%;
-	transform: translateY(-50%) rotate(1.2deg);
+	width: var(--lis-card-w);
+	height: 80%;
+	transform: translateY(-50%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	cursor: zoom-in;
 	transition: transform .5s var(--lis-gal-ease);
 }
-.lis-gal-cover-card:hover { transform: translateY(-50%) rotate(0deg) scale(1.01); }
+.lis-gal-cover-card:hover { transform: translateY(-50%) scale(1.01); }
 .lis-gal-cover-card .lis-gal-img {
 	max-height: 100%;
+	max-width: 100%;
 	width: auto;
 	height: auto;
 	object-fit: contain;
@@ -414,11 +418,13 @@ body.single-lis_listing .lis-gal--cover.is-framed .lis-gal-cover-title,
 		right: auto;
 		top: auto;
 		width: auto;
-		height: 46vh;
-		margin: 0 24px 20px;
-		transform: rotate(1deg);
+		height: auto;
+		max-height: 52vh;
+		margin: 0 20px 20px;
+		transform: none;
 	}
-	.lis-gal-cover-card:hover { transform: rotate(0deg); }
+	.lis-gal-cover-card .lis-gal-img { max-height: 52vh; }
+	.lis-gal-cover-card:hover { transform: none; }
 	.lis-gal--cover.is-framed .lis-gal-cover-copy { padding: 0 20px 48px; }
 	.lis-gal-cover-thumbs { justify-content: flex-start; margin-top: -26px; }
 	.lis-gal-thumb { width: 54px; height: 54px; }

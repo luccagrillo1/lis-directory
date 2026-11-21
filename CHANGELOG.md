@@ -1,3 +1,12 @@
+## [0.60.1] — 2026-11-20 — Cover photo picker, straight cover card
+
+Lucca liked the Cover layout's card look; asked for no tilt, the photo at its uploaded aspect ratio, and a way to choose the main photo.
+
+- **Cover card**: no rotation. The card's width follows the photo's shape (`is-landscape` / `is-square` / `is-portrait` → `--lis-card-w`); the photo is never cropped. The full-bleed cropped hero with parallax is now opt-in: `add_filter( 'lis_directory_gallery_cover_fill', '__return_true' )`.
+- **Cover photo** = the first gallery photo (it already drives the featured image, listing cards and search results), so no new meta:
+  - Add Listing and Edit Listing: a "Cover" radio on every photo, both existing and newly chosen (`lis_listing_cover_photo` = attachment ID or `new-<file index>`). New `lis_directory_cover_photo_first()` moves the pick to the front before saving. The upload handler reports IDs by file index (new optional 4th arg).
+  - wp-admin listing box: "Make cover" on each gallery thumb moves it to the front; saving now also sets the featured image to the first photo.
+
 ## [0.60.0] — 2026-11-20 — Listing photo layouts
 
 Lucca's report: Headlights by Lily showed 4 tall cropped photos in a row plus an orphan 5th with empty grey space. Cause: the site skin forces `.lis-listing-gallery-img` to `clamp(240px,42vw,480px)` inside an auto-fit grid.

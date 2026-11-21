@@ -241,11 +241,11 @@ function lis_directory_render_listing_submission_form_shortcode() {
 			<p>
 				<label for="lis_listing_photos" class="lis-listing-photos-dropzone">
 					<span class="lis-listing-photos-dropzone-label">Click to choose photos, or drag them here</span>
-					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each. The first one becomes the main photo.</span>
+					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each. Tap “Cover” on the one you want as your main photo.</span>
 				</label>
 				<input type="file" id="lis_listing_photos" name="lis_listing_photos[]" accept="image/png,image/jpeg" multiple required />
 			</p>
-			<div class="lis-listing-photos-preview" data-photos-preview></div>
+			<div class="lis-listing-photos-preview" data-photos-preview data-photos-cover></div>
 		</div>
 
 		<div class="lis-listing-panel" data-panel-section="Photos &amp; Video" data-panel-question="Got a video?" data-panel-hint="Optional — YouTube or Vimeo link">
@@ -754,7 +754,8 @@ function lis_directory_handle_listing_submission() {
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
-	$photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', ! $is_draft, $errors );
+	$photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', ! $is_draft, $errors, $photo_ids_by_index );
+	$photo_ids = lis_directory_cover_photo_first( $photo_ids, $photo_ids_by_index );
 
 	// Branding assets — collected in the early "Branding" step, optional for
 	// every listing (a listing without them just won't appear where those assets
@@ -963,7 +964,8 @@ function lis_directory_save_submitted_features( $post_id ) {
  *
  * @return int[] Attachment IDs of everything that uploaded successfully.
  */
-function lis_directory_handle_listing_photos_upload( $field_name, $required, array &$errors ) {
+function lis_directory_handle_listing_photos_upload( $field_name, $required, array &$errors, &$by_index = null ) {
+	$by_index = array();
 	if ( empty( $_FILES[ $field_name ] ) || empty( $_FILES[ $field_name ]['name'] ) ) {
 		if ( $required ) {
 			$errors[] = $field_name;
@@ -1022,7 +1024,8 @@ function lis_directory_handle_listing_photos_upload( $field_name, $required, arr
 			continue;
 		}
 
-		$ids[] = (int) $attachment_id;
+		$ids[]          = (int) $attachment_id;
+		$by_index[ $i ] = (int) $attachment_id;
 	}
 
 	if ( ! $has_any && $required ) {

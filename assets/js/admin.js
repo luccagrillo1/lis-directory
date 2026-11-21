@@ -45,6 +45,7 @@
 		var $thumb = $('<span class="lis-listing-gallery-thumb"></span>').attr('data-id', attachment.id);
 		$thumb.append($('<img>').attr('src', thumbUrl));
 		$thumb.append($('<button type="button" class="lis-listing-gallery-remove" aria-label="Remove">&times;</button>'));
+		$thumb.append($('<button type="button" class="lis-listing-gallery-cover">Make cover</button>'));
 		$('#lis_listing_gallery_preview').append($thumb);
 	}
 
@@ -73,6 +74,17 @@
 		});
 
 		frame.open();
+	});
+
+	// The first photo is the cover; "Make cover" moves one to the front.
+	$(document).on('click', '.lis-listing-gallery-cover', function (e) {
+		e.preventDefault();
+		var $thumb = $(this).closest('.lis-listing-gallery-thumb');
+		var id = String($thumb.data('id'));
+		var ids = lisListingGalleryIds().filter(function (x) { return x !== id; });
+		ids.unshift(id);
+		$('#lis_listing_gallery_ids').val(ids.join(','));
+		$('#lis_listing_gallery_preview').prepend($thumb);
 	});
 
 	$(document).on('click', '.lis-listing-gallery-remove', function (e) {

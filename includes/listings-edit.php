@@ -242,13 +242,16 @@ function lis_directory_render_listing_edit_form( $listing_id, $token = '' ) {
 		<div class="lis-listing-panel" data-panel-section="Photos &amp; Video" data-panel-question="Your photos">
 			<?php if ( ! empty( $gallery_ids ) ) : ?>
 				<div class="lis-listing-edit-gallery">
+					<?php $cover_done = false; ?>
 					<?php foreach ( $gallery_ids as $attachment_id ) : ?>
 						<?php $thumb = wp_get_attachment_image_url( $attachment_id, 'thumbnail' ); ?>
 						<?php if ( $thumb ) : ?>
-							<label class="lis-listing-edit-gallery-item">
+							<div class="lis-listing-edit-gallery-item">
 								<img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( lis_directory_listing_image_alt( $attachment_id, $listing_id ) ); ?>" />
-								<span><input type="checkbox" name="lis_listing_remove_photos[]" value="<?php echo (int) $attachment_id; ?>" /> Remove</span>
-							</label>
+								<label class="lis-photo-cover-choice"><input type="radio" name="lis_listing_cover_photo" value="<?php echo (int) $attachment_id; ?>" <?php checked( ! $cover_done ); ?> /> Cover</label>
+								<label><input type="checkbox" name="lis_listing_remove_photos[]" value="<?php echo (int) $attachment_id; ?>" /> Remove</label>
+							</div>
+							<?php $cover_done = true; ?>
 						<?php endif; ?>
 					<?php endforeach; ?>
 				</div>
@@ -256,11 +259,11 @@ function lis_directory_render_listing_edit_form( $listing_id, $token = '' ) {
 			<p>
 				<label for="lis_listing_photos" class="lis-listing-photos-dropzone">
 					<span class="lis-listing-photos-dropzone-label">Click to choose photos, or drag them here</span>
-					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each. Add more, or remove any above.</span>
+					<span class="lis-listing-photos-dropzone-hint">PNG or JPG, up to 2MB each. Add more, remove any, and pick which one is your Cover (main) photo.</span>
 				</label>
 				<input type="file" id="lis_listing_photos" name="lis_listing_photos[]" accept="image/png,image/jpeg" multiple />
 			</p>
-			<div class="lis-listing-photos-preview" data-photos-preview></div>
+			<div class="lis-listing-photos-preview" data-photos-preview data-photos-cover></div>
 		</div>
 
 		<div class="lis-listing-panel" data-panel-section="Photos &amp; Video" data-panel-question="Got a video?" data-panel-hint="Optional — YouTube or Vimeo link">
@@ -453,7 +456,7 @@ function lis_directory_handle_listing_update() {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
 	// New photos are optional on edit — pass required=false, unlike submission.
-	$new_photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', false, $errors );
+	$new_photo_ids = lis_directory_handle_listing_photos_upload( 'lis_listing_photos', false, $errors, $new_photo_ids_by_index );
 
 	// Branding assets — optional; a new upload replaces the stored one, a Remove
 	// checkbox clears it.
@@ -558,7 +561,7 @@ function lis_directory_handle_listing_update() {
 		$remove_ids  = array_map( 'absint', (array) wp_unslash( $_POST['lis_listing_remove_photos'] ) );
 		$gallery_ids = array_values( array_diff( $gallery_ids, $remove_ids ) );
 	}
-	$gallery_ids = array_merge( $gallery_ids, $new_photo_ids );
+	$gallery_ids = lis_directory_cover_photo_first( array_merge( $gallery_ids, $new_photo_ids ), $new_photo_ids_by_index );
 	update_post_meta( $listing_id, '_lis_listing_gallery_ids', implode( ',', $gallery_ids ) );
 	if ( ! empty( $gallery_ids ) ) {
 		set_post_thumbnail( $listing_id, $gallery_ids[0] );

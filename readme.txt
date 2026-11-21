@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.60.0
+Stable tag: 0.60.1
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.60.1 =
+* Cover layout: the main photo sits straight at the shape it was uploaded. Owners pick their Cover (main) photo on Add Listing and Edit Listing; admins use "Make cover".
 
 = 0.60.0 =
 * New listing photo layouts (Settings → Listing photo layout): Mosaic, Filmstrip and Cover, plus a full-screen photo viewer, Call/Directions/Website buttons, an "Open now" line and a sticky sidebar. Classic (the old strip) stays the default until you switch.
