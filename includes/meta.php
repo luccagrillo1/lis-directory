@@ -231,4 +231,18 @@ function lis_directory_admin_enqueue( $hook ) {
 		LIS_DIRECTORY_VERSION,
 		true
 	);
+
+	// Gallery box: thumbnails in a row, × to remove, first photo = Cover.
+	wp_register_style( 'lis-directory-admin', false, array(), LIS_DIRECTORY_VERSION );
+	wp_enqueue_style( 'lis-directory-admin' );
+	wp_add_inline_style( 'lis-directory-admin', '
+#lis_listing_gallery_preview{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.lis-listing-gallery-thumb{position:relative;display:flex;flex-direction:column;gap:4px;width:96px}
+.lis-listing-gallery-thumb img{width:96px;height:96px;object-fit:cover;border-radius:6px;border:1px solid #dcdcde;display:block}
+.lis-listing-gallery-thumb:first-child img{outline:3px solid #2271b1;outline-offset:1px}
+.lis-listing-gallery-remove{position:absolute;top:-7px;right:-7px;width:20px;height:20px;padding:0;border-radius:50%;border:0;background:#b32d2e;color:#fff;line-height:18px;cursor:pointer}
+.lis-listing-gallery-cover{padding:2px 0;font-size:11px;border:1px solid #c3c4c7;border-radius:4px;background:#fff;cursor:pointer}
+.lis-listing-gallery-thumb:first-child .lis-listing-gallery-cover{font-size:0;background:#2271b1;border-color:#2271b1;color:#fff;pointer-events:none}
+.lis-listing-gallery-thumb:first-child .lis-listing-gallery-cover::after{content:"\\2605  Cover";font-size:11px}
+' );
 }

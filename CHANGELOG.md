@@ -1,3 +1,7 @@
+## [0.60.2] — 2026-11-20 — Admin gallery box styles
+
+- The wp-admin listing Gallery box never had styles: its CSS lived in front-end `listings.css`. `lis_directory_admin_enqueue()` now adds an inline style: thumbnails in a row, × to remove, the first photo outlined with a "★ Cover" label, "Make cover" on the rest.
+
 ## [0.60.1] — 2026-11-20 — Cover photo picker, straight cover card
 
 Lucca liked the Cover layout's card look; asked for no tilt, the photo at its uploaded aspect ratio, and a way to choose the main photo.
