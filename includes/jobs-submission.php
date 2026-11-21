@@ -22,6 +22,23 @@ add_shortcode( 'lis_job_submit', 'lis_directory_render_job_form_shortcode' );
 add_shortcode( 'lis_job_dashboard', 'lis_directory_render_job_dashboard_shortcode' );
 add_action( 'admin_post_lis_directory_save_job', 'lis_directory_handle_job_save' );
 add_action( 'admin_post_lis_directory_job_action', 'lis_directory_handle_job_action' );
+add_filter( 'body_class', 'lis_directory_job_form_body_class' );
+
+/**
+ * The post form brings its own headline (it changes with what you're
+ * posting), so mark the page and let work-post.css hide the theme's title.
+ * Only for signed-in visitors: signed out, the form is a sign-in prompt and
+ * the page title still explains the page.
+ */
+function lis_directory_job_form_body_class( $classes ) {
+	if ( is_singular() && is_user_logged_in() ) {
+		$post = get_post();
+		if ( $post && has_shortcode( (string) $post->post_content, 'lis_job_submit' ) ) {
+			$classes[] = 'lis-post-page';
+		}
+	}
+	return $classes;
+}
 
 /**
  * Whether the current user may edit / pay for / close this job — its author,
@@ -144,7 +161,8 @@ function lis_directory_render_job_form_shortcode() {
 	$price       = $job ? '' : lis_directory_get_job_price_text();
 
 	ob_start();
-	echo '<div class="lis-job-formwrap">';
+	wp_enqueue_style( 'lis-directory-work-post', LIS_DIRECTORY_URL . 'assets/css/work-post.css', array( 'lis-directory-jobs' ), LIS_DIRECTORY_VERSION );
+	echo '<div class="lis-job-formwrap lp">';
 
 	if ( isset( $_GET['lis_job_updated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		echo '<div class="lis-job-notice lis-job-notice--success">Job updated.</div>';
@@ -166,10 +184,11 @@ function lis_directory_render_job_form_shortcode() {
 		}
 	}
 	$days = lis_directory_get_job_duration_days();
+	$note = '';
 	if ( $price ) {
-		echo '<p class="lis-job-price-note">Posting a job is <strong>' . esc_html( $price ) . '</strong>' . ( $days ? ' for ' . (int) $days . ' days' : '' ) . '. You\'ll pay at checkout after you save it.</p>';
+		$note = '<p class="lis-job-price-note">Posting a job is <strong>' . esc_html( $price ) . '</strong>' . ( $days ? ' for ' . (int) $days . ' days' : '' ) . '. You\'ll pay at checkout after you save it.</p>';
 	} elseif ( ! $job ) {
-		echo '<p class="lis-job-price-note">Posting is <strong>free</strong>. Your post goes live as soon as you save it' . ( $days ? ' and stays up for ' . (int) $days . ' days (renew free anytime from My Job Postings)' : '' ) . '.</p>';
+		$note = '<p class="lis-job-price-note">Free, and live as soon as you save it' . ( $days ? '. It stays up ' . (int) $days . ' days, and you can renew it free from My Job Postings' : '' ) . '.</p>';
 	}
 	$valid_kinds = array( 'hiring', 'gig', 'seeking' );
 	$get_kind    = isset( $_GET['kind'] ) ? sanitize_key( wp_unslash( $_GET['kind'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -210,7 +229,21 @@ function lis_directory_render_job_form_shortcode() {
 		return $out;
 	};
 	$kind_labels = array( 'hiring' => 'I\'m hiring', 'gig' => 'I need a hand (a one-time gig)', 'seeking' => 'I\'m looking for work' );
+	// Tiles at the top of the form: same order and colors as the work board.
+	$kind_tiles = array(
+		'gig'     => array( 'I need a hand', 'A one-time job, like raking a yard or moving a couch' ),
+		'hiring'  => array( 'I\'m hiring', 'A job at your business: full-time, part-time or seasonal' ),
+		'seeking' => array( 'I\'m available', 'List what you do so neighbors can find you' ),
+	);
+	$board_url = get_post_type_archive_link( 'lis_job' );
 	?>
+	<header class="lp-head">
+		<?php if ( $board_url ) : ?><a class="lp-back" href="<?php echo esc_url( $board_url ); ?>">&larr; Back to the work board</a><?php endif; ?>
+		<p class="lp-kick"><?php echo $job ? 'Edit your post' : 'Post on the work board'; ?></p>
+		<h1 class="lp-h1"><?php echo $job ? esc_html( get_the_title( $job ) ) : $lbl( 'Hire someone <span>local.</span>', 'List <span>yourself.</span>', 'Get a <span>hand.</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text or escaped. ?></h1>
+		<?php echo $note; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built above. ?>
+	</header>
+	<div class="lp-grid"><div class="lp-main">
 	<form class="lis-job-form" method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="lis_directory_save_job" />
 		<input type="hidden" name="job_id" value="<?php echo (int) $job_id; ?>" />
@@ -219,9 +252,9 @@ function lis_directory_render_job_form_shortcode() {
 
 		<fieldset class="lis-job-kind">
 			<legend>What are you posting?</legend>
-			<?php foreach ( $kind_labels as $value => $label ) : ?>
+			<?php foreach ( $kind_tiles as $value => $tile ) : ?>
 				<?php if ( 'seeking' === $value && ! $allow_seeking ) { continue; } ?>
-				<label class="lis-job-kind-option"><input type="radio" name="lis_job_kind" value="<?php echo esc_attr( $value ); ?>" <?php checked( $kind, $value ); ?> /> <?php echo esc_html( $label ); ?></label>
+				<label class="lis-job-kind-option lp-tile lp-tile--<?php echo esc_attr( $value ); ?>"><input type="radio" name="lis_job_kind" value="<?php echo esc_attr( $value ); ?>" <?php checked( $kind, $value ); ?> /> <b><?php echo esc_html( $tile[0] ); ?></b><small><?php echo esc_html( $tile[1] ); ?></small></label>
 			<?php endforeach; ?>
 		</fieldset>
 
@@ -316,33 +349,86 @@ function lis_directory_render_job_form_shortcode() {
 
 		<fieldset>
 			<legend><?php echo $lbl( 'How to apply', 'How to reach you', 'How neighbors reach you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
-			<p><label for="lis_job_apply_url"><?php echo $lbl( 'Application link', 'Link <span class="lis-job-optional">(résumé, LinkedIn, etc.)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
-			<input type="url" id="lis_job_apply_url" name="lis_job_apply_url" value="<?php echo esc_attr( $meta( 'apply_url' ) ); ?>" placeholder="https://" /></p>
-			<p><label for="lis_job_apply_email"><?php echo $lbl( 'Application email', 'Email' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			<p><label for="lis_job_apply_email"><?php echo $lbl( 'Application email', 'Your email', 'Your email' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="email" id="lis_job_apply_email" name="lis_job_apply_email" value="<?php echo esc_attr( $meta( 'apply_email' ) ); ?>" /></p>
+			<p><label for="lis_job_apply_url"><?php echo $lbl( 'Application link', 'Link <span class="lis-job-optional">(website, photos of your work, LinkedIn)</span>', 'Link <span class="lis-job-optional">(optional, e.g. photos or a sign-up sheet)</span>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			<input type="url" id="lis_job_apply_url" name="lis_job_apply_url" value="<?php echo esc_attr( $meta( 'apply_url' ) ); ?>" placeholder="https://" /></p>
 			<p class="lis-job-hint"><?php echo $lbl( 'Add at least one. Applicants go straight to you — we don\'t collect applications.', 'Add at least one. Employers contact you directly — it\'s shown on your post.', 'Add at least one. Neighbors contact you directly to offer a hand.' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
 			<p data-kind="hiring"<?php echo 'hiring' === $kind ? '' : ' hidden'; ?>><label for="lis_job_deadline">Application deadline <span class="lis-job-optional">(optional)</span></label>
 			<input type="date" id="lis_job_deadline" name="lis_job_deadline" value="<?php echo esc_attr( $meta( 'deadline' ) ); ?>" /></p>
 		</fieldset>
 
-		<p><button type="submit" class="lis-job-btn lis-job-btn--primary"><?php echo $job ? 'Save changes' : ( $price ? 'Save &amp; continue' : 'Post it' ); ?></button></p>
+		<div class="lp-submit">
+			<button type="submit" class="lis-job-btn lis-job-btn--primary"><?php echo $job ? 'Save changes' : ( $price ? 'Save &amp; continue' : $lbl( 'Post the job', 'Publish my profile', 'Post my gig' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></button>
+			<?php if ( ! $job ) : ?><small>You can edit or close it any time from My Job Postings.</small><?php endif; ?>
+		</div>
 	</form>
 	<script>
 	( function () {
 		var form = document.currentScript.previousElementSibling;
 		if ( ! form ) { return; }
+		var wrap = form.closest( '.lis-job-formwrap' ) || form;
+		function val( name ) { var f = form.querySelector( '[name="' + name + '"]' ); return f && ! f.disabled ? f.value.trim() : ''; }
+		function kind() { return ( form.querySelector( 'input[name="lis_job_kind"]:checked' ) || form.querySelector( 'input[name="lis_job_kind"][type="hidden"]' ) || {} ).value || 'hiring'; }
 		function sync() {
-			var k = ( form.querySelector( 'input[name="lis_job_kind"]:checked' ) || form.querySelector( 'input[name="lis_job_kind"][type="hidden"]' ) || {} ).value || 'hiring';
-			form.querySelectorAll( '[data-kind]' ).forEach( function ( el ) { el.hidden = el.getAttribute( 'data-kind' ) !== k; } );
+			var k = kind();
+			wrap.setAttribute( 'data-kind-now', k );
+			wrap.querySelectorAll( '[data-kind]' ).forEach( function ( el ) { el.hidden = el.getAttribute( 'data-kind' ) !== k; } );
 			form.querySelectorAll( '[data-kind-not]' ).forEach( function ( el ) {
 				el.hidden = el.getAttribute( 'data-kind-not' ).split( ' ' ).indexOf( k ) > -1;
 				el.querySelectorAll( 'select,input' ).forEach( function ( f ) { f.disabled = el.hidden; } );
 			} );
+			preview();
+		}
+		// Live preview: the card as it will sit on the work board.
+		var card = wrap.querySelector( '.lp-card' );
+		function txt( sel, s ) { var el = card.querySelector( sel ); if ( el ) { el.textContent = s; el.hidden = ! s; } }
+		function preview() {
+			if ( ! card ) { return; }
+			var k = kind(), title = val( 'lis_job_title' ), name = val( 'lis_job_company' ), where = val( 'lis_job_location' ), when = val( 'lis_job_when' );
+			var min = val( 'lis_job_salary_min' ), max = val( 'lis_job_salary_max' ), per = form.querySelector( '[name="lis_job_salary_period"]' );
+			var perTxt = per && per.value ? ' ' + per.options[ per.selectedIndex ].text : '';
+			var pay = min || max ? '$' + ( min && max ? min + '–' + max : ( min || max ) ) + perTxt : '';
+			card.setAttribute( 'data-k', k );
+			var ph = { gig: [ 'Rake leaves in the front yard', 'Your name' ], hiring: [ 'Line cook, evenings', 'Your business' ], seeking: [ 'Handyman and snow removal', 'Your name' ] }[ k ];
+			if ( k === 'seeking' ) {
+				txt( '.lp-card-h', name || ph[ 1 ] );
+				txt( '.lp-card-s', title || ph[ 0 ] );
+			} else {
+				txt( '.lp-card-h', title || ph[ 0 ] );
+				txt( '.lp-card-s', k === 'gig' ? [ where, when ].filter( Boolean ).join( ' · ' ) || 'Where · When' : [ name || ph[ 1 ], where ].filter( Boolean ).join( ' · ' ) );
+			}
+			txt( '.lp-card-pay', pay );
+			var av = card.querySelector( '.lp-card-av' ); if ( av ) { av.textContent = ( ( k === 'hiring' || k === 'seeking' ? name : title ) || '?' ).charAt( 0 ).toUpperCase(); }
+			var skills = card.querySelector( '.lp-card-skills' );
+			if ( skills ) {
+				var list = k === 'seeking' ? val( 'lis_job_skills' ).split( /[,;\n]+/ ).map( function ( s ) { return s.trim(); } ).filter( Boolean ).slice( 0, 4 ) : [];
+				skills.innerHTML = '';
+				list.forEach( function ( s ) { var li = document.createElement( 'li' ); li.textContent = s; skills.appendChild( li ); } );
+				skills.hidden = ! list.length;
+			}
 		}
 		form.querySelectorAll( 'input[name="lis_job_kind"]' ).forEach( function ( r ) { r.addEventListener( 'change', sync ); } );
+		form.addEventListener( 'input', preview );
+		form.addEventListener( 'change', preview );
 		sync();
 	}() );
 	</script>
+	</div>
+	<aside class="lp-side" aria-hidden="true">
+		<p class="lp-side-k">Your post will look like this</p>
+		<div class="lp-card" data-k="<?php echo esc_attr( $kind ); ?>">
+			<span class="lp-card-kind"><?php echo $lbl( 'Job', 'Available for work', 'Local gig' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></span>
+			<div class="lp-card-row">
+				<span class="lp-card-av">?</span>
+				<span class="lp-card-t"><b class="lp-card-h"></b><small class="lp-card-s"></small></span>
+				<em class="lp-card-pay" hidden></em>
+			</div>
+			<ul class="lp-card-skills" hidden></ul>
+		</div>
+		<p class="lp-side-note"><?php echo $lbl( 'Shows in the Jobs column on the work board.', 'Shows in Available for Work, under every town you pick.', 'Shows in Local Gigs on the work board.' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></p>
+	</aside>
+	</div>
 	<?php
 	echo '</div>';
 	return ob_get_clean();

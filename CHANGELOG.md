@@ -1,3 +1,10 @@
+## [0.63.0] — 2026-11-21 — Post form matches the work board (staging only)
+
+- New assets/css/work-post.css: headline that changes with what you are posting, three colored tiles for gig / job / profile, numbered section cards with a colored top edge, rounded fields, town chips, clay submit button.
+- Live preview card beside the form shows the post as it will look on the board.
+- Theme page title hidden on the post page for signed-in visitors (body class lis-post-page).
+- Gigs and profiles no longer say "Application link / email"; email comes first.
+
 ## [0.62.2] — 2026-11-21 — Profile card tidy (staging only)
 
 - Profile cards stack "Works in" and availability on their own lines (each in its own span), and the headline wraps instead of cutting off.
