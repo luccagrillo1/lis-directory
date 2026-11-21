@@ -112,7 +112,12 @@ function lis_directory_work_hub_items() {
 			'ago'      => human_time_diff( get_post_time( 'U', true, $id ), time() ) . ' ago',
 			'deadline' => (string) get_post_meta( $id, '_lis_job_deadline', true ),
 			'excerpt'  => wp_trim_words( wp_strip_all_tags( $p->post_content ), 14, '…' ),
+			'skills'   => 'seeking' === $kind ? lis_directory_job_skills( $id ) : array(),
+			'areas'    => 'seeking' === $kind ? lis_directory_job_areas( $id ) : array(),
+			'avail'    => 'seeking' === $kind ? (string) get_post_meta( $id, '_lis_job_availability', true ) : '',
 		);
+		// Every town a post belongs to: its own, plus any a profile will travel to.
+		$item['towns'] = array_values( array_unique( array_filter( array_merge( array( $item['town'] ), $item['areas'] ) ) ) );
 		$out[ $kind ][] = $item;
 	}
 	return $out;
@@ -131,8 +136,11 @@ function lis_directory_work_hub_tint( $text ) {
 
 /** One row in a column. $by_cat maps category id => [ kind => count ] for the cross-links. */
 function lis_directory_work_hub_row( array $it, array $by_cat, $allow_seeking ) {
-	$search = strtolower( implode( ' ', array( $it['title'], $it['name'], $it['location'], $it['cat_name'], $it['type_lbl'], $it['when'], $it['excerpt'] ) ) );
-	$attrs  = ' data-kind="' . esc_attr( $it['kind'] ) . '" data-town="' . esc_attr( $it['town'] ) . '" data-type="' . esc_attr( $it['type'] ) . '" data-text="' . esc_attr( $search ) . '"';
+	$search = mb_strtolower( implode( ' ', array_merge( array( $it['title'], $it['name'], $it['location'], $it['cat_name'], $it['type_lbl'], $it['when'], $it['excerpt'], $it['avail'] ), $it['skills'], $it['areas'] ) ) );
+	$attrs  = ' data-kind="' . esc_attr( $it['kind'] ) . '" data-towns="' . esc_attr( $it['towns'] ? '|' . implode( '|', $it['towns'] ) . '|' : '' ) . '" data-type="' . esc_attr( $it['type'] ) . '" data-text="' . esc_attr( $search ) . '"';
+	if ( 'seeking' === $it['kind'] ) {
+		return lis_directory_work_hub_person( $it, $attrs, $by_cat );
+	}
 	$where  = $it['town'] ? $it['town'] : $it['location'];
 
 	ob_start();
@@ -199,6 +207,64 @@ function lis_directory_work_hub_row( array $it, array $by_cat, $allow_seeking ) 
 	return ob_get_clean();
 }
 
+/**
+ * A profile card in Available for Work: who they are, what they do (skills
+ * as chips, which are also what search matches), where they'll go, and when.
+ */
+function lis_directory_work_hub_person( array $it, $attrs, array $by_cat ) {
+	$name   = $it['name'] ? $it['name'] : $it['title'];
+	$skills = $it['skills'];
+	$shown  = array_slice( $skills, 0, 4 );
+	$more   = count( $skills ) - count( $shown );
+
+	ob_start();
+	echo '<li class="wh-row wh-person"' . $attrs . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the caller.
+	echo '<a class="wh-main" href="' . esc_url( $it['url'] ) . '">';
+	if ( $it['logo'] ) {
+		echo '<span class="wh-av wh-av--photo">' . wp_get_attachment_image( $it['logo'], 'thumbnail', false, array( 'alt' => '' ) ) . '</span>';
+	} else {
+		echo '<span class="wh-av" style="--c:' . esc_attr( lis_directory_work_hub_tint( $name ) ) . '" aria-hidden="true">' . esc_html( lis_directory_work_hub_initial( $name ) ) . '</span>';
+	}
+	echo '<span class="wh-txt"><b>' . esc_html( $name ) . '</b><small>' . esc_html( $it['title'] ) . '</small></span>';
+	if ( $it['pay'] ) {
+		echo '<em class="wh-pay">' . esc_html( $it['pay'] ) . '</em>';
+	}
+	echo '</a>';
+
+	if ( $shown ) {
+		echo '<ul class="wh-skills" aria-label="Skills">';
+		foreach ( $shown as $s ) {
+			echo '<li>' . esc_html( $s ) . '</li>';
+		}
+		if ( $more > 0 ) {
+			echo '<li class="wh-skills-more">+' . (int) $more . '</li>';
+		}
+		echo '</ul>';
+	}
+
+	$meta = array();
+	if ( $it['areas'] ) {
+		$areas  = $it['areas'];
+		$meta[] = 'Works in ' . esc_html( count( $areas ) > 3 ? implode( ', ', array_slice( $areas, 0, 3 ) ) . ' +' . ( count( $areas ) - 3 ) : implode( ', ', $areas ) );
+	} elseif ( $it['town'] || $it['location'] ) {
+		$meta[] = 'Based in ' . esc_html( $it['town'] ? $it['town'] : $it['location'] );
+	}
+	if ( $it['avail'] ) {
+		$meta[] = esc_html( $it['avail'] );
+	}
+	if ( $meta ) {
+		echo '<p class="wh-meta">' . implode( '<i aria-hidden="true"></i>', $meta ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- parts escaped above.
+	}
+
+	$n = ( $it['cat'] && isset( $by_cat[ $it['cat'] ] ) ) ? $by_cat[ $it['cat'] ] : array();
+	if ( ! empty( $n['gig'] ) ) {
+		$c = (int) $n['gig'];
+		echo '<a class="wh-bridge" href="#wh-gigs" data-go="gigs" data-q="' . esc_attr( mb_strtolower( $it['cat_name'] ) ) . '">' . esc_html( $c . ( 1 === $c ? ' open gig fits' : ' open gigs fit' ) ) . ' &rarr;</a>';
+	}
+	echo '</li>';
+	return ob_get_clean();
+}
+
 function lis_directory_render_work_hub() {
 	$items         = lis_directory_work_hub_items();
 	$allow_seeking = lis_directory_jobs_allow_seeking();
@@ -220,8 +286,8 @@ function lis_directory_render_work_hub() {
 	$towns_used = array();
 	foreach ( $items as $list ) {
 		foreach ( $list as $it ) {
-			if ( $it['town'] ) {
-				$towns_used[ $it['town'] ] = true;
+			foreach ( $it['towns'] as $t ) {
+				$towns_used[ $t ] = true;
 			}
 		}
 	}

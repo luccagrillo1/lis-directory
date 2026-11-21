@@ -1,3 +1,11 @@
+## [0.62.0] — 2026-11-21 — Available for Work profiles (staging only)
+
+- "Looking for work" posts are now profiles: skills (required, up to 10, searchable), towns they will work in, and availability. Type and Workplace are no longer asked.
+- Work board: profile cards with photo or initial, skill chips, "Works in" towns and availability. A profile shows under every town it works in.
+- Profile page: photo, name, headline, skills, Based in / Works in / Available / Rate, and "Contact <first name>" / "See their work" buttons.
+- Posting from the board as "I am available" ticks the town you typed.
+- wp-admin Job Details box edits skills, towns and availability.
+
 ## [0.61.2] — 2026-11-21 — Work board fixes (staging only)
 
 - Posting from the work board now carries Where and When into the form, not just the title.

@@ -50,6 +50,7 @@ function lis_directory_job_error_message( $key ) {
 	$messages = array(
 		'title'           => 'A job title is required.',
 		'company'         => 'The company name (or, for someone looking for work, your name) is required.',
+		'skills'          => 'Add at least one skill so neighbors can find you.',
 		'description'     => 'Please describe the job.',
 		'category'        => 'Please choose a category.',
 		'employment_type' => 'Please choose an employment type.',
@@ -190,6 +191,13 @@ function lis_directory_render_job_form_shortcode() {
 				$prefill[ 'lis_job_' . $k ] = sanitize_text_field( wp_unslash( $_GET[ $k ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			}
 		}
+		// A profile started from the board: tick the town they typed.
+		if ( 'seeking' === $kind && ! empty( $prefill['lis_job_location'] ) && function_exists( 'lis_directory_work_hub_town_of' ) ) {
+			$town = lis_directory_work_hub_town_of( $prefill['lis_job_location'] );
+			if ( $town ) {
+				$prefill['lis_job_areas'] = array( $town );
+			}
+		}
 	}
 	// Labels that read differently per post type; the inline script below
 	// swaps them when the type changes. $gig falls back to the hiring text.
@@ -219,7 +227,7 @@ function lis_directory_render_job_form_shortcode() {
 
 		<fieldset>
 			<legend><?php echo $lbl( 'The job', 'The work you want', 'What you need done' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static text. ?></legend>
-			<p><label for="lis_job_title"><?php echo $lbl( 'Job title *', 'What kind of work are you looking for? *', 'What do you need done? *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			<p><label for="lis_job_title"><?php echo $lbl( 'Job title *', 'What do you do? * <span class="lis-job-optional">(one line, e.g. &ldquo;Handyman and snow removal&rdquo;)</span>', 'What do you need done? *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="text" id="lis_job_title" name="lis_job_title" value="<?php echo esc_attr( $title ); ?>" required /></p>
 
 			<p><label for="lis_job_category">Category *</label>
@@ -230,7 +238,23 @@ function lis_directory_render_job_form_shortcode() {
 				<?php endforeach; ?>
 			</select></p>
 
-			<div class="lis-job-form-row" data-kind-not="gig">
+			<div data-kind="seeking"<?php echo 'seeking' === $kind ? '' : ' hidden'; ?>>
+				<p><label for="lis_job_skills">Skills * <span class="lis-job-optional">(separate with commas, up to 10)</span></label>
+				<input type="text" id="lis_job_skills" name="lis_job_skills" value="<?php echo esc_attr( $meta( 'skills' ) ); ?>" placeholder="Snow removal, Hauling, Small repairs" /></p>
+				<p class="lis-job-hint">Neighbors search by these, so use the words they'd type.</p>
+				<?php $areas_now = $job ? lis_directory_job_areas( $job->ID ) : array(); ?>
+				<?php if ( isset( $prefill['lis_job_areas'] ) || isset( $prefill['lis_job_areas_sent'] ) ) { $areas_now = isset( $prefill['lis_job_areas'] ) ? (array) $prefill['lis_job_areas'] : array(); } ?>
+				<fieldset class="lis-job-areas"><legend>Towns you'll work in</legend>
+					<input type="hidden" name="lis_job_areas_sent" value="1" />
+					<?php foreach ( lis_directory_job_area_choices() as $town ) : ?>
+						<label><input type="checkbox" name="lis_job_areas[]" value="<?php echo esc_attr( $town ); ?>" <?php checked( in_array( $town, $areas_now, true ) ); ?> /> <?php echo esc_html( $town ); ?></label>
+					<?php endforeach; ?>
+				</fieldset>
+				<p><label for="lis_job_availability">When you're available <span class="lis-job-optional">(optional)</span></label>
+				<input type="text" id="lis_job_availability" name="lis_job_availability" value="<?php echo esc_attr( $meta( 'availability' ) ); ?>" placeholder="e.g. Weekends and evenings" /></p>
+			</div>
+
+			<div class="lis-job-form-row" data-kind-not="gig seeking">
 				<p><label for="lis_job_employment_type">Type *</label>
 				<select id="lis_job_employment_type" name="lis_job_employment_type" required>
 					<?php foreach ( lis_directory_get_job_employment_types() as $value => $label ) : ?>
@@ -245,7 +269,7 @@ function lis_directory_render_job_form_shortcode() {
 				</select></p>
 			</div>
 
-			<p><label for="lis_job_location">Location</label>
+			<p><label for="lis_job_location"><?php echo $lbl( 'Location', 'Where you\'re based', 'Location' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="text" id="lis_job_location" name="lis_job_location" value="<?php echo esc_attr( $meta( 'location' ) ); ?>" placeholder="e.g. Sandpoint, ID" /></p>
 
 			<p data-kind="gig"<?php echo 'gig' === $kind ? '' : ' hidden'; ?>><label for="lis_job_when">When</label>
@@ -311,7 +335,7 @@ function lis_directory_render_job_form_shortcode() {
 			var k = ( form.querySelector( 'input[name="lis_job_kind"]:checked' ) || form.querySelector( 'input[name="lis_job_kind"][type="hidden"]' ) || {} ).value || 'hiring';
 			form.querySelectorAll( '[data-kind]' ).forEach( function ( el ) { el.hidden = el.getAttribute( 'data-kind' ) !== k; } );
 			form.querySelectorAll( '[data-kind-not]' ).forEach( function ( el ) {
-				el.hidden = el.getAttribute( 'data-kind-not' ) === k;
+				el.hidden = el.getAttribute( 'data-kind-not' ).split( ' ' ).indexOf( k ) > -1;
 				el.querySelectorAll( 'select,input' ).forEach( function ( f ) { f.disabled = el.hidden; } );
 			} );
 		}

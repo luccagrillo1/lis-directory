@@ -164,3 +164,12 @@ html.wh-touring .wh-spot,html.wh-touring .wh-tip{display:block}
 @media (max-width:760px){.wh{padding:32px 16px 56px}.wh-compose{grid-template-columns:1fr;padding:20px}.wh-prev{display:none}}
 @media (prefers-reduced-motion:reduce){.wh *,.wh-spot,.wh-tip{transition:none!important;animation:none!important}}
 .wh-col>:last-child:not(.wh-dot){border-radius:0 0 15px 15px;overflow:hidden}
+
+/* Available for Work: profile cards */
+.wh .wh-skills{list-style:none;margin:0;padding:0 0 0 48px;display:flex;flex-wrap:wrap;gap:5px}
+.wh .wh-skills li{margin:0;padding:3px 9px;border-radius:999px;background:#EAF1F5;color:var(--wh-info);font-size:12.5px;font-weight:600;line-height:1.3}
+.wh .wh-skills .wh-skills-more{background:none;color:var(--wh-soft);padding-left:2px}
+.wh-person .wh-av{width:40px;height:40px}
+.wh-person .wh-meta,.wh-person .wh-bridge{padding-left:52px;margin-left:0}
+.wh-person .wh-skills{padding-left:52px}
+.wh-av--photo{background:var(--wh-pine-100)}

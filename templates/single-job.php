@@ -35,13 +35,18 @@ while ( have_posts() ) :
 	$seeking    = lis_directory_job_is_seeking( $job_id );
 	$gig        = lis_directory_job_is_gig( $job_id );
 	$when       = get_post_meta( $job_id, '_lis_job_when', true );
+	$skills     = $seeking ? lis_directory_job_skills( $job_id ) : array();
+	$areas      = $seeking ? lis_directory_job_areas( $job_id ) : array();
+	$avail      = $seeking ? (string) get_post_meta( $job_id, '_lis_job_availability', true ) : '';
 	$details    = array_filter( array(
-		( $seeking ? 'Name' : ( $gig ? 'Posted by' : 'Company' ) ) => $company,
-		'Location'  => $location,
+		( $seeking ? 'Name' : ( $gig ? 'Posted by' : 'Company' ) ) => $seeking ? '' : $company,
+		( $seeking ? 'Based in' : 'Location' ) => $location,
+		'Works in'  => implode( ', ', $areas ),
+		'Available' => $avail,
 		'When'      => $gig ? $when : '',
-		'Type'      => ( ! $gig && isset( $types[ $type ] ) ) ? $types[ $type ] : '',
-		'Workplace' => ( ! $gig && isset( $workplaces[ $workplace ] ) ) ? $workplaces[ $workplace ] : '',
-		'Pay'       => $salary,
+		'Type'      => ( ! $gig && ! $seeking && isset( $types[ $type ] ) ) ? $types[ $type ] : '',
+		'Workplace' => ( ! $gig && ! $seeking && isset( $workplaces[ $workplace ] ) ) ? $workplaces[ $workplace ] : '',
+		( $seeking ? 'Rate' : 'Pay' ) => $salary,
 		'Category'  => $cat ? $cat->name : '',
 		'Apply by'  => ( $deadline && ! $seeking && ! $gig ) ? mysql2date( get_option( 'date_format' ), $deadline . ' 00:00:00' ) : '',
 	) );
@@ -58,6 +63,28 @@ while ( have_posts() ) :
 			<div class="lis-job-notice"><?php echo $gig ? 'Someone is already on this one.' : 'This position has been filled.'; ?></div>
 		<?php endif; ?>
 
+		<?php if ( $seeking ) : ?>
+		<header class="lis-job-single-head lis-job-profile-head">
+			<?php if ( has_post_thumbnail() ) : ?>
+				<span class="lis-job-profile-photo"><?php the_post_thumbnail( 'medium', array( 'alt' => '' ) ); ?></span>
+			<?php else : ?>
+				<span class="lis-job-profile-photo lis-job-profile-photo--initial" style="--c:<?php echo esc_attr( function_exists( 'lis_directory_work_hub_tint' ) ? lis_directory_work_hub_tint( $company ) : '#2C5240' ); ?>" aria-hidden="true"><?php echo esc_html( function_exists( 'lis_directory_work_hub_initial' ) ? lis_directory_work_hub_initial( $company ) : '' ); ?></span>
+			<?php endif; ?>
+			<div>
+				<p class="lis-job-profile-kick">Available for work</p>
+				<h1 class="lis-job-single-title"><?php echo esc_html( $company ? $company : get_the_title() ); ?></h1>
+				<p class="lis-job-single-company"><?php the_title(); ?><?php if ( $location ) : ?> · <?php echo esc_html( $location ); ?><?php endif; ?></p>
+				<?php if ( $skills ) : ?>
+					<ul class="lis-job-skills" aria-label="Skills">
+						<?php foreach ( $skills as $s ) : ?><li><?php echo esc_html( $s ); ?></li><?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
+			</div>
+			<?php if ( $apply && ! $filled ) : ?>
+				<div class="lis-job-single-apply"><?php echo $apply; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside the render function. ?></div>
+			<?php endif; ?>
+		</header>
+		<?php else : ?>
 		<header class="lis-job-single-head">
 			<?php if ( has_post_thumbnail() ) : ?>
 				<span class="lis-job-single-logo"><?php the_post_thumbnail( 'medium', array( 'alt' => '' ) ); ?></span>
@@ -84,6 +111,7 @@ while ( have_posts() ) :
 				<div class="lis-job-single-apply"><?php echo $apply; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside the render function. ?></div>
 			<?php endif; ?>
 		</header>
+		<?php endif; ?>
 
 		<div class="lis-job-single-body">
 			<div class="lis-job-single-content">

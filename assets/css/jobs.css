@@ -515,3 +515,79 @@
 	border-color: var(--lis-dir-job-status-expired-border, var(--lis-dir-color-error-border, color-mix(in srgb, var(--lis-dir-color-error, var(--lis-error, #8E1D33)) 32%, var(--lis-dir-color-canvas, var(--lis-canvas, #FBFAF6)))));
 	color: var(--lis-dir-status-expired-text, var(--lis-dir-color-error, var(--lis-error, #8E1D33)));
 }
+
+/* Available for Work profile page (the "seeking" kind). */
+.lis-job-profile-photo {
+	flex: 0 0 104px;
+	width: 104px;
+	height: 104px;
+	border-radius: 50%;
+	overflow: hidden;
+	display: grid;
+	place-items: center;
+	background: var(--lis-pine-100, #E4EBE4);
+}
+
+.lis-job-profile-photo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.lis-job-profile-photo--initial {
+	background: var(--c, var(--lis-pine-700, #2C5240));
+	color: #fff;
+	font: 700 42px/1 var(--lis-font-display, 'Gabarito', system-ui, sans-serif);
+}
+
+.lis-job-profile-kick {
+	margin: 0 0 4px;
+	font-size: 0.78em;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--lis-info, #2A5B78);
+}
+
+.lis-job-skills {
+	list-style: none;
+	margin: 4px 0 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.lis-job-skills li {
+	margin: 0;
+	padding: 4px 12px;
+	border-radius: 999px;
+	background: #EAF1F5;
+	color: var(--lis-info, #2A5B78);
+	font-size: 0.88em;
+	font-weight: 600;
+}
+
+/* "Towns you'll work in" checkboxes on the post form. */
+.lis-job-form .lis-job-areas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 18px;
+	border: 0;
+	padding: 0;
+	margin: 0 0 16px;
+}
+
+.lis-job-form .lis-job-areas legend {
+	width: 100%;
+	padding: 0;
+	margin-bottom: 4px;
+	font-weight: 600;
+}
+
+.lis-job-form .lis-job-areas label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+}

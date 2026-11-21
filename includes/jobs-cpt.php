@@ -131,11 +131,57 @@ function lis_directory_job_is_gig( $job_id ) {
  * before validation so one rule set still governs every kind.
  */
 function lis_directory_job_apply_kind_defaults( array $src ) {
-	if ( isset( $src['lis_job_kind'] ) && 'gig' === $src['lis_job_kind'] ) {
+	$kind = isset( $src['lis_job_kind'] ) ? $src['lis_job_kind'] : '';
+	if ( 'gig' === $kind ) {
 		$src['lis_job_employment_type'] = 'temporary';
 		$src['lis_job_workplace']       = 'onsite';
 	}
+	// Profiles (Available for Work) don't ask either; keep a value an older
+	// profile already had, otherwise fill one in.
+	if ( 'seeking' === $kind ) {
+		if ( empty( $src['lis_job_employment_type'] ) || ! isset( lis_directory_get_job_employment_types()[ $src['lis_job_employment_type'] ] ) ) {
+			$src['lis_job_employment_type'] = 'part-time';
+		}
+		if ( empty( $src['lis_job_workplace'] ) || ! isset( lis_directory_get_job_workplaces()[ $src['lis_job_workplace'] ] ) ) {
+			$src['lis_job_workplace'] = 'onsite';
+		}
+	}
 	return $src;
+}
+
+/* ---------- Profiles (Available for Work = the "seeking" kind) ---------- */
+
+/** Skills on a profile, as a clean list. Stored as one comma-separated string. */
+function lis_directory_job_skills( $job_id ) {
+	return lis_directory_parse_job_skills( (string) get_post_meta( $job_id, '_lis_job_skills', true ) );
+}
+
+/** "Snow removal, hauling,, Small repairs" → [ 'Snow removal', 'Hauling', 'Small repairs' ] (max 10, deduped). */
+function lis_directory_parse_job_skills( $raw ) {
+	$out = array();
+	foreach ( preg_split( '/[,\n;]+/', (string) $raw ) as $s ) {
+		$s = trim( preg_replace( '/\s+/', ' ', sanitize_text_field( $s ) ) );
+		if ( '' === $s ) {
+			continue;
+		}
+		$s = mb_substr( $s, 0, 40 );
+		$s = mb_strtoupper( mb_substr( $s, 0, 1 ) ) . mb_substr( $s, 1 );
+		$out[ mb_strtolower( $s ) ] = $s;
+		if ( count( $out ) >= 10 ) {
+			break;
+		}
+	}
+	return array_values( $out );
+}
+
+/** Towns a profile will work in (subset of the work board's towns). */
+function lis_directory_job_areas( $job_id ) {
+	$raw = get_post_meta( $job_id, '_lis_job_areas', true );
+	return is_array( $raw ) ? array_values( $raw ) : array();
+}
+
+function lis_directory_job_area_choices() {
+	return function_exists( 'lis_directory_work_hub_towns' ) ? lis_directory_work_hub_towns() : array();
 }
 
 /** Whether people can post that they're looking for work (Job Settings, default on). */
@@ -282,6 +328,11 @@ function lis_directory_validate_job_fields( array $src ) {
 	if ( '' === trim( isset( $src['lis_job_company'] ) ? $src['lis_job_company'] : '' ) ) {
 		$errors[] = 'company';
 	}
+	// A profile is found by its skills, so it needs at least one.
+	if ( isset( $src['lis_job_kind'] ) && 'seeking' === $src['lis_job_kind']
+		&& ! lis_directory_parse_job_skills( isset( $src['lis_job_skills'] ) ? $src['lis_job_skills'] : '' ) ) {
+		$errors[] = 'skills';
+	}
 	$term_id = isset( $src['lis_job_category'] ) ? (int) $src['lis_job_category'] : 0;
 	$term    = $term_id ? get_term( $term_id, 'lis_job_category' ) : null;
 	if ( ! $term || is_wp_error( $term ) ) {
@@ -333,6 +384,18 @@ function lis_directory_save_job_fields( $job_id, array $src ) {
 	$gig     = isset( $src['lis_job_kind'] ) && 'gig' === $src['lis_job_kind'];
 	update_post_meta( $job_id, '_lis_job_kind', $seeking ? 'seeking' : ( $gig ? 'gig' : 'hiring' ) );
 	update_post_meta( $job_id, '_lis_job_when', $text( 'lis_job_when' ) );
+	// Profile fields. Only written when the form sent them, so an older form
+	// (or a save that never showed them) can't wipe a profile.
+	if ( isset( $src['lis_job_skills'] ) ) {
+		update_post_meta( $job_id, '_lis_job_skills', implode( ', ', lis_directory_parse_job_skills( $src['lis_job_skills'] ) ) );
+	}
+	if ( isset( $src['lis_job_availability'] ) ) {
+		update_post_meta( $job_id, '_lis_job_availability', $text( 'lis_job_availability' ) );
+	}
+	if ( isset( $src['lis_job_areas_sent'] ) ) {
+		$areas = isset( $src['lis_job_areas'] ) ? array_map( 'sanitize_text_field', (array) $src['lis_job_areas'] ) : array();
+		update_post_meta( $job_id, '_lis_job_areas', array_values( array_intersect( lis_directory_job_area_choices(), $areas ) ) );
+	}
 	update_post_meta( $job_id, '_lis_job_company', $text( 'lis_job_company' ) );
 	update_post_meta( $job_id, '_lis_job_company_website', isset( $src['lis_job_company_website'] ) ? esc_url_raw( $src['lis_job_company_website'] ) : '' );
 	update_post_meta( $job_id, '_lis_job_location', $text( 'lis_job_location' ) );
@@ -406,6 +469,14 @@ function lis_directory_render_job_meta_box( $post ) {
 		</td></tr>
 		<tr><th><label for="lis_job_apply_url">Apply URL</label></th><td><input type="url" class="regular-text" id="lis_job_apply_url" name="lis_job_apply_url" value="<?php echo esc_attr( $m( 'apply_url' ) ); ?>" placeholder="https://" /></td></tr>
 		<tr><th><label for="lis_job_apply_email">Apply email</label></th><td><input type="email" class="regular-text" id="lis_job_apply_email" name="lis_job_apply_email" value="<?php echo esc_attr( $m( 'apply_email' ) ); ?>" /><p class="description">At least one of Apply URL / Apply email.</p></td></tr>
+		<tr><th><label for="lis_job_skills">Skills (profiles)</label></th><td><input type="text" class="large-text" id="lis_job_skills" name="lis_job_skills" value="<?php echo esc_attr( $m( 'skills' ) ); ?>" placeholder="Snow removal, Hauling, Small repairs" /><p class="description">Looking-for-work posts only. Comma-separated, up to 10.</p></td></tr>
+		<tr><th>Works in (profiles)</th><td><input type="hidden" name="lis_job_areas_sent" value="1" />
+			<?php $areas_now = lis_directory_job_areas( $post->ID ); ?>
+			<?php foreach ( lis_directory_job_area_choices() as $town ) : ?>
+				<label style="margin-right:12px"><input type="checkbox" name="lis_job_areas[]" value="<?php echo esc_attr( $town ); ?>" <?php checked( in_array( $town, $areas_now, true ) ); ?> /> <?php echo esc_html( $town ); ?></label>
+			<?php endforeach; ?>
+		</td></tr>
+		<tr><th><label for="lis_job_availability">Availability (profiles)</label></th><td><input type="text" class="regular-text" id="lis_job_availability" name="lis_job_availability" value="<?php echo esc_attr( $m( 'availability' ) ); ?>" placeholder="Weekends and evenings" /></td></tr>
 		<tr><th><label for="lis_job_when">When (gigs)</label></th><td><input type="text" class="regular-text" id="lis_job_when" name="lis_job_when" value="<?php echo esc_attr( $m( 'when' ) ); ?>" placeholder="e.g. This Saturday morning" /></td></tr>
 		<tr><th><label for="lis_job_deadline">Application deadline</label></th><td><input type="date" id="lis_job_deadline" name="lis_job_deadline" value="<?php echo esc_attr( $m( 'deadline' ) ); ?>" /> <span class="description">Optional.</span></td></tr>
 		<tr><th><label for="lis_job_expiry_date">Listing expires</label></th><td><input type="date" id="lis_job_expiry_date" name="lis_job_expiry_date" value="<?php echo esc_attr( $expiry_date ); ?>" /><input type="hidden" name="lis_job_expiry_prev" value="<?php echo esc_attr( $expiry_date ); ?>" /> <span class="description">Set automatically on publish (Jobs &rarr; Job Settings). Clear it to never expire.</span></td></tr>

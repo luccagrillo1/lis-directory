@@ -294,8 +294,19 @@ function lis_directory_render_job_apply_buttons( $job_id ) {
 		}
 		return $out;
 	}
+	if ( $seek ) {
+		$name  = trim( (string) get_post_meta( $job_id, '_lis_job_company', true ) );
+		$first = $name ? strtok( $name, ' ' ) : '';
+		if ( $email ) {
+			$out .= '<a class="lis-job-btn lis-job-btn--primary" href="mailto:' . esc_attr( antispambot( $email ) ) . '?subject=' . rawurlencode( 'Work for you, from Living in Sandpoint' ) . '">' . esc_html( $first ? 'Contact ' . $first : 'Contact' ) . '</a> ';
+		}
+		if ( $url ) {
+			$out .= '<a class="lis-job-btn' . ( $email ? '' : ' lis-job-btn--primary' ) . '" href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener">' . ( $email ? 'See their work' : esc_html( $first ? 'Contact ' . $first : 'Contact' ) ) . '</a>';
+		}
+		return $out;
+	}
 	if ( $url ) {
-		$out .= '<a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener">' . ( $seek ? 'View profile' : 'Apply now' ) . '</a> ';
+		$out .= '<a class="lis-job-btn lis-job-btn--primary" href="' . esc_url( $url ) . '" target="_blank" rel="nofollow noopener">Apply now</a> ';
 	}
 	if ( $email ) {
 		$subject = ( $seek ? 'Work opportunity: ' : 'Application: ' ) . get_the_title( $job_id );

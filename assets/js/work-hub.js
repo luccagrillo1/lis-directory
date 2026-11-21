@@ -19,7 +19,7 @@
 
 	/* ---------- filtering ---------- */
 	function matches( r ) {
-		if ( state.town && r.getAttribute( 'data-town' ) !== state.town ) { return false; }
+		if ( state.town && ( r.getAttribute( 'data-towns' ) || '' ).indexOf( '|' + state.town + '|' ) < 0 ) { return false; }
 		if ( state.type && r.getAttribute( 'data-kind' ) === 'hiring' && r.getAttribute( 'data-type' ) !== state.type ) { return false; }
 		if ( state.q ) {
 			var t = r.getAttribute( 'data-text' );
