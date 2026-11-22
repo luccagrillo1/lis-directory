@@ -1,3 +1,9 @@
+## [0.67.0] — 2026-11-22 — Audit batch 3: meta descriptions, smaller logo, readable labels
+
+- New includes/listing-meta.php: listings without their own SEOPress description get one built from category, town and tagline (or the first sentence), about 155 characters, plus og:description and twitter:description (audit item 35).
+- The Vendor Showcase heading image was 9,128px wide (158 KB) and loaded on every page; it's now 1000×89 (22 KB) with width/height set (item 31).
+- Listing Address / Phone labels 11px → 12.5px; directory search inputs 16px on phones so iPhones don't zoom; Features label 13px (items 27–28).
+
 ## [0.66.0] — 2026-11-22 — Directory landing tiles
 
 - New `[lis_directory_browse]` (includes/directory-browse.php): photo tiles for each top-level listing category that has local-business listings (children counted), biggest first, with a count and the newest listing photo in that category, plus a "See all N" tile. Links go to the results page with `?lis_category=`. Cached in the `lis_directory_browse_v1` transient (6 h), cleared on any listing save, term change or category edit. Attributes: `url`, `title`.

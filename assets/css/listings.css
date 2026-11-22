@@ -3107,3 +3107,12 @@ a.lis-account-stat:focus-visible {
 	.lis-dir-browse-page .lis-listing-search-input { font-size: 16px !important; }
 	.lis-dir-browse-page .ast-header-breadcrumb { display: none !important; }
 }
+
+/* Phone audit items 27–28 (v0.67.0): inputs at 16px so iPhones don't zoom on tap,
+   and the Features label readable. */
+@media (max-width: 768px) {
+	.lis-listing-feature-input,
+	.lis-listing-search input,
+	.lis-listing-search select { font-size: 16px; }
+	.lis-listing-search-field-label { font-size: 13px; }
+}

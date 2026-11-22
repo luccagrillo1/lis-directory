@@ -384,7 +384,7 @@ function lis_directory_render_heading_shortcode( $atts ) {
 	?>
 	<<?php echo esc_html( $tag ); ?> class="lis-pv-heading">
 		<?php if ( $browse_url ) : ?><a class="lis-pv-heading-link" href="<?php echo esc_url( $browse_url ); ?>"><?php endif; ?>
-		<img class="lis-pv-heading-lockup" src="<?php echo esc_url( LIS_DIRECTORY_URL . 'assets/img/lis-vendor-showcase-lockup.png?ver=' . LIS_DIRECTORY_VERSION ); ?>" alt="LIS Vendor Showcase" />
+		<img class="lis-pv-heading-lockup" src="<?php echo esc_url( LIS_DIRECTORY_URL . 'assets/img/lis-vendor-showcase-lockup.png?ver=' . LIS_DIRECTORY_VERSION ); ?>" alt="LIS Vendor Showcase" width="1000" height="89" />
 		<?php if ( $browse_url ) : ?></a><?php endif; ?>
 		<span class="lis-pv-heading-info" tabindex="0" aria-describedby="<?php echo esc_attr( $tooltip_id ); ?>">
 			<span class="lis-pv-heading-info-icon" aria-hidden="true">i</span>
