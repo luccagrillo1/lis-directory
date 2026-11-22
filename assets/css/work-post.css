@@ -139,7 +139,7 @@ body.lis-post-page .entry-header{display:none}
 /* The theme turns focused fields dotted; keep them solid. */
 .lp .lis-job-form input:focus,.lp .lis-job-form select:focus,.lp .lis-job-form textarea:focus{border-style:solid}
 /* Connect a directory listing (0.64.0) */
-.lp .lis-job-form .lp-connect{margin:20px 0 24px;padding:18px 20px 20px;border-radius:14px;background:var(--lp-pine-100);box-shadow:inset 0 0 0 1px var(--lp-pine-200)}
+.lp .lis-job-form .lp-connect{margin:0 0 24px;padding:18px 20px 20px;border-radius:14px;background:var(--lp-pine-100);box-shadow:inset 0 0 0 1px var(--lp-pine-200)}
 .lp .lis-job-form .lp-connect[hidden]{display:none}
 .lp .lp-connect-kick{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lp-pine-700)}
 .lp .lis-job-form .lp-connect .lp-connect-p{margin:0 0 14px;font-size:15px;line-height:1.5;color:var(--lp-pine-900);max-width:62ch}
@@ -151,3 +151,5 @@ body.lis-post-page .entry-header{display:none}
 .lp .lp-connect-p span{font-size:13.5px;color:var(--lp-soft)}
 .lp .lp-connect-logo{display:block;margin-top:8px;font-size:13.5px;color:var(--lp-pine-700)}
 .lp .lp-connect-logo[hidden],.lp[data-kind-now="seeking"] .lp-connect-logo{display:none}
+/* The legend floats and the card clears it, which swallows the card's top margin: space the legend instead. */
+.lp .lis-job-form > fieldset:has(> .lp-connect:not([hidden])) > legend{margin-bottom:22px}

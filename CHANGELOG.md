@@ -1,3 +1,7 @@
+## [0.64.3] — 2026-11-21 — Spacing, take two
+
+- The space above the "Get found twice" card now actually shows (it sits under a floated heading, so the space goes on the heading).
+
 ## [0.64.2] — 2026-11-21 — Spacing
 
 - More room between "The company" heading and the "Get found twice" card.
