@@ -89,16 +89,9 @@
 .wh .wh-bridge:hover{color:var(--wh-clay-600)}
 
 /* empty states */
-.wh-empty{padding:30px 22px 28px;text-align:center;display:grid;justify-items:center;gap:6px;border-top:1px solid var(--wh-line)}
+.wh-empty{padding:34px 22px 30px;text-align:center;display:grid;justify-items:center;gap:6px;border-top:1px solid var(--wh-line)}
 .wh-empty.is-in{animation:wh-empty-in .45s var(--wh-ease) both}
 @keyframes wh-empty-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.wh-empty-mark{width:54px;height:54px;border-radius:50%;border:1.5px dashed var(--wh-pine-200);position:relative;margin-bottom:6px}
-.wh-empty-mark::before,.wh-empty-mark::after{content:"";position:absolute;left:50%;top:50%;background:var(--wh-pine-600);border-radius:2px}
-.wh-empty-mark::before{width:16px;height:2px;margin:-1px 0 0 -8px}
-.wh-empty-mark::after{width:2px;height:16px;margin:-8px 0 0 -1px}
-.wh-col--gigs .wh-empty-mark{border-color:var(--wh-clay-200)}.wh-col--gigs .wh-empty-mark::before,.wh-col--gigs .wh-empty-mark::after{background:var(--wh-clay-600)}
-.wh-col--people .wh-empty-mark{border-color:#BFD2DE}.wh-col--people .wh-empty-mark::before,.wh-col--people .wh-empty-mark::after{background:var(--wh-info)}
-.wh-empty[data-mode="filtered"] .wh-empty-mark::after{display:none}
 .wh-empty-h{font:700 18px/1.2 var(--wh-display);color:var(--wh-pine-900)}
 .wh-empty-p{font-size:14.5px;line-height:1.45;color:var(--wh-soft);max-width:30ch}
 .wh-empty-acts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px}

@@ -399,7 +399,6 @@ function lis_directory_render_work_hub() {
 						?>
 					</ul>
 					<div class="wh-empty" data-empty="<?php echo esc_attr( $key ); ?>" data-total="<?php echo count( $list ); ?>"<?php echo $list ? ' hidden' : ''; ?>>
-						<span class="wh-empty-mark" aria-hidden="true"></span>
 						<p class="wh-empty-h"></p>
 						<p class="wh-empty-p"></p>
 						<div class="wh-empty-acts">

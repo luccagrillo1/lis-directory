@@ -1,3 +1,7 @@
+## [0.63.6] — 2026-11-21 — Plain empty states (staging only)
+
+- Work board empty columns drop the dashed plus circle; just the heading, line and button.
+
 ## [0.63.5] — 2026-11-21 — Breadcrumb (staging only)
 
 - Post a job and My Job Postings breadcrumbs read Home / Jobs / page, so Jobs is their parent.
