@@ -1,3 +1,7 @@
+## [0.63.3] — 2026-11-21 — Quieter focus (staging only)
+
+- Work board composer fields focus with a soft pine ring like the search box; no clay outline around the whole field. Keyboard focus rings are pine everywhere on the board and post form.
+
 ## [0.63.2] — 2026-11-21 — Post form polish (staging only)
 
 - Selected kind tile: colored ring, tint and a filled radio dot instead of a cap bar that did not follow the rounded corners.

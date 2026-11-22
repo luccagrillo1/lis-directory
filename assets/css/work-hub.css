@@ -12,7 +12,8 @@
 .wh h1,.wh h2{font-family:var(--wh-display);color:inherit;letter-spacing:-.015em;line-height:1.05;font-weight:700}
 .wh a{text-decoration:none;color:inherit}
 .wh button{font:inherit}
-.wh a:focus-visible,.wh button:focus-visible,.wh input:focus-visible,.wh label:focus-within{outline:2px solid var(--wh-clay-600);outline-offset:3px}
+.wh a:focus-visible,.wh button:focus-visible{outline:2px solid var(--wh-pine-900);outline-offset:3px}
+.wh .wh-seg label:has(input:focus-visible){outline:2px solid var(--wh-pine-900);outline-offset:2px}
 .wh [hidden]{display:none!important}
 
 /* header */
@@ -176,3 +177,4 @@ html.wh-touring .wh-spot,html.wh-touring .wh-tip{display:block}
 .wh-person .wh-meta{flex-direction:column;align-items:flex-start;gap:2px}
 .wh-person .wh-meta i{display:none}
 .wh-person .wh-txt small{white-space:normal;overflow:visible;text-overflow:clip}
+.wh .wh-f input:focus{border-color:var(--wh-pine-600);outline:none;box-shadow:0 0 0 3px var(--wh-pine-100)}

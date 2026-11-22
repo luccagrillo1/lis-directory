@@ -81,7 +81,7 @@ body.lis-post-page .entry-header{display:none}
 .lp .lis-job-form .lis-job-areas label:hover{box-shadow:inset 0 0 0 1px var(--lp-pine-600)}
 .lp .lis-job-form .lis-job-areas input{position:absolute;opacity:0;pointer-events:none}
 .lp .lis-job-form .lis-job-areas label:has(input:checked){background:var(--lp-pine-900);color:#fff;box-shadow:none}
-.lp .lis-job-form .lis-job-areas label:has(input:focus-visible){outline:2px solid var(--lp-clay-600);outline-offset:2px}
+.lp .lis-job-form .lis-job-areas label:has(input:focus-visible){outline:2px solid var(--lp-pine-900);outline-offset:2px}
 
 /* description editor */
 .lp .lis-job-form-editor{margin-top:0}
