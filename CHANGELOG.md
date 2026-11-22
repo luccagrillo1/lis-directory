@@ -1,3 +1,7 @@
+## [0.69.1] — 2026-11-22 — One h1 on Add Listing, not zero
+
+- Add Listing hides the theme's page title, so after 0.69.0 turned the link dialog's heading into an h2 the page had no h1. The same footer script now adds a screen-reader-only h1 (the page title) above a listing form when the page has none. Item 29.
+
 ## [0.69.0] — 2026-11-22 — Audit leftovers: phone list view, sign-up username, one h1
 
 - Directory results open in List view on phones (≤600px) unless the visitor already picked a view; the default isn't saved, so a tap on Grid still sticks. Phone list cards: fixed 108px photo column (the thumb wrap used to shrink to 78–160px), 120px rows, 2-line excerpt, no category badge over the photo (it wrapped and got clipped). Desktop list cards get the same fixed 200px column. Audit item 15.

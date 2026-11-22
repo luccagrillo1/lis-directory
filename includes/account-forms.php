@@ -344,6 +344,7 @@ function lis_directory_cap_wpum_upload_size( $file, $args = array() ) {
  * editors (Add Listing, Edit Listing, Post a Job) prints a hidden
  * <h1 id="link-modal-title">Insert/edit link</h1>, giving those pages a second
  * h1. Swap it for an h2 once the page has loaded; the dialog looks the same.
+ * 0.69.1: a listing form page left with no h1 gets a screen-reader-only one.
  */
 function lis_directory_demote_link_dialog_heading() {
 	// Only on pages that printed an editor (wp_enqueue_editor fires from wp_editor()).
@@ -354,17 +355,27 @@ function lis_directory_demote_link_dialog_heading() {
 	<script>
 	document.addEventListener( 'DOMContentLoaded', function () {
 		var h = document.getElementById( 'link-modal-title' );
-		if ( ! h || 'H1' !== h.tagName ) {
-			return;
+		if ( h && 'H1' === h.tagName ) {
+			var h2 = document.createElement( 'h2' );
+			for ( var i = 0; i < h.attributes.length; i++ ) {
+				h2.setAttribute( h.attributes[ i ].name, h.attributes[ i ].value );
+			}
+			while ( h.firstChild ) {
+				h2.appendChild( h.firstChild );
+			}
+			h.parentNode.replaceChild( h2, h );
 		}
-		var h2 = document.createElement( 'h2' );
-		for ( var i = 0; i < h.attributes.length; i++ ) {
-			h2.setAttribute( h.attributes[ i ].name, h.attributes[ i ].value );
+		// Add Listing hides the theme's page title, so that dialog heading was the
+		// page's only h1. If none is left, add a screen-reader-only one from the title.
+		var form = document.querySelector( '.lis-listing-submit-form' );
+		if ( form && ! document.querySelector( 'h1' ) ) {
+			var t = document.createElement( 'h1' );
+			t.className = 'screen-reader-text';
+			t.textContent = ( document.title.split( / [-–|] / )[0] || '' ).trim();
+			if ( t.textContent ) {
+				form.parentNode.insertBefore( t, form );
+			}
 		}
-		while ( h.firstChild ) {
-			h2.appendChild( h.firstChild );
-		}
-		h.parentNode.replaceChild( h2, h );
 	} );
 	</script>
 	<?php
