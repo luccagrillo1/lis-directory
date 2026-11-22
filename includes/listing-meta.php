@@ -108,13 +108,13 @@ add_action( 'wp_head', function () {
 	if ( ! lis_directory_listing_meta_applies() ) {
 		return;
 	}
-	// Did SEOPress print anything? Check what's already gone out isn't possible, so rely
-	// on the filter flag for the description, and always add og/twitter descriptions
-	// (SEOPress skips them entirely when the post has no description).
-	$desc = esc_attr( lis_directory_listing_meta_desc( get_queried_object_id() ) );
-	if ( ! $GLOBALS['lis_directory_meta_done']['desc'] ) {
-		echo '<meta name="description" content="' . $desc . '" />' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+	// When SEOPress took the description through its filter it also prints the og and
+	// twitter descriptions from it (0.67.0 printed them twice), so only fill in when it didn't.
+	if ( $GLOBALS['lis_directory_meta_done']['desc'] ) {
+		return;
 	}
+	$desc = esc_attr( lis_directory_listing_meta_desc( get_queried_object_id() ) );
+	echo '<meta name="description" content="' . $desc . '" />' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
 	echo '<meta property="og:description" content="' . $desc . '" />' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	echo '<meta name="twitter:description" content="' . $desc . '" />' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }, 99 );

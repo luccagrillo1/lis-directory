@@ -1,3 +1,7 @@
+## [0.67.1] — 2026-11-22 — No duplicate og/twitter descriptions
+
+- When SEOPress takes the listing description through its filter it prints og:description and twitter:description itself; the wp_head fallback now only runs when it didn't.
+
 ## [0.67.0] — 2026-11-22 — Audit batch 3: meta descriptions, smaller logo, readable labels
 
 - New includes/listing-meta.php: listings without their own SEOPress description get one built from category, town and tagline (or the first sentence), about 155 characters, plus og:description and twitter:description (audit item 35).
