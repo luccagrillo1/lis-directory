@@ -136,3 +136,5 @@ body.lis-post-page .entry-header{display:none}
 @media (prefers-reduced-motion:reduce){
   .lp *{transition:none!important}
 }
+/* The theme turns focused fields dotted; keep them solid. */
+.lp .lis-job-form input:focus,.lp .lis-job-form select:focus,.lp .lis-job-form textarea:focus{border-style:solid}

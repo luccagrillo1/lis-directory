@@ -1,6 +1,6 @@
-## [0.63.3] — 2026-11-21 — Quieter focus (staging only)
+## [0.63.4] — 2026-11-21 — Quieter focus (staging only)
 
-- Work board composer fields focus with a soft pine ring like the search box; no clay outline around the whole field. Keyboard focus rings are pine everywhere on the board and post form.
+- Work board composer fields focus with a soft pine ring like the search box; no clay outline around the whole field. Keyboard focus rings are pine everywhere on the board and post form. Focused fields stay solid (the theme turned them dotted).
 
 ## [0.63.2] — 2026-11-21 — Post form polish (staging only)
 

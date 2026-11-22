@@ -178,3 +178,5 @@ html.wh-touring .wh-spot,html.wh-touring .wh-tip{display:block}
 .wh-person .wh-meta i{display:none}
 .wh-person .wh-txt small{white-space:normal;overflow:visible;text-overflow:clip}
 .wh .wh-f input:focus{border-color:var(--wh-pine-600);outline:none;box-shadow:0 0 0 3px var(--wh-pine-100)}
+/* The theme turns focused fields dotted; keep them solid with a soft pine ring. */
+.wh .wh-compose .wh-f input:focus,.wh .wh-tools .wh-search input:focus{border-style:solid;border-color:var(--wh-pine-600);outline:none;box-shadow:0 0 0 3px var(--wh-pine-100)}
