@@ -1,3 +1,7 @@
+## [0.64.1] — 2026-11-21 — Listing logo fallback
+
+- A connected job with no logo uses the listing's logo, or its main image when the listing has no separate logo. Spacing fix in the "Get found twice" card.
+
 ## [0.64.0] — 2026-11-21 — Connect a directory listing to a job
 
 - Post a job: "The company" now offers to connect the poster's Local Directory listing ("Get found twice"). Picking one fills empty name and website fields, and the listing logo is used when no logo is uploaded. Posters without a listing get a link to add their business. `?listing=ID` preselects.

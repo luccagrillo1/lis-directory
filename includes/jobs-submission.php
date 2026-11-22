@@ -360,7 +360,7 @@ function lis_directory_render_job_form_shortcode() {
 					<select id="lis_job_listing_id" name="lis_job_listing_id">
 						<option value="0">Don't connect</option>
 						<?php foreach ( $my_listings as $l ) : ?>
-							<option value="<?php echo (int) $l->ID; ?>" data-name="<?php echo esc_attr( get_the_title( $l ) ); ?>" data-site="<?php echo esc_attr( (string) get_post_meta( $l->ID, '_lis_listing_website', true ) ); ?>" data-logo="<?php echo get_post_meta( $l->ID, '_lis_listing_logo_id', true ) ? '1' : ''; ?>" <?php selected( $listing_sel, $l->ID ); ?>><?php echo esc_html( get_the_title( $l ) ); ?></option>
+							<option value="<?php echo (int) $l->ID; ?>" data-name="<?php echo esc_attr( get_the_title( $l ) ); ?>" data-site="<?php echo esc_attr( (string) get_post_meta( $l->ID, '_lis_listing_website', true ) ); ?>" data-logo="<?php echo lis_directory_listing_logo_for_job( $l->ID ) ? '1' : ''; ?>" <?php selected( $listing_sel, $l->ID ); ?>><?php echo esc_html( get_the_title( $l ) ); ?></option>
 						<?php endforeach; ?>
 					</select>
 				<?php else : ?>
@@ -378,7 +378,7 @@ function lis_directory_render_job_form_shortcode() {
 				<span class="lis-job-form-logo"><?php echo get_the_post_thumbnail( $job->ID, 'thumbnail' ); ?> <label><input type="checkbox" name="lis_job_remove_logo" value="1" /> Remove</label></span>
 			<?php endif; ?>
 			<input type="file" id="lis_job_logo" name="lis_job_logo" accept="image/png,image/jpeg" />
-			<?php if ( ! empty( $my_listings ) ) : ?><span class="lp-connect-logo"<?php echo ( $listing_sel && get_post_meta( $listing_sel, '_lis_listing_logo_id', true ) ) ? '' : ' hidden'; ?>>Leave this empty to use your listing's logo.</span><?php endif; ?></p>
+			<?php if ( ! empty( $my_listings ) ) : ?><span class="lp-connect-logo"<?php echo ( $listing_sel && lis_directory_listing_logo_for_job( $listing_sel ) ) ? '' : ' hidden'; ?>>Leave this empty to use your listing's logo.</span><?php endif; ?></p>
 		</fieldset>
 
 		<fieldset>
@@ -445,8 +445,7 @@ function lis_directory_render_job_form_shortcode() {
 		}
 		// Picking a listing fills empty company fields from it.
 		var pick = form.querySelector( '#lis_job_listing_id' );
-		if ( pick ) {
-			pick.addEventListener( 'change', function () {
+		function fillFromListing() {
 				var o = pick.options[ pick.selectedIndex ];
 				[ [ 'lis_job_company', o.getAttribute( 'data-name' ) ], [ 'lis_job_company_website', o.getAttribute( 'data-site' ) ] ].forEach( function ( p ) {
 					var f = form.querySelector( '[name="' + p[ 0 ] + '"]' );
@@ -455,7 +454,10 @@ function lis_directory_render_job_form_shortcode() {
 				var note = form.querySelector( '.lp-connect-logo' );
 				if ( note ) { note.hidden = ! o.getAttribute( 'data-logo' ); }
 				preview();
-			} );
+		}
+		if ( pick ) {
+			pick.addEventListener( 'change', fillFromListing );
+			if ( pick.value !== '0' ) { fillFromListing(); }
 		}
 		form.querySelectorAll( 'input[name="lis_job_kind"]' ).forEach( function ( r ) { r.addEventListener( 'change', sync ); } );
 		form.addEventListener( 'input', preview );

@@ -312,7 +312,15 @@ function lis_directory_job_logo_id( $job_id ) {
 		return $id;
 	}
 	$listing = lis_directory_job_listing_id( $job_id );
-	return $listing ? (int) get_post_meta( $listing, '_lis_listing_logo_id', true ) : 0;
+	return $listing ? lis_directory_listing_logo_for_job( $listing ) : 0;
+}
+
+/**
+ * A listing's logo for job use: its logo, else its main (featured) image.
+ */
+function lis_directory_listing_logo_for_job( $listing_id ) {
+	$logo = (int) get_post_meta( $listing_id, '_lis_listing_logo_id', true );
+	return $logo ? $logo : (int) get_post_thumbnail_id( $listing_id );
 }
 
 /* ---------- Expiry ---------- */
