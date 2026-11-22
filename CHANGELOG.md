@@ -1,3 +1,7 @@
+## [0.68.0] — 2026-11-22 — Map loads when you scroll to it
+
+- Listing and real-estate pages load the Google Maps script only when the map is within 600px of the screen (IntersectionObserver), instead of on page load. The Maps script is the heaviest download on a listing page and the map sits near the bottom. Audit item 33.
+
 ## [0.67.1] — 2026-11-22 — No duplicate og/twitter descriptions
 
 - When SEOPress takes the listing description through its filter it prints og:description and twitter:description itself; the wp_head fallback now only runs when it didn't.

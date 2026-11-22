@@ -203,7 +203,24 @@ while ( have_posts() ) :
 						} );
 					};
 					</script>
-					<script src="https://maps.googleapis.com/maps/api/js?key=<?php echo esc_attr( $maps_api_key ); ?>&callback=lisDirectoryInitMaps&loading=async" async defer></script>
+					<script>
+					/* Load Google Maps only when the map is about to scroll into view (0.68.0, audit item 33):
+					   the Maps script is the heaviest thing on a listing page and the map sits near the bottom. */
+					( function () {
+						var src = <?php echo wp_json_encode( 'https://maps.googleapis.com/maps/api/js?key=' . rawurlencode( $maps_api_key ) . '&callback=lisDirectoryInitMaps&loading=async' ); ?>;
+						var done = false;
+						function load() {
+							if ( done ) return; done = true;
+							var s = document.createElement( 'script' ); s.src = src; s.async = true; document.head.appendChild( s );
+						}
+						var el = document.querySelector( '.lis-listing-map-canvas[data-address]' );
+						if ( ! el || ! ( 'IntersectionObserver' in window ) ) { load(); return; }
+						var io = new IntersectionObserver( function ( entries ) {
+							if ( entries.some( function ( e ) { return e.isIntersecting; } ) ) { io.disconnect(); load(); }
+						}, { rootMargin: '600px 0px' } );
+						io.observe( el );
+					} )();
+					</script>
 				<?php endif; ?>
 			</div>
 		</div>
