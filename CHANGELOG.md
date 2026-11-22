@@ -1,3 +1,7 @@
+## [0.64.4] — 2026-11-21 — My Listings on phones
+
+- My Listings (account → Listings) shows each listing as a card on phones instead of a six-column table that was ~620px wide and scrolled sideways on a 390px screen. Labels come from `data-label` on each cell; actions sit in a row under a divider with 36px tap height.
+
 ## [0.64.3] — 2026-11-21 — Spacing, take two
 
 - The space above the "Get found twice" card now actually shows (it sits under a floated heading, so the space goes on the heading).

@@ -2569,6 +2569,74 @@
 	font-family: var(--lis-dir-font-body, inherit);
 }
 
+/* Phones (0.64.4): each row becomes a card. The six-column table was ~620px
+   wide on a 390px screen and scrolled sideways. */
+@media (max-width: 640px) {
+	.lis-listing-dashboard {
+		padding-left: 16px;
+		padding-right: 16px;
+	}
+	.lis-listing-dashboard-table,
+	.lis-listing-dashboard-table tbody,
+	.lis-listing-dashboard-table tr,
+	.lis-listing-dashboard-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+	.lis-listing-dashboard-table thead {
+		display: none;
+	}
+	.lis-listing-dashboard-table tr {
+		margin: 0 0 12px;
+		padding: 14px 16px;
+		border: 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8));
+		border-radius: var(--lis-dir-radius-container, var(--lis-radius-container, 12px));
+		background: var(--lis-dir-color-surface, var(--lis-surface, #FFFFFF));
+	}
+	.lis-listing-dashboard-table td {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+		padding: 4px 0;
+		border-bottom: 0;
+	}
+	.lis-listing-dashboard-table td[data-label]::before {
+		content: attr(data-label);
+		flex: 0 0 72px;
+		font-size: 0.78em;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--lis-dir-color-text-muted, var(--lis-ink-600, #5C6159));
+	}
+	.lis-listing-dashboard-table td.lis-listing-dashboard-title {
+		display: block;
+		padding: 0 0 6px;
+		font-weight: 700;
+		font-size: 1.05em;
+		line-height: 1.3;
+	}
+	.lis-listing-dashboard-table td.lis-listing-dashboard-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 16px;
+		margin-top: 8px;
+		padding-top: 10px;
+		border-top: 1px solid var(--lis-dir-color-line, var(--lis-line, #DEDFD8));
+	}
+	.lis-listing-dashboard-table td.lis-listing-dashboard-actions a,
+	.lis-listing-dashboard-table td.lis-listing-dashboard-actions .lis-listing-dashboard-link-button {
+		display: inline-flex;
+		align-items: center;
+		min-height: 36px;
+		margin-right: 0;
+	}
+	.lis-listing-dashboard-table td.lis-listing-dashboard-actions:empty {
+		display: none;
+	}
+}
+
 /* ---------- FAQs ---------- */
 
 .lis-listing-faq {

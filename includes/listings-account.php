@@ -374,15 +374,15 @@ function lis_directory_render_dashboard_shortcode() {
 							: 'No Plan';
 						?>
 						<tr>
-							<td><?php echo esc_html( get_the_title( $listing ) ); ?></td>
-							<td><?php echo esc_html( $types[ $type ] ); ?></td>
-							<td><?php echo esc_html( $expiry_display ); ?></td>
-							<td>
+							<td class="lis-listing-dashboard-title"><?php echo esc_html( get_the_title( $listing ) ); ?></td>
+							<td data-label="Directory"><?php echo esc_html( $types[ $type ] ); ?></td>
+							<td data-label="Expires"><?php echo esc_html( $expiry_display ); ?></td>
+							<td data-label="Status">
 								<span class="lis-listing-dashboard-status lis-listing-dashboard-status--<?php echo esc_attr( $dash_status ); ?>"><?php echo esc_html( $status ); ?></span>
 								<?php if ( $sold ) : ?><span class="lis-listing-badge lis-listing-badge--sold"><?php echo esc_html( $sold_label ); ?></span><?php endif; ?>
 							</td>
-							<td><?php echo esc_html( $plan_label ); ?></td>
-							<td>
+							<td data-label="Plan"><?php echo esc_html( $plan_label ); ?></td>
+							<td class="lis-listing-dashboard-actions">
 								<?php if ( 'publish' === $listing->post_status ) : ?>
 									<a href="<?php echo esc_url( get_permalink( $listing ) ); ?>">View</a>
 								<?php endif; ?>
