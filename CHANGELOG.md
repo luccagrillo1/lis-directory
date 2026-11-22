@@ -1,3 +1,7 @@
+## [0.64.2] — 2026-11-21 — Spacing
+
+- More room between "The company" heading and the "Get found twice" card.
+
 ## [0.64.1] — 2026-11-21 — Listing logo fallback
 
 - A connected job with no logo uses the listing's logo, or its main image when the listing has no separate logo. Spacing fix in the "Get found twice" card.
