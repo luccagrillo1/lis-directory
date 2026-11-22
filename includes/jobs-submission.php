@@ -336,6 +336,39 @@ function lis_directory_render_job_form_shortcode() {
 
 		<fieldset>
 			<legend><?php echo $lbl( 'The company', 'About you', 'About you' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></legend>
+			<?php
+			// Connect a Local Directory listing (0.64.0): the job shows under
+			// "Now hiring" on the listing, and the listing fills name/site/logo.
+			$my_listings = lis_directory_user_job_listings( $job ? (int) $job->post_author : get_current_user_id() );
+			$listing_sel = (int) $meta( 'listing_id' );
+			$get_listing = isset( $_GET['listing'] ) ? absint( $_GET['listing'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( ! $job && ! isset( $prefill['lis_job_listing_id'] ) ) {
+				if ( $get_listing && in_array( $get_listing, wp_list_pluck( $my_listings, 'ID' ), true ) ) {
+					$listing_sel = $get_listing;
+				} elseif ( 1 === count( $my_listings ) ) {
+					$listing_sel = (int) $my_listings[0]->ID;
+				}
+			}
+			$add_listing = function_exists( 'lis_directory_add_listing_url' ) ? lis_directory_add_listing_url() : '';
+			if ( $my_listings || $add_listing ) :
+				?>
+			<div class="lp-connect" data-kind="hiring">
+				<p class="lp-connect-kick">Get found twice</p>
+				<?php if ( $my_listings ) : ?>
+					<p class="lp-connect-p">Connect your Local Directory listing and this job shows on your business page too, so people browsing the directory see you're hiring. We'll fill in your name, website and logo from it.</p>
+					<label class="lp-connect-label" for="lis_job_listing_id">Your listing</label>
+					<select id="lis_job_listing_id" name="lis_job_listing_id">
+						<option value="0">Don't connect</option>
+						<?php foreach ( $my_listings as $l ) : ?>
+							<option value="<?php echo (int) $l->ID; ?>" data-name="<?php echo esc_attr( get_the_title( $l ) ); ?>" data-site="<?php echo esc_attr( (string) get_post_meta( $l->ID, '_lis_listing_website', true ) ); ?>" data-logo="<?php echo get_post_meta( $l->ID, '_lis_listing_logo_id', true ) ? '1' : ''; ?>" <?php selected( $listing_sel, $l->ID ); ?>><?php echo esc_html( get_the_title( $l ) ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				<?php else : ?>
+					<p class="lp-connect-p">Businesses in the Local Directory can connect their job posts, so the job also shows on their business page where people are already looking. Your listing comes with a logo, hours and a map.</p>
+					<p class="lp-connect-p"><a class="lp-connect-add" href="<?php echo esc_url( $add_listing ); ?>" target="_blank" rel="noopener">Add your business to the directory</a> <span>Opens in a new tab, so you won't lose this form.</span></p>
+				<?php endif; ?>
+			</div>
+			<?php endif; ?>
 			<p><label for="lis_job_company"><?php echo $lbl( 'Company name *', 'Your name *', 'Your first name *' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
 			<input type="text" id="lis_job_company" name="lis_job_company" value="<?php echo esc_attr( $company ); ?>" required /></p>
 			<p data-kind-not="gig"><label for="lis_job_company_website"><?php echo $lbl( 'Company website', 'Website or portfolio' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <span class="lis-job-optional">(optional)</span></label>
@@ -344,7 +377,8 @@ function lis_directory_render_job_form_shortcode() {
 			<?php if ( $job && has_post_thumbnail( $job->ID ) ) : ?>
 				<span class="lis-job-form-logo"><?php echo get_the_post_thumbnail( $job->ID, 'thumbnail' ); ?> <label><input type="checkbox" name="lis_job_remove_logo" value="1" /> Remove</label></span>
 			<?php endif; ?>
-			<input type="file" id="lis_job_logo" name="lis_job_logo" accept="image/png,image/jpeg" /></p>
+			<input type="file" id="lis_job_logo" name="lis_job_logo" accept="image/png,image/jpeg" />
+			<?php if ( ! empty( $my_listings ) ) : ?><span class="lp-connect-logo"<?php echo ( $listing_sel && get_post_meta( $listing_sel, '_lis_listing_logo_id', true ) ) ? '' : ' hidden'; ?>>Leave this empty to use your listing's logo.</span><?php endif; ?></p>
 		</fieldset>
 
 		<fieldset>
@@ -408,6 +442,20 @@ function lis_directory_render_job_form_shortcode() {
 				list.forEach( function ( s ) { var li = document.createElement( 'li' ); li.textContent = s; skills.appendChild( li ); } );
 				skills.hidden = ! list.length;
 			}
+		}
+		// Picking a listing fills empty company fields from it.
+		var pick = form.querySelector( '#lis_job_listing_id' );
+		if ( pick ) {
+			pick.addEventListener( 'change', function () {
+				var o = pick.options[ pick.selectedIndex ];
+				[ [ 'lis_job_company', o.getAttribute( 'data-name' ) ], [ 'lis_job_company_website', o.getAttribute( 'data-site' ) ] ].forEach( function ( p ) {
+					var f = form.querySelector( '[name="' + p[ 0 ] + '"]' );
+					if ( f && ! f.value.trim() && p[ 1 ] ) { f.value = p[ 1 ]; }
+				} );
+				var note = form.querySelector( '.lp-connect-logo' );
+				if ( note ) { note.hidden = ! o.getAttribute( 'data-logo' ); }
+				preview();
+			} );
 		}
 		form.querySelectorAll( 'input[name="lis_job_kind"]' ).forEach( function ( r ) { r.addEventListener( 'change', sync ); } );
 		form.addEventListener( 'input', preview );

@@ -138,3 +138,16 @@ body.lis-post-page .entry-header{display:none}
 }
 /* The theme turns focused fields dotted; keep them solid. */
 .lp .lis-job-form input:focus,.lp .lis-job-form select:focus,.lp .lis-job-form textarea:focus{border-style:solid}
+/* Connect a directory listing (0.64.0) */
+.lp .lis-job-form .lp-connect{margin:4px 0 22px;padding:18px 20px 20px;border-radius:14px;background:var(--lp-pine-100);box-shadow:inset 0 0 0 1px var(--lp-pine-200)}
+.lp .lis-job-form .lp-connect[hidden]{display:none}
+.lp .lp-connect-kick{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lp-pine-700)}
+.lp .lp-connect-p{margin:0 0 12px;font-size:15px;line-height:1.5;color:var(--lp-pine-900);max-width:62ch}
+.lp .lp-connect-p:last-child{margin-bottom:0}
+.lp .lis-job-form .lp-connect-label{margin:0 0 6px;font-weight:700}
+.lp .lis-job-form .lp-connect select{background-color:#fff}
+.lp .lp-connect-add{display:inline-block;margin-right:10px;padding:10px 16px;border-radius:999px;background:var(--lp-pine-700);color:#fff;font-weight:700;text-decoration:none}
+.lp .lp-connect-add:hover{background:var(--lp-pine-900);color:#fff}
+.lp .lp-connect-p span{font-size:13.5px;color:var(--lp-soft)}
+.lp .lp-connect-logo{display:block;margin-top:8px;font-size:13.5px;color:var(--lp-pine-700)}
+.lp .lp-connect-logo[hidden],.lp[data-kind-now="seeking"] .lp-connect-logo{display:none}

@@ -108,7 +108,8 @@ function lis_directory_work_hub_items() {
 			'when'     => (string) get_post_meta( $id, '_lis_job_when', true ),
 			'cat'      => $cat ? $cat->term_id : 0,
 			'cat_name' => $cat ? $cat->name : '',
-			'logo'     => get_post_thumbnail_id( $id ),
+			'logo'     => lis_directory_job_logo_id( $id ),
+			'listing'  => 'hiring' === $kind ? lis_directory_job_listing_id( $id ) : 0,
 			'ago'      => human_time_diff( get_post_time( 'U', true, $id ), time() ) . ' ago',
 			'deadline' => (string) get_post_meta( $id, '_lis_job_deadline', true ),
 			'excerpt'  => wp_trim_words( wp_strip_all_tags( $p->post_content ), 14, '…' ),
@@ -172,6 +173,9 @@ function lis_directory_work_hub_row( array $it, array $by_cat, $allow_seeking ) 
 	if ( 'hiring' === $it['kind'] ) {
 		if ( $where ) {
 			$meta[] = esc_html( $where );
+		}
+		if ( $it['listing'] ) {
+			$meta[] = '<span class="wh-dir">In the directory</span>';
 		}
 		if ( $it['deadline'] ) {
 			$meta[] = 'Apply by ' . esc_html( mysql2date( 'M j', $it['deadline'] . ' 00:00:00' ) );

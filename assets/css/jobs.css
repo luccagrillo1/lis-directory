@@ -591,3 +591,5 @@
 	gap: 6px;
 	cursor: pointer;
 }
+/* Connected directory listing (0.64.0) */
+.lis-job-listing-link{margin:14px 0 0;font-weight:600}

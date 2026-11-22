@@ -1,3 +1,9 @@
+## [0.64.0] — 2026-11-21 — Connect a directory listing to a job
+
+- Post a job: "The company" now offers to connect the poster's Local Directory listing ("Get found twice"). Picking one fills empty name and website fields, and the listing logo is used when no logo is uploaded. Posters without a listing get a link to add their business. `?listing=ID` preselects.
+- Connected jobs show under "Now hiring" on the listing page (owners see a "Hiring?" nudge when there are none), the job page links the company name and a "See … in the Local Directory" line to the listing, and board rows get an "In the directory" mark.
+- New meta `_lis_job_listing_id`, accepted only for a published listing the job's author owns (editors: any). Gigs and profiles never connect. Admin Job Details has a Directory listing ID field.
+
 ## [0.63.6] — 2026-11-21 — Plain empty states (staging only)
 
 - Work board empty columns drop the dashed plus circle; just the heading, line and button.

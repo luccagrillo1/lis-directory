@@ -259,6 +259,62 @@ function lis_directory_is_job_open( $job_id ) {
 	return 'publish' === get_post_status( $job_id ) && ! get_post_meta( $job_id, '_lis_job_filled', true );
 }
 
+/* ---------- Directory listing link (0.64.0) ---------- */
+
+/**
+ * Published directory listings a user owns, for the "Connect your listing"
+ * picker on the post form.
+ */
+function lis_directory_user_job_listings( $user_id ) {
+	if ( ! $user_id ) {
+		return array();
+	}
+	return get_posts( array(
+		'post_type'      => 'lis_listing',
+		'post_status'    => 'publish',
+		'author'         => (int) $user_id,
+		'posts_per_page' => 50,
+		'orderby'        => 'title',
+		'order'          => 'ASC',
+		'no_found_rows'  => true,
+	) );
+}
+
+/**
+ * $listing_id if a job by $author_id may connect to it: a published listing
+ * the author owns (editors may connect any published listing), else 0.
+ */
+function lis_directory_job_valid_listing( $listing_id, $author_id ) {
+	$listing = $listing_id ? get_post( $listing_id ) : null;
+	if ( ! $listing || 'lis_listing' !== $listing->post_type || 'publish' !== $listing->post_status ) {
+		return 0;
+	}
+	if ( (int) $listing->post_author !== (int) $author_id && ! current_user_can( 'edit_others_posts' ) ) {
+		return 0;
+	}
+	return (int) $listing->ID;
+}
+
+/**
+ * The listing a job is connected to, if it is still published. 0 otherwise.
+ */
+function lis_directory_job_listing_id( $job_id ) {
+	$id = (int) get_post_meta( $job_id, '_lis_job_listing_id', true );
+	return ( $id && 'publish' === get_post_status( $id ) && 'lis_listing' === get_post_type( $id ) ) ? $id : 0;
+}
+
+/**
+ * Logo for a job: its own upload, else the connected listing's logo.
+ */
+function lis_directory_job_logo_id( $job_id ) {
+	$id = (int) get_post_thumbnail_id( $job_id );
+	if ( $id ) {
+		return $id;
+	}
+	$listing = lis_directory_job_listing_id( $job_id );
+	return $listing ? (int) get_post_meta( $listing, '_lis_listing_logo_id', true ) : 0;
+}
+
 /* ---------- Expiry ---------- */
 
 function lis_directory_schedule_job_expiry_check() {
@@ -398,6 +454,14 @@ function lis_directory_save_job_fields( $job_id, array $src ) {
 	}
 	update_post_meta( $job_id, '_lis_job_company', $text( 'lis_job_company' ) );
 	update_post_meta( $job_id, '_lis_job_company_website', isset( $src['lis_job_company_website'] ) ? esc_url_raw( $src['lis_job_company_website'] ) : '' );
+	if ( isset( $src['lis_job_listing_id'] ) ) {
+		$listing_id = ( $seeking || $gig ) ? 0 : lis_directory_job_valid_listing( (int) $src['lis_job_listing_id'], (int) get_post_field( 'post_author', $job_id ) );
+		if ( $listing_id ) {
+			update_post_meta( $job_id, '_lis_job_listing_id', $listing_id );
+		} else {
+			delete_post_meta( $job_id, '_lis_job_listing_id' );
+		}
+	}
 	update_post_meta( $job_id, '_lis_job_location', $text( 'lis_job_location' ) );
 	$src = lis_directory_job_apply_kind_defaults( $src );
 	update_post_meta( $job_id, '_lis_job_employment_type', isset( $src['lis_job_employment_type'] ) ? sanitize_text_field( $src['lis_job_employment_type'] ) : '' );
@@ -442,6 +506,7 @@ function lis_directory_render_job_meta_box( $post ) {
 		</td></tr>
 		<tr><th><label for="lis_job_company">Company</label></th><td><input type="text" class="regular-text" id="lis_job_company" name="lis_job_company" value="<?php echo esc_attr( $m( 'company' ) ); ?>" /></td></tr>
 		<tr><th><label for="lis_job_company_website">Company website</label></th><td><input type="url" class="regular-text" id="lis_job_company_website" name="lis_job_company_website" value="<?php echo esc_attr( $m( 'company_website' ) ); ?>" placeholder="https://" /></td></tr>
+		<tr><th><label for="lis_job_listing_id">Directory listing ID</label></th><td><input type="number" min="0" style="width:110px" id="lis_job_listing_id" name="lis_job_listing_id" value="<?php echo esc_attr( (int) $m( 'listing_id' ) ?: '' ); ?>" /> <?php $lid = lis_directory_job_listing_id( $post->ID ); if ( $lid ) : ?><a href="<?php echo esc_url( get_permalink( $lid ) ); ?>" target="_blank"><?php echo esc_html( get_the_title( $lid ) ); ?></a><?php endif; ?><p class="description">Connects a job to its business's Local Directory listing, so it shows under "Now hiring" there. Jobs only.</p></td></tr>
 		<tr><th><label for="lis_job_employment_type">Employment type</label></th><td>
 			<select id="lis_job_employment_type" name="lis_job_employment_type">
 				<?php foreach ( lis_directory_get_job_employment_types() as $value => $label ) : ?>

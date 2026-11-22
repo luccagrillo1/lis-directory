@@ -20,6 +20,8 @@ while ( have_posts() ) :
 	$workplaces = lis_directory_get_job_workplaces();
 	$company    = get_post_meta( $job_id, '_lis_job_company', true );
 	$company_site = get_post_meta( $job_id, '_lis_job_company_website', true );
+	$listing_id   = function_exists( 'lis_directory_job_listing_id' ) && 'hiring' === lis_directory_get_job_kind( $job_id ) ? lis_directory_job_listing_id( $job_id ) : 0;
+	$logo_id      = function_exists( 'lis_directory_job_logo_id' ) ? lis_directory_job_logo_id( $job_id ) : (int) get_post_thumbnail_id( $job_id );
 	$location   = get_post_meta( $job_id, '_lis_job_location', true );
 	$type       = get_post_meta( $job_id, '_lis_job_employment_type', true );
 	$workplace  = get_post_meta( $job_id, '_lis_job_workplace', true );
@@ -86,13 +88,15 @@ while ( have_posts() ) :
 		</header>
 		<?php else : ?>
 		<header class="lis-job-single-head">
-			<?php if ( has_post_thumbnail() ) : ?>
-				<span class="lis-job-single-logo"><?php the_post_thumbnail( 'medium', array( 'alt' => '' ) ); ?></span>
+			<?php if ( $logo_id ) : ?>
+				<span class="lis-job-single-logo"><?php echo wp_get_attachment_image( $logo_id, 'medium', false, array( 'alt' => '' ) ); ?></span>
 			<?php endif; ?>
 			<div>
 				<h1 class="lis-job-single-title"><?php the_title(); ?></h1>
 				<p class="lis-job-single-company">
-					<?php if ( $company_site ) : ?>
+					<?php if ( $listing_id ) : ?>
+						<a href="<?php echo esc_url( get_permalink( $listing_id ) ); ?>"><?php echo esc_html( $company ); ?></a>
+					<?php elseif ( $company_site ) : ?>
 						<a href="<?php echo esc_url( $company_site ); ?>" rel="nofollow noopener" target="_blank"><?php echo esc_html( $company ); ?></a>
 					<?php else : ?>
 						<?php echo esc_html( $company ); ?>
@@ -131,6 +135,9 @@ while ( have_posts() ) :
 					<dt>Posted</dt>
 					<dd><?php echo esc_html( get_the_date() ); ?></dd>
 				</dl>
+				<?php if ( $listing_id ) : ?>
+					<p class="lis-job-listing-link"><a href="<?php echo esc_url( get_permalink( $listing_id ) ); ?>"><?php echo esc_html( 'See ' . html_entity_decode( get_the_title( $listing_id ), ENT_QUOTES, 'UTF-8' ) . ' in the Local Directory' ); ?> &rarr;</a></p>
+				<?php endif; ?>
 				<?php if ( $edit_url ) : ?>
 					<p><a class="lis-job-btn" href="<?php echo esc_url( $edit_url ); ?>">Edit this post</a></p>
 				<?php endif; ?>

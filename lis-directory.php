@@ -3,7 +3,7 @@
  * Plugin Name:       LIS Directory
  * Plugin URI:        https://livinginsandpoint.com
  * Description:       Vendor Showcase + a self-hosted listings framework (replacing Directorist over time, same approach as LIS Events replacing EventON) for Living in Sandpoint.
- * Version:           0.63.6
+ * Version:           0.64.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Lucca Grillo
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIS_DIRECTORY_VERSION', '0.63.6' );
+define( 'LIS_DIRECTORY_VERSION', '0.64.0' );
 define( 'LIS_DIRECTORY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LIS_DIRECTORY_URL', plugin_dir_url( __FILE__ ) );
 define( 'LIS_DIRECTORY_FILE', __FILE__ );
@@ -58,6 +58,7 @@ require_once LIS_DIRECTORY_PATH . 'includes/jobs-template.php';
 require_once LIS_DIRECTORY_PATH . 'includes/jobs-submission.php';
 require_once LIS_DIRECTORY_PATH . 'includes/jobs-pricing.php';
 require_once LIS_DIRECTORY_PATH . 'includes/work-hub.php';
+require_once LIS_DIRECTORY_PATH . 'includes/jobs-listing-link.php';
 require_once LIS_DIRECTORY_PATH . 'includes/showcase-slots.php';
 require_once LIS_DIRECTORY_PATH . 'includes/payment-test.php';
 require_once LIS_DIRECTORY_PATH . 'includes/payment-audit.php';

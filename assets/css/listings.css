@@ -2965,3 +2965,12 @@ a.lis-account-stat:focus-visible {
 	background: #a12622;
 	color: #fff;
 }
+
+/* Now hiring: jobs connected to this listing (0.64.0) */
+.lis-listing-jobs-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.lis-listing-jobs-list li { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.lis-listing-jobs-list a { font-weight: 600; }
+.lis-listing-jobs-list span { font-size: 14px; opacity: .75; }
+.lis-listing-jobs-more { margin: 12px 0 0; font-weight: 600; }
+.lis-listing-jobs-nudge { margin: 0; }
+.lis-listing-jobs-nudge a { font-weight: 600; white-space: nowrap; }
