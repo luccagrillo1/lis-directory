@@ -3080,3 +3080,30 @@ a.lis-account-stat:focus-visible {
 .lis-listing-jobs-more { margin: 12px 0 0; font-weight: 600; }
 .lis-listing-jobs-nudge { margin: 0; }
 .lis-listing-jobs-nudge a { font-weight: 600; white-space: nowrap; }
+
+/* ---------- Directory landing tiles (v0.66.0, mockup 14: Category tiles + Compact search) ---------- */
+.lis-dir-browse { max-width: 1100px; margin: 0 auto; padding: 28px 16px 8px; font-family: 'Source Sans 3', system-ui, sans-serif; color: #1A1D19; }
+.lis-dir-browse h2 { font: 800 26px/1.1 Gabarito, system-ui, sans-serif; letter-spacing: -.01em; margin: 0 0 4px; }
+.lis-dir-browse .lis-dir-browse-sub { margin: 0 0 16px; color: #5C6159; font-size: 15px; }
+.lis-dir-browse-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (min-width: 769px) { .lis-dir-browse-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; } .lis-dir-tile { min-height: 150px; } }
+.lis-dir-tile { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 118px; padding: 12px; border-radius: 14px; overflow: hidden; color: #fff !important; text-decoration: none !important; background: #16281F center / cover; }
+.lis-dir-tile::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22, 40, 31, .05) 20%, rgba(22, 40, 31, .85)); }
+.lis-dir-tile.is-noimg { background: #37654F; }
+.lis-dir-tile b, .lis-dir-tile span { position: relative; }
+.lis-dir-tile b { font: 700 17px/1.15 Gabarito, system-ui, sans-serif; }
+.lis-dir-tile span { font-size: 13px; opacity: .85; margin-top: 2px; }
+.lis-dir-tile:focus-visible { outline: 3px solid #D07B4F; outline-offset: 2px; }
+.lis-dir-tile.is-all { background: #F1EEE4; color: #1A1D19 !important; justify-content: center; align-items: flex-start; border: 1px dashed #C9C6B9; }
+.lis-dir-tile.is-all::before { display: none; }
+@media (hover: hover) { .lis-dir-tile:not(.is-all):hover::before { background: linear-gradient(180deg, rgba(22, 40, 31, 0) 10%, rgba(22, 40, 31, .78)); } }
+@media (max-width: 768px) {
+	.lis-dir-browse-page .entry-content > .wp-block-uagb-container:first-child { min-height: 0 !important; padding-top: 24px !important; padding-bottom: 24px !important; }
+	.lis-dir-browse-page .entry-content > .wp-block-uagb-container:first-child h1 { font-size: 32px !important; margin-bottom: 12px !important; }
+	.lis-dir-browse-page .lis-listing-search-select { display: none !important; }
+	.lis-dir-browse-page .lis-listing-search-row { display: grid !important; grid-template-columns: 1fr auto; gap: 8px; }
+	.lis-dir-browse-page .lis-listing-search-submit { width: auto !important; padding: 0 16px !important; font-size: 0 !important; min-width: 52px; }
+	.lis-dir-browse-page .lis-listing-search-submit::after { content: "Search"; font-size: 16px; }
+	.lis-dir-browse-page .lis-listing-search-input { font-size: 16px !important; }
+	.lis-dir-browse-page .ast-header-breadcrumb { display: none !important; }
+}

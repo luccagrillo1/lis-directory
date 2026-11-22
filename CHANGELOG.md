@@ -1,3 +1,9 @@
+## [0.66.0] — 2026-11-22 — Directory landing tiles
+
+- New `[lis_directory_browse]` (includes/directory-browse.php): photo tiles for each top-level listing category that has local-business listings (children counted), biggest first, with a count and the newest listing photo in that category, plus a "See all N" tile. Links go to the results page with `?lis_category=`. Cached in the `lis_directory_browse_v1` transient (6 h), cleared on any listing save, term change or category edit. Attributes: `url`, `title`.
+- Pages using it get the body class `lis-dir-browse-page`: on phones the banner above is shorter, the category menu is hidden (the tiles cover it), the search box and a short "Search" button share one row, and breadcrumbs are hidden.
+- From mobile mockup 14 (option "Category tiles" + "Compact" search). Placed on the Local Directory page under the search banner.
+
 ## [0.65.1] — 2026-11-22 — Stat cards, take two
 
 - The phone rule that puts the three Account stat cards in one row sat above the base `.lis-account-stats` rule in listings.css, so the base rule won. Moved below it.
