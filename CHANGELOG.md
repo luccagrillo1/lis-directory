@@ -1,3 +1,8 @@
+## [0.63.2] — 2026-11-21 — Post form polish (staging only)
+
+- Selected kind tile: colored ring, tint and a filled radio dot instead of a cap bar that did not follow the rounded corners.
+- Section cards and the preview card draw their colored top edge as an inset shadow, so it follows the corner radius instead of tapering.
+
 ## [0.63.1] — 2026-11-21 — Post form fixes (staging only)
 
 - Kind tiles stack their title and description; live preview fills in on load (it sits after the script).
