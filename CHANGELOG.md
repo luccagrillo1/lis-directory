@@ -1,3 +1,7 @@
+## [0.65.1] — 2026-11-22 — Stat cards, take two
+
+- The phone rule that puts the three Account stat cards in one row sat above the base `.lis-account-stats` rule in listings.css, so the base rule won. Moved below it.
+
 ## [0.65.0] — 2026-11-22 — Phone UX batch
 
 - Listing page: Call / Directions / Website buttons under the title on every listing, not only gallery layouts. On phones the contact box sat below Related and Reviews.
