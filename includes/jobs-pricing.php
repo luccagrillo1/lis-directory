@@ -74,6 +74,29 @@ function lis_directory_get_job_page_url( $which ) {
 }
 
 /**
+ * Astra breadcrumbs: put Jobs between Home and the "Post a job" / "My jobs"
+ * pages (Home / Jobs / Post a Job Opening). /jobs/ is the lis_job archive, not
+ * a page, so it can't be set as the WordPress parent.
+ */
+function lis_directory_job_page_breadcrumb( $items ) {
+	if ( ! is_page() || ! is_array( $items ) || count( $items ) < 2 ) {
+		return $items;
+	}
+	$id    = get_queried_object_id();
+	$pages = array( (int) get_option( 'lis_directory_job_submit_page_id' ), (int) get_option( 'lis_directory_job_dashboard_page_id' ) );
+	if ( ! $id || ! in_array( $id, $pages, true ) ) {
+		return $items;
+	}
+	$url = get_post_type_archive_link( 'lis_job' );
+	if ( ! $url ) {
+		return $items;
+	}
+	array_splice( $items, 1, 0, array( sprintf( '<a href="%s">%s</a>', esc_url( $url ), esc_html__( 'Jobs', 'lis-directory' ) ) ) );
+	return $items;
+}
+add_filter( 'astra_breadcrumb_trail_items', 'lis_directory_job_page_breadcrumb' );
+
+/**
  * Checkout URL that buys a posting for $job_id, or '' when the product isn't
  * configured / published / purchasable (callers then use the moderation
  * fallback, or hide the pay button).
