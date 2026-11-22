@@ -252,6 +252,15 @@
 	max-width: none;
 }
 
+/* "6 results for “coffee”" above searched/filtered results (0.65.0). */
+.lis-listing-results-summary {
+	margin: 0 0 12px;
+	font-family: var(--lis-dir-font-heading, inherit);
+	font-size: 1.15em;
+	font-weight: 700;
+	color: var(--lis-dir-color-heading, var(--lis-pine-900, #16281F));
+}
+
 /* Search box that [lis_listing_grid] renders above a per-type landing grid. */
 .lis-listing-grid-search {
 	margin-bottom: 28px;
@@ -2927,6 +2936,33 @@
 
 .lis-account-overview-title {
 	margin: 0 0 20px;
+	font-size: clamp(1.6rem, 5vw, 2.2rem);
+}
+
+/* 0.65.0: these were <h1>s under the page's own "Account" / "Listings" <h1>. */
+.lis-listing-dashboard-title {
+	font-size: clamp(1.5rem, 4.5vw, 2rem);
+}
+
+/* Phones: the three stat cards in one row instead of two plus an orphan. */
+@media (max-width: 560px) {
+	.lis-account-stats {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 8px;
+	}
+	.lis-account-stat {
+		padding: 12px 10px;
+	}
+	.lis-account-stat-num {
+		font-size: 1.6rem;
+	}
+	.lis-account-stat-label {
+		font-size: 0.85rem;
+	}
+	.lis-account-overview-profile a {
+		display: inline-block;
+		padding: 10px 0;
+	}
 }
 
 .lis-account-stats {

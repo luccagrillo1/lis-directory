@@ -24,6 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'wp_footer', 'lis_directory_render_account_menu', 20 );
 add_filter( 'wp_nav_menu_items', 'lis_directory_mobile_menu_account_items', 20, 2 );
+add_action( 'wp_head', 'lis_directory_mobile_menu_group_css', 120 );
 
 function lis_directory_account_menu_enabled() {
 	if ( ! is_user_logged_in() || is_admin() ) {
@@ -46,6 +47,11 @@ function lis_directory_account_menu_items() {
 		),
 	);
 
+	$listings = lis_directory_account_page_url( 'listings' );
+	if ( $listings ) {
+		$items[] = array( 'label' => 'My Listings', 'url' => $listings, 'class' => 'lis-acct-listings' );
+	}
+
 	$saved = lis_directory_account_page_url( 'saved' );
 	if ( $saved ) {
 		$items[] = array( 'label' => 'Saved', 'url' => $saved, 'class' => 'lis-acct-saved' );
@@ -66,10 +72,17 @@ function lis_directory_account_menu_items() {
 }
 
 /**
- * Append the account links to Astra's mobile (hamburger) menu.
+ * Append to Astra's mobile (hamburger) menu (0.65.0 widened this):
+ * - everyone: "Add an event" and "List your business", the two things
+ *   people come to post, which weren't anywhere in the drawer;
+ * - signed out: "Sign in" (the header's Sign in link is small and easy to
+ *   miss next to the hamburger);
+ * - signed in: the account links (Account, My Listings, Saved, My Events,
+ *   Log out), as before.
+ * Filter `lis_directory_mobile_menu_extra_items` edits the first two.
  */
 function lis_directory_mobile_menu_account_items( $items, $args ) {
-	if ( ! lis_directory_account_menu_enabled() || ! is_object( $args ) ) {
+	if ( is_admin() || ! is_object( $args ) ) {
 		return $items;
 	}
 	$location = isset( $args->theme_location ) ? $args->theme_location : '';
@@ -78,13 +91,49 @@ function lis_directory_mobile_menu_account_items( $items, $args ) {
 		return $items;
 	}
 
-	$first = true;
-	foreach ( lis_directory_account_menu_items() as $item ) {
-		$classes = 'menu-item lis-acct-mobile-item ' . $item['class'] . ( $first ? ' lis-acct-mobile-first' : '' );
-		$items  .= '<li class="' . esc_attr( $classes ) . '"><a class="menu-link" href="' . esc_url( $item['url'] ) . '">' . esc_html( $item['label'] ) . '</a></li>';
-		$first   = false;
+	$extra       = array();
+	$submit_page = function_exists( 'lis_events_find_submit_page_url' ) ? lis_events_find_submit_page_url() : '';
+	if ( $submit_page ) {
+		$extra[] = array( 'label' => 'Add an event', 'url' => $submit_page, 'class' => 'lis-acct-add-event' );
+	}
+	$add_listing = function_exists( 'lis_directory_add_listing_url' ) ? lis_directory_add_listing_url() : '';
+	if ( $add_listing ) {
+		$extra[] = array( 'label' => 'List your business', 'url' => $add_listing, 'class' => 'lis-acct-add-listing' );
+	}
+	$extra = (array) apply_filters( 'lis_directory_mobile_menu_extra_items', $extra );
+
+	if ( lis_directory_account_menu_enabled() ) {
+		$account = lis_directory_account_menu_items();
+	} elseif ( ! is_user_logged_in() ) {
+		$login   = get_page_by_path( 'account/login' );
+		$account = array(
+			array(
+				'label' => 'Sign in',
+				'url'   => ( $login && 'publish' === $login->post_status ) ? get_permalink( $login ) : wp_login_url(),
+				'class' => 'lis-acct-signin',
+			),
+		);
+	} else {
+		$account = array();
+	}
+
+	foreach ( array( $extra, $account ) as $group ) {
+		$first = true;
+		foreach ( $group as $item ) {
+			$classes = 'menu-item lis-acct-mobile-item ' . $item['class'] . ( $first ? ' lis-acct-mobile-first' : '' );
+			$items  .= '<li class="' . esc_attr( $classes ) . '"><a class="menu-link" href="' . esc_url( $item['url'] ) . '">' . esc_html( $item['label'] ) . '</a></li>';
+			$first   = false;
+		}
 	}
 	return $items;
+}
+
+/**
+ * A thin rule above each added group in the drawer, so "Add an event" /
+ * "Sign in" read as their own section under the site pages (0.65.0).
+ */
+function lis_directory_mobile_menu_group_css() {
+	echo '<style id="lis-mobile-menu-groups">#ast-hf-mobile-menu > .lis-acct-mobile-first{margin-top:14px;border-top:1px solid rgba(251,250,246,.22)}#ast-hf-mobile-menu > .lis-acct-mobile-item > .menu-link{font-size:.92em}</style>';
 }
 
 /**

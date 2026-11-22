@@ -377,6 +377,9 @@ function lis_directory_render_listing_quick_actions( $post_id ) {
 	if ( ! $phone && ! $address && ! $website ) {
 		return '';
 	}
+	// Its styles live in listing-gallery.css, which a listing without a gallery
+	// wouldn't otherwise load (0.65.0 shows these buttons on every listing).
+	lis_directory_enqueue_gallery_assets();
 	$icon = array(
 		'call' => '<path d="M5.5 3.5h2.4l1.3 3.4-1.7 1.1a9 9 0 0 0 4.5 4.5l1.1-1.7 3.4 1.3v2.4a1.5 1.5 0 0 1-1.6 1.5A13 13 0 0 1 4 5.1 1.5 1.5 0 0 1 5.5 3.5Z"/>',
 		'dir'  => '<path d="M10 2.5 17.5 10 10 17.5 2.5 10Z"/><path d="M8 11.5V9.5h4M10.5 8l1.5 1.5-1.5 1.5"/>',

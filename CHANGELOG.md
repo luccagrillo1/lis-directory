@@ -1,3 +1,13 @@
+## [0.65.0] — 2026-11-22 — Phone UX batch
+
+- Listing page: Call / Directions / Website buttons under the title on every listing, not only gallery layouts. On phones the contact box sat below Related and Reviews.
+- Listing page: the Website row shows "Instagram", "Facebook" etc. for social profiles and the bare domain otherwise, instead of the full URL (`lis_directory_website_label()`).
+- Related listings show the listing's category instead of Jetpack's "Similar post" (`jetpack_relatedposts_filter_post_context`).
+- Search results: "6 results for “coffee”" above the grid when a search or filter is active (`lis_directory_render_results_summary()`, archive + `[lis_listing_grid]`).
+- Hamburger menu: "Add an event" and "List your business" for everyone, "Sign in" when signed out, "My Listings" added to the signed-in account links (also in the avatar dropdown). Filter `lis_directory_mobile_menu_extra_items`.
+- Account: "Hi, Name" and "My Listings" are `<h2>` (the page already has an `<h1>`); the three Overview stat cards share one row on phones; Edit profile / Log out links get a taller tap area.
+- Register: WP User Manager's sign-up fields get `autocomplete` hints (given-name, family-name, email, username, new-password) so phones and password managers can fill them.
+
 ## [0.64.4] — 2026-11-21 — My Listings on phones
 
 - My Listings (account → Listings) shows each listing as a card on phones instead of a six-column table that was ~620px wide and scrolled sideways on a 390px screen. Labels come from `data-label` on each cell; actions sit in a row under a divider with 36px tap height.

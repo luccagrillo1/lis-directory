@@ -60,6 +60,7 @@ $title = is_tax( 'lis_listing_category' ) ? single_term_title( '', false ) : 'Li
 	<?php endif; ?>
 
 	<?php if ( $lis_query->have_posts() ) : ?>
+		<?php echo lis_directory_render_results_summary( $lis_open_now ? $lis_query->post_count : $lis_query->found_posts ); // phpcs:ignore -- escaped inside helper. ?>
 		<?php if ( function_exists( 'lis_directory_render_listing_toolbar' ) ) : ?>
 			<?php lis_directory_render_listing_toolbar(); ?>
 		<?php endif; ?>

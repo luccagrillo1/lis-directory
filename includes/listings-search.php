@@ -398,6 +398,27 @@ function lis_directory_render_search_form_shortcode( $atts ) {
 }
 
 /**
+ * "6 results for “coffee”" above the results (0.65.0). Only when a search or
+ * filter is active; a plain browse of the whole directory shows nothing.
+ * Before this a search landed on a page still titled "All Listings" with no
+ * count, so on a phone it wasn't clear the search had run.
+ */
+function lis_directory_render_results_summary( $count ) {
+	$filters = function_exists( 'lis_directory_listing_request_filters' ) ? lis_directory_listing_request_filters() : array();
+	$keyword = isset( $filters['s'] ) ? trim( (string) $filters['s'] ) : '';
+	$active  = '' !== $keyword || ! empty( $filters['tax_query'] ) || ! empty( $filters['meta_query'] ) || ! empty( $filters['open_now'] );
+	if ( ! $active ) {
+		return '';
+	}
+	$label = sprintf( _n( '%s result', '%s results', (int) $count, 'lis-directory' ), number_format_i18n( (int) $count ) );
+	if ( '' !== $keyword ) {
+		/* translators: 1: "6 results", 2: search keyword */
+		$label = sprintf( __( '%1$s for “%2$s”', 'lis-directory' ), $label, $keyword );
+	}
+	return '<p class="lis-listing-results-summary" role="status">' . esc_html( $label ) . '</p>';
+}
+
+/**
  * Grid/List/Map view toggle + Sort By, rendered just above the results
  * grid in templates/archive-listing.php. View is a pure display
  * preference (which layout to show the SAME results in) — handled

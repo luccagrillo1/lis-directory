@@ -99,6 +99,48 @@ function lis_directory_render_listing_fallback_image( $post, $context = 'card' )
 add_filter( 'jetpack_relatedposts_filter_headline', 'lis_directory_related_posts_headline' );
 add_filter( 'jetpack_relatedposts_returned_results', 'lis_directory_related_posts_alt', 10, 2 );
 
+add_filter( 'jetpack_relatedposts_filter_post_context', 'lis_directory_related_posts_context', 10, 2 );
+
+/**
+ * Jetpack labels each related item "Similar post" when it has no better
+ * context. On listings show the related listing's category instead (0.65.0).
+ */
+function lis_directory_related_posts_context( $context, $post_id ) {
+	if ( 'lis_listing' !== get_post_type( $post_id ) ) {
+		return $context;
+	}
+	$terms = get_the_terms( $post_id, 'lis_listing_category' );
+	if ( $terms && ! is_wp_error( $terms ) ) {
+		return $terms[0]->name;
+	}
+	return '';
+}
+
+/**
+ * Short, readable label for a listing's website link (0.65.0): "Instagram",
+ * "Facebook" for social profiles, otherwise the bare domain
+ * ("bernklau.com"), instead of the full URL with its query string.
+ */
+function lis_directory_website_label( $url ) {
+	$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+	if ( '' === $host ) {
+		return $url;
+	}
+	$host   = preg_replace( '/^(www\.|m\.)/', '', $host );
+	$social = array(
+		'instagram.com' => 'Instagram',
+		'facebook.com'  => 'Facebook',
+		'fb.com'        => 'Facebook',
+		'tiktok.com'    => 'TikTok',
+		'youtube.com'   => 'YouTube',
+		'linktr.ee'     => 'Linktree',
+		'x.com'         => 'X',
+		'twitter.com'   => 'X',
+		'yelp.com'      => 'Yelp',
+	);
+	return isset( $social[ $host ] ) ? $social[ $host ] : $host;
+}
+
 function lis_directory_related_posts_headline( $headline ) {
 	return is_singular( 'lis_listing' ) ? '' : $headline;
 }

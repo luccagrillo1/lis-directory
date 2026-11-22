@@ -137,7 +137,9 @@ while ( have_posts() ) :
 		</div>
 
 		<?php
-		if ( $gallery_html && function_exists( 'lis_directory_render_listing_quick_actions' ) ) {
+		// Every listing, not only gallery layouts (0.65.0): on phones the sidebar with
+		// the phone number and address sits below Related and Reviews.
+		if ( function_exists( 'lis_directory_render_listing_quick_actions' ) ) {
 			echo lis_directory_render_listing_quick_actions( $post_id ); // phpcs:ignore -- escaped inside helper.
 		}
 		$offer_url = '';
@@ -327,7 +329,7 @@ while ( have_posts() ) :
 						<?php if ( $website ) : ?>
 							<div class="lis-listing-meta-row">
 								<span class="lis-listing-meta-label">Website</span>
-								<a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $website ); ?></a>
+								<a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( lis_directory_website_label( $website ) ); ?></a>
 							</div>
 						<?php endif; ?>
 						<?php if ( $email ) : ?>

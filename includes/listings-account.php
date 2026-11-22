@@ -185,6 +185,7 @@ function lis_directory_render_grid_shortcode( $atts ) {
 	<?php if ( empty( $listings ) ) : ?>
 		<p class="lis-listing-empty"><?php echo esc_html( lis_directory_listing_empty_message() ); ?></p>
 	<?php else : ?>
+		<?php echo lis_directory_render_results_summary( $paged ? $grid_query->found_posts : count( $listings ) ); // phpcs:ignore -- escaped inside helper. ?>
 		<?php if ( function_exists( 'lis_directory_render_listing_toolbar' ) ) : ?>
 			<?php lis_directory_render_listing_toolbar(); ?>
 		<?php endif; ?>
@@ -324,7 +325,7 @@ function lis_directory_render_dashboard_shortcode() {
 	ob_start();
 	?>
 	<div class="lis-listing-dashboard">
-		<h1>My Listings</h1>
+		<h2 class="lis-listing-dashboard-title">My Listings</h2>
 		<?php if ( empty( $listings ) ) : ?>
 			<div class="lis-account-empty">
 				<p class="lis-listing-empty">You haven't submitted any listings yet.</p>
@@ -737,7 +738,7 @@ function lis_directory_render_account_overview_shortcode() {
 	ob_start();
 	?>
 	<div class="lis-account-overview">
-		<h1 class="lis-account-overview-title">Hi, <?php echo esc_html( $name ); ?></h1>
+		<h2 class="lis-account-overview-title">Hi, <?php echo esc_html( $name ); ?></h2>
 
 		<?php if ( function_exists( 'lis_account_email_confirmed' ) && ! lis_account_email_confirmed( $user_id ) ) : ?>
 			<?php echo lis_account_confirm_notice_html( 'events, listings or job posts' ); // phpcs:ignore -- escaped inside. ?>
@@ -774,3 +775,34 @@ function lis_directory_render_account_overview_shortcode() {
 	return ob_get_clean();
 }
 
+
+/**
+ * Autofill hints on WP User Manager's sign-up form (0.65.0). WPUM prints the
+ * fields with no `autocomplete`, so phones and password managers couldn't
+ * fill name/email or offer a strong new password. Only runs on a page that
+ * has the registration form.
+ */
+add_action( 'wp_footer', 'lis_directory_registration_autocomplete', 30 );
+
+function lis_directory_registration_autocomplete() {
+	if ( is_admin() || is_user_logged_in() ) {
+		return;
+	}
+	?>
+	<script id="lis-register-autocomplete">
+	(function () {
+		var form = document.querySelector('.wpum-registration-form form');
+		if (!form) return;
+		var map = { user_firstname: 'given-name', user_lastname: 'family-name', user_email: 'email', username: 'username', user_password: 'new-password' };
+		Object.keys(map).forEach(function (name) {
+			var el = form.querySelector('[name="' + name + '"]');
+			if (el && !el.getAttribute('autocomplete')) el.setAttribute('autocomplete', map[name]);
+		});
+		var email = form.querySelector('[name="user_email"]');
+		if (email) { email.setAttribute('autocapitalize', 'off'); email.setAttribute('inputmode', 'email'); }
+		var user = form.querySelector('[name="username"]');
+		if (user) { user.setAttribute('autocapitalize', 'off'); user.setAttribute('autocorrect', 'off'); }
+	})();
+	</script>
+	<?php
+}
