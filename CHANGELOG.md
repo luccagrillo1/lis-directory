@@ -1,3 +1,10 @@
+## [0.69.0] — 2026-11-22 — Audit leftovers: phone list view, sign-up username, one h1
+
+- Directory results open in List view on phones (≤600px) unless the visitor already picked a view; the default isn't saved, so a tap on Grid still sticks. Phone list cards: fixed 108px photo column (the thumb wrap used to shrink to 78–160px), 120px rows, 2-line excerpt, no category badge over the photo (it wrapped and got clipped). Desktop list cards get the same fixed 200px column. Audit item 15.
+- A plain browse of the directory now shows the total ("36 listings") as well as filtered searches.
+- Sign-up form: the required username fills itself from the email address until the visitor types in it, with a hint under the field. Still visible and editable; WPUM still checks it's free. Item 24.
+- Pages with a front-end editor (Add Listing, Edit Listing, Post a Job): WordPress's hidden link dialog heading becomes an h2, so the page has one h1. Item 29.
+
 ## [0.68.0] — 2026-11-22 — Map loads when you scroll to it
 
 - Listing and real-estate pages load the Google Maps script only when the map is within 600px of the screen (IntersectionObserver), instead of on page load. The Maps script is the heaviest download on a listing page and the map sits near the bottom. Audit item 33.

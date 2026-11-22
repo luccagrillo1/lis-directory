@@ -408,7 +408,8 @@ function lis_directory_render_results_summary( $count ) {
 	$keyword = isset( $filters['s'] ) ? trim( (string) $filters['s'] ) : '';
 	$active  = '' !== $keyword || ! empty( $filters['tax_query'] ) || ! empty( $filters['meta_query'] ) || ! empty( $filters['open_now'] );
 	if ( ! $active ) {
-		return '';
+		// 0.69.0: a plain browse shows the total too ("36 listings").
+		return '<p class="lis-listing-results-summary">' . esc_html( sprintf( _n( '%s listing', '%s listings', (int) $count, 'lis-directory' ), number_format_i18n( (int) $count ) ) ) . '</p>';
 	}
 	$label = sprintf( _n( '%s result', '%s results', (int) $count, 'lis-directory' ), number_format_i18n( (int) $count ) );
 	if ( '' !== $keyword ) {

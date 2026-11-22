@@ -802,6 +802,25 @@ function lis_directory_registration_autocomplete() {
 		if (email) { email.setAttribute('autocapitalize', 'off'); email.setAttribute('inputmode', 'email'); }
 		var user = form.querySelector('[name="username"]');
 		if (user) { user.setAttribute('autocapitalize', 'off'); user.setAttribute('autocorrect', 'off'); }
+		// 0.69.0 (phone audit item 24): the username is required but nobody signs in
+		// with it here, so fill one in from the email while it hasn't been typed in.
+		// The field stays visible and editable; WPUM still checks it's free.
+		if (user && email) {
+			var touched = user.value !== '';
+			user.addEventListener('input', function () { touched = user.value !== ''; });
+			var fill = function () {
+				if (touched) return;
+				var base = (email.value.split('@')[0] || '').toLowerCase().replace(/[^a-z0-9._-]+/g, '').replace(/^[._-]+|[._-]+$/g, '').slice(0, 20);
+				user.value = base.length >= 3 ? base : '';
+			};
+			email.addEventListener('input', fill);
+			email.addEventListener('change', fill);
+			var hint = document.createElement('small');
+			hint.className = 'lis-username-hint';
+			hint.textContent = 'Filled in from your email. Change it if you like.';
+			hint.style.cssText = 'display:block;margin-top:6px;font-size:13px;opacity:.75';
+			user.insertAdjacentElement('afterend', hint);
+		}
 	})();
 	</script>
 	<?php

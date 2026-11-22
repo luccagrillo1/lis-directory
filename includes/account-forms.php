@@ -338,3 +338,35 @@ function lis_directory_cap_wpum_upload_size( $file, $args = array() ) {
 	}
 	return $file;
 }
+
+/**
+ * 0.69.0 (phone audit item 29): WordPress's link dialog for the front-end
+ * editors (Add Listing, Edit Listing, Post a Job) prints a hidden
+ * <h1 id="link-modal-title">Insert/edit link</h1>, giving those pages a second
+ * h1. Swap it for an h2 once the page has loaded; the dialog looks the same.
+ */
+function lis_directory_demote_link_dialog_heading() {
+	// Only on pages that printed an editor (wp_enqueue_editor fires from wp_editor()).
+	if ( is_admin() || ! did_action( 'wp_enqueue_editor' ) ) {
+		return;
+	}
+	?>
+	<script>
+	document.addEventListener( 'DOMContentLoaded', function () {
+		var h = document.getElementById( 'link-modal-title' );
+		if ( ! h || 'H1' !== h.tagName ) {
+			return;
+		}
+		var h2 = document.createElement( 'h2' );
+		for ( var i = 0; i < h.attributes.length; i++ ) {
+			h2.setAttribute( h.attributes[ i ].name, h.attributes[ i ].value );
+		}
+		while ( h.firstChild ) {
+			h2.appendChild( h.firstChild );
+		}
+		h.parentNode.replaceChild( h2, h );
+	} );
+	</script>
+	<?php
+}
+add_action( 'wp_footer', 'lis_directory_demote_link_dialog_heading', 99 );

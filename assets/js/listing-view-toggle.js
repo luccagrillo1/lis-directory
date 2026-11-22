@@ -29,7 +29,7 @@
 		var mapLoaded = false;
 		var mapLoading = false;
 
-		function setView( view ) {
+		function setView( view, keep ) {
 			if ( 'map' === view && ! mapView ) {
 				view = 'grid';
 			}
@@ -48,7 +48,9 @@
 			} );
 
 			try {
-				localStorage.setItem( STORAGE_KEY, view );
+				if ( false !== keep ) {
+					localStorage.setItem( STORAGE_KEY, view );
+				}
 			} catch ( e ) {
 				// Private browsing / storage disabled - view choice just won't persist. Not fatal.
 			}
@@ -72,6 +74,10 @@
 		}
 		if ( saved && ( 'list' === saved || ( 'map' === saved && mapView ) ) ) {
 			setView( saved );
+		} else if ( ! saved && window.matchMedia && window.matchMedia( '(max-width: 600px)' ).matches ) {
+			// 0.69.0 (phone audit item 15): phones start in List view, where a card is
+			// ~120px tall instead of ~300px. Not saved, so a tap on Grid still sticks.
+			setView( 'list', false );
 		}
 
 		function loadMapView() {

@@ -395,6 +395,36 @@
 	overflow: hidden;
 }
 
+/* 0.69.0 (phone audit item 15): phones open in List view. The thumb wrap,
+   not the img, is the flex item, so it shrank to whatever the text left —
+   78px on one card, 160px on the next. Fixed 108px column, shorter rows,
+   and no category badge over the photo (it wrapped and got clipped). */
+.lis-listing-grid--list .lis-listing-card-thumb-wrap {
+	flex: 0 0 200px;
+	width: 200px;
+}
+.lis-listing-grid--list .lis-listing-card-thumb-wrap .lis-listing-card-thumb {
+	width: 100%;
+}
+@media (max-width: 600px) {
+	.lis-listing-grid--list .lis-listing-card {
+		height: 120px;
+	}
+	.lis-listing-grid--list .lis-listing-card-thumb-wrap {
+		flex-basis: 108px;
+		width: 108px;
+	}
+	.lis-listing-grid--list .lis-listing-card-thumb-badges {
+		display: none;
+	}
+	.lis-listing-grid--list .lis-listing-card-excerpt {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+}
+
 /* Map view: the map sits above the results (see archive-listing.php markup
    order + listing-view-toggle.js), which stay visible underneath in the
    same compact list-card layout as List view — not hidden behind the map
