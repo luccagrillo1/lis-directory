@@ -108,7 +108,9 @@ function lis_directory_render_grid_shortcode( $atts ) {
 	// LIS_DIRECTORY_LISTINGS_PER_PAGE at a time with numbered links, same as the
 	// main archive (D15). An explicit count is a fixed preview widget: that many
 	// listings, no pagination.
-	$atts  = shortcode_atts( array( 'type' => '', 'count' => -1, 'search' => 'auto' ), $atts, 'lis_listing_grid' );
+	$atts  = shortcode_atts( array( 'type' => '', 'count' => -1, 'search' => 'auto', 'layout' => '' ), $atts, 'lis_listing_grid' );
+	// layout="photo" (0.74.0): big heading, category tiles, true-shape photo cards (directory-pages.php).
+	$photo_layout = 'photo' === $atts['layout'] && function_exists( 'lis_directory_render_photo_grid' );
 	$paged = -1 === (int) $atts['count'];
 	$types = lis_directory_get_listing_types();
 	$type  = isset( $types[ $atts['type'] ] ) ? $atts['type'] : '';
@@ -119,7 +121,7 @@ function lis_directory_render_grid_shortcode( $atts ) {
 	// forces it on for an all-types grid, `search="no"` hides it. The form
 	// submits to the archive with the filters applied — same results
 	// template, no separate page.
-	$show_search = ( 'no' !== $atts['search'] ) && ( '' !== $type || 'yes' === $atts['search'] );
+	$show_search = ! $photo_layout && ( 'no' !== $atts['search'] ) && ( '' !== $type || 'yes' === $atts['search'] );
 	$search_html = '';
 	if ( $show_search ) {
 		// The form submits back to this page (not the archive), and this grid
@@ -174,6 +176,9 @@ function lis_directory_render_grid_shortcode( $atts ) {
 		} ) );
 		$grid_query->post_count    = count( $grid_query->posts );
 		$grid_query->max_num_pages = 1;
+	}
+	if ( $photo_layout ) {
+		return lis_directory_render_photo_grid( $grid_query, $query_args, $paged );
 	}
 	$listings     = $grid_query->posts;
 	$maps_api_key = get_option( 'lis_directory_google_maps_api_key' );

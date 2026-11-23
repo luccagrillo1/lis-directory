@@ -1,3 +1,12 @@
+## [0.74.0] — 2026-11-23 — Directory pages redesign
+
+From the lis-dir-lab mockups (round 2: 09 / 10 / 11). New `includes/directory-pages.php`, `assets/css/directory-pages.css`, `assets/js/directory-pages.js`.
+
+- **`[lis_directory_home]`** for the parent page /services/local-directory/: "Where Sandpoint actually goes." with search (goes to All Listings with `lis_q`) and Try links; a stack of three listing photos, each its own link that straightens and lifts on hover one at a time; **Locals' favourites** = featured + popular local-business listings with a photo only (featured first); category tiles; big links to All Listings and the A–Z Index. Attributes `favourites` (default 12), `quick`.
+- **`[lis_listing_grid layout="photo"]`** for All Listings: own big heading (category name when filtered), search, category tiles as filters (Everything + the five biggest, More opens the rest), sort, link to the Index, then a true-shape photo grid with the text on a dark fade. Cards load the `large` photo with srcset instead of the 300px thumbnail, keep the photo's own shape (very wide ones trimmed to 1.42:1 so the text fits). Paging, `lis_q`, `lis_category`, `lis_sort` work as before.
+- **`[lis_directory_index]`** for the new A–Z page: every local-business listing by name ("The" ignored), true-shape thumbnail, category, street, open status or phone; sticky letter rail; search and category buttons filter in place.
+- Pages with any of these get body class `lis-dir-v2-page`, which hides the theme page title. URLs come from `lis_directory_v2_url()` (filters `lis_directory_{home,all,index}_url`).
+
 ## [0.73.2] — 2026-11-23 — Ticker copy out of the tab order
 
 - `shortcodes.php`: the vendor ticker's second, aria-hidden copy (there for the seamless loop) had live links, so Tab went through every vendor a second time with nothing announced (Lighthouse aria-hidden-focus). Its links now get `tabindex="-1"`; they still work with a mouse or tap. The extra copies vendor-ticker.js adds already did this.
