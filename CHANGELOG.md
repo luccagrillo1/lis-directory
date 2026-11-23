@@ -1,3 +1,7 @@
+## [0.73.2] — 2026-11-23 — Ticker copy out of the tab order
+
+- `shortcodes.php`: the vendor ticker's second, aria-hidden copy (there for the seamless loop) had live links, so Tab went through every vendor a second time with nothing announced (Lighthouse aria-hidden-focus). Its links now get `tabindex="-1"`; they still work with a mouse or tap. The extra copies vendor-ticker.js adds already did this.
+
 ## [0.73.1] — 2026-11-23 — rel=next guard fix
 
 - `archive-meta.php`: live 0.73.0 still printed `rel="next"` to /page/2/ on community-public-services (13 listings), because on these archives `$wp_query->max_num_pages` itself is 2 (worked out at 10 a page) while the page renders 36 a page. The guard now counts pages as ceil(found_posts / LIS_DIRECTORY_LISTINGS_PER_PAGE) (1 for an open-now search).

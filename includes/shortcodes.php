@@ -551,7 +551,8 @@ function lis_directory_render_vendor_ticker_shortcode( $atts ) {
 		<noscript><style>.lis-pv-ticker-track{visibility:visible !important;}</style></noscript>
 		<div class="lis-pv-ticker-track" style="visibility:hidden;">
 			<div class="lis-pv-ticker-group"><?php echo $items_html; // phpcs:ignore -- built from escaped markup above. ?></div>
-			<div class="lis-pv-ticker-group lis-pv-ticker-copy" aria-hidden="true"><?php echo $items_html; // phpcs:ignore -- same. ?></div>
+			<?php // The copy is aria-hidden, so its links must not take keyboard focus either (site audit 2026-11-23). ?>
+			<div class="lis-pv-ticker-group lis-pv-ticker-copy" aria-hidden="true"><?php echo preg_replace( '/<a\b(?![^>]*\btabindex=)/i', '<a tabindex="-1"', $items_html ); // phpcs:ignore -- same markup, links taken out of the tab order. ?></div>
 		</div>
 	</div>
 	<?php
