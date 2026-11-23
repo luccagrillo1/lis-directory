@@ -241,6 +241,8 @@ function lis_directory_render_home_shortcode( $atts ) {
 		// Which sections to print, so other page blocks can sit between them:
 		// [lis_directory_home parts="hero,tiles,doors"] … [lis_directory_home parts="favourites"]
 		'parts'      => 'hero,favourites,tiles,doors',
+		// CSS selector of other text on the page to type out when scrolled to (e.g. the testimonial).
+		'typewriter' => '',
 	), $atts, 'lis_directory_home' );
 	$show = array_flip( array_map( 'trim', explode( ',', strtolower( $atts['parts'] ) ) ) );
 	lis_directory_v2_assets( true );
@@ -263,7 +265,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 
 	ob_start();
 	?>
-	<div class="lis-v2 lis-v2-home">
+	<div class="lis-v2 lis-v2-home"<?php echo '' !== $atts['typewriter'] ? ' data-lis-v2-typewriter="' . esc_attr( $atts['typewriter'] ) . '"' : ''; ?>>
 		<?php if ( isset( $show['hero'] ) ) : ?>
 		<section class="lis-v2-hero<?php echo count( $stack ) < 3 ? ' is-nostack' : ''; ?>">
 			<div class="lis-v2-hero-copy">

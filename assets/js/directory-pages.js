@@ -275,3 +275,115 @@
 	window.addEventListener( 'resize', onScroll );
 	onScroll();
 } )();
+
+/*
+ * Typewriter (0.75.2): [lis_directory_home typewriter="<selector>"] types that
+ * text out once it scrolls into view. Whole thing takes ~1.8s however long the
+ * text is, with a blinking caret riding the last letter. Reduced motion: skipped.
+ */
+( function () {
+	if ( window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) {
+		return;
+	}
+	var targets = [];
+	document.querySelectorAll( '[data-lis-v2-typewriter]' ).forEach( function ( w ) {
+		try {
+			document.querySelectorAll( w.getAttribute( 'data-lis-v2-typewriter' ) ).forEach( function ( el ) {
+				if ( targets.indexOf( el ) < 0 ) {
+					targets.push( el );
+				}
+			} );
+		} catch ( e ) {} // bad selector: do nothing
+	} );
+	targets = targets.filter( function ( el ) {
+		return el.getBoundingClientRect().top > window.innerHeight * 0.8; // already visible: leave it
+	} );
+	if ( ! targets.length ) {
+		return;
+	}
+	var DURATION = 1800;
+
+	function prep( el ) {
+		var walker = document.createTreeWalker( el, NodeFilter.SHOW_TEXT );
+		var nodes = [], n, chars = [];
+		while ( ( n = walker.nextNode() ) ) {
+			if ( n.nodeValue.trim() ) {
+				nodes.push( n );
+			}
+		}
+		el.setAttribute( 'aria-label', el.textContent.replace( /\s+/g, ' ' ).trim() );
+		nodes.forEach( function ( node ) {
+			var frag = document.createDocumentFragment();
+			node.nodeValue.split( /(\s+)/ ).forEach( function ( part ) {
+				if ( ! part ) {
+					return;
+				}
+				if ( /^\s+$/.test( part ) ) {
+					var sp = document.createElement( 'span' );
+					sp.className = 'lis-v2-tw-c';
+					sp.setAttribute( 'aria-hidden', 'true' );
+					sp.textContent = part;
+					frag.appendChild( sp );
+					chars.push( sp );
+					return;
+				}
+				// keep each word unbreakable so lines never re-wrap mid-type
+				var word = document.createElement( 'span' );
+				word.style.whiteSpace = 'nowrap';
+				word.setAttribute( 'aria-hidden', 'true' );
+				for ( var i = 0; i < part.length; i++ ) {
+					var c = document.createElement( 'span' );
+					c.className = 'lis-v2-tw-c';
+					c.textContent = part[ i ];
+					word.appendChild( c );
+					chars.push( c );
+				}
+				frag.appendChild( word );
+			} );
+			node.parentNode.replaceChild( frag, node );
+		} );
+		var caret = document.createElement( 'span' );
+		caret.className = 'lis-v2-tw-caret';
+		caret.setAttribute( 'aria-hidden', 'true' );
+		return { chars: chars, caret: caret };
+	}
+	function type( el ) {
+		var t = el._lisTw;
+		var start = null, shown = 0;
+		function frame( now ) {
+			if ( null === start ) {
+				start = now;
+			}
+			var p = Math.min( 1, ( now - start ) / DURATION );
+			var want = Math.round( t.chars.length * p );
+			while ( shown < want ) {
+				t.chars[ shown++ ].classList.add( 'is-on' );
+			}
+			var last = t.chars[ Math.max( 0, shown - 1 ) ];
+			last.parentNode.insertBefore( t.caret, last.nextSibling );
+			if ( p < 1 ) {
+				requestAnimationFrame( frame );
+			} else {
+				setTimeout( function () { t.caret.classList.add( 'is-done' ); }, 1400 );
+			}
+		}
+		requestAnimationFrame( frame );
+	}
+	targets.forEach( function ( el ) {
+		el._lisTw = prep( el );
+	} );
+	function check() {
+		targets = targets.filter( function ( el ) {
+			if ( el.getBoundingClientRect().top > window.innerHeight * 0.75 ) {
+				return true;
+			}
+			type( el );
+			return false;
+		} );
+		if ( ! targets.length ) {
+			window.removeEventListener( 'scroll', check );
+		}
+	}
+	window.addEventListener( 'scroll', check, { passive: true } );
+	check();
+} )();
