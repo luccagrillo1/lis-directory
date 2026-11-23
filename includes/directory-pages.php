@@ -297,7 +297,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 		<?php endif; ?>
 
 		<?php if ( $favs && isset( $show['favourites'] ) ) : ?>
-			<section class="lis-v2-sec">
+			<section class="lis-v2-sec lis-v2-sec--favs">
 				<div class="lis-v2-sec-h">
 					<div><p class="lis-v2-kick">Locals’ favourites</p><h2>The places people keep sending their friends to.</h2></div>
 					<a class="lis-v2-link" href="<?php echo esc_url( $all ); ?>"><?php echo esc_html( sprintf( 'See all %d', $total ) ); ?> <?php echo lis_directory_v2_svg( 'arrow', 16 ); // phpcs:ignore ?></a>
@@ -311,6 +311,8 @@ function lis_directory_render_home_shortcode( $atts ) {
 			</section>
 		<?php endif; ?>
 
+		<?php $band = isset( $show['tiles'] ) || isset( $show['doors'] ); ?>
+		<?php if ( $band ) : ?><div class="lis-v2-band"><?php endif; ?>
 		<?php if ( isset( $show['tiles'] ) ) : ?>
 		<section class="lis-v2-sec">
 			<div class="lis-v2-sec-h"><div><p class="lis-v2-kick">Browse by kind</p><h2>What are you after?</h2></div></div>
@@ -334,6 +336,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 			</a>
 		</section>
 		<?php endif; ?>
+		<?php if ( $band ) : ?></div><?php endif; ?>
 	</div>
 	<?php
 	return ob_get_clean();

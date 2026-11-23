@@ -184,3 +184,94 @@
 		}, 180 );
 	} );
 } )();
+
+/*
+ * Motion (0.75.0). Reduced motion: none of this runs.
+ * - Hero photos fan apart as the hero scrolls away (individual translate/rotate
+ *   properties, so the hover transform still works).
+ * - Below-the-fold pieces reveal once: tiles rise in a cascade, the All listings
+ *   door wipes up, the A–Z slides in, favourites cards rise column by column.
+ *   Anything already on screen at load is left alone (no flash).
+ */
+( function () {
+	if ( window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) {
+		return;
+	}
+	var root = document.documentElement;
+
+	/* hero fan */
+	var hero = document.querySelector( '.lis-v2-hero' );
+	var phs = hero ? [].slice.call( hero.querySelectorAll( '.lis-v2-stack-ph' ) ) : [];
+	var FAN = [ [ -38, 34, -4 ], [ 36, -20, 4 ], [ 0, 64, 0 ] ]; // x px, y px, extra deg at full scroll
+	var ticking = false;
+	function fan() {
+		ticking = false;
+		var r = hero.getBoundingClientRect();
+		var p = Math.max( 0, Math.min( 1, -r.top / Math.max( 1, r.height * 0.9 ) ) );
+		phs.forEach( function ( el, i ) {
+			var f = FAN[ i ] || FAN[ 2 ];
+			el.style.translate = ( f[0] * p ).toFixed( 1 ) + 'px ' + ( f[1] * p ).toFixed( 1 ) + 'px';
+			el.style.rotate = ( f[2] * p ).toFixed( 2 ) + 'deg';
+		} );
+	}
+
+	/* reveals */
+	var items = [];
+	function mark( el, kind, delay ) {
+		if ( ! el || el.getBoundingClientRect().top < window.innerHeight * 0.92 ) {
+			return; // already visible at load
+		}
+		el.setAttribute( 'data-v2-rv', kind );
+		el.style.setProperty( '--v2-d', ( delay || 0 ) + 'ms' );
+		items.push( el );
+	}
+	document.querySelectorAll( '.lis-v2-band' ).forEach( function ( band ) {
+		band.querySelectorAll( '.lis-v2-sec-h' ).forEach( function ( h ) { mark( h, 'up', 0 ); } );
+		[].slice.call( band.querySelectorAll( '.lis-v2-tiles > *' ) ).forEach( function ( t, i ) { mark( t, 'up', 60 + i * 55 ); } );
+		mark( band.querySelector( '.lis-v2-door--all' ), 'wipe', 0 );
+		mark( band.querySelector( '.lis-v2-door--idx' ), 'up', 160 );
+		mark( band.querySelector( '.lis-v2-door--idx .lis-v2-az' ), 'right', 380 );
+	} );
+	document.querySelectorAll( '.lis-v2-sec--favs' ).forEach( function ( sec ) {
+		mark( sec.querySelector( '.lis-v2-sec-h' ), 'up', 0 );
+		sec.querySelectorAll( '.lis-v2-card' ).forEach( function ( c ) {
+			var col = c.parentElement.classList.contains( 'lis-v2-col' ) ? [].indexOf.call( c.parentElement.parentElement.children, c.parentElement ) : 0;
+			mark( c, 'card', col * 90 );
+		} );
+		mark( sec.querySelector( '.lis-v2-fade-link' ), 'up', 300 );
+	} );
+	mark( document.querySelector( '.lis-pv-heading' ), 'fade', 0 );
+
+	if ( items.length ) {
+		root.classList.add( 'lis-v2-motion' );
+	}
+	function check() {
+		var line = window.innerHeight * 0.88;
+		items = items.filter( function ( el ) {
+			if ( el.getBoundingClientRect().top > line ) {
+				return true;
+			}
+			el.classList.add( 'is-in' );
+			var d = parseInt( el.style.getPropertyValue( '--v2-d' ), 10 ) || 0;
+			setTimeout( function () {
+				// hand the element back to its own hover transitions
+				el.removeAttribute( 'data-v2-rv' );
+				el.classList.remove( 'is-in' );
+			}, d + 1200 );
+			return false;
+		} );
+	}
+
+	function onScroll() {
+		if ( items.length ) {
+			check();
+		}
+		if ( phs.length && ! ticking ) {
+			ticking = true;
+			requestAnimationFrame( fan );
+		}
+	}
+	window.addEventListener( 'scroll', onScroll, { passive: true } );
+	window.addEventListener( 'resize', onScroll );
+	onScroll();
+} )();

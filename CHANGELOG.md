@@ -1,3 +1,8 @@
+## [0.75.0] — 2026-11-23 — Directory home: bands + motion
+
+- "What are you after?" + the All listings / A–Z doors sit on a full-bleed soft green band, so the page reads as separate sections. Locals' favourites gets its own roomier section.
+- Motion (off for reduced-motion): hero copy rises and the three photos deal in on load; the photos fan apart as the hero scrolls away; tiles cascade in, the All listings door wipes up, the A–Z slides in, favourites cards rise column by column. Only transform/opacity/clip-path; things already on screen at load don't animate.
+
 ## [0.74.7] — 2026-11-23 — Favourites fade out
 
 - Locals' favourites: the grid is cut a little below its shortest column and fades into the section background (colour read from the page), with a "See all N places" button on the fade. No more ragged column ends.
