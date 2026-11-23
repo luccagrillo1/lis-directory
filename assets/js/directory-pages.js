@@ -132,3 +132,55 @@
 		} );
 	} );
 } )();
+
+/*
+ * Locals' favourites fade (0.74.7): after the masonry runs, cut the grid a little
+ * below the shortest column so the bottom is one straight fade instead of ragged
+ * column ends. The fade takes the colour of whatever sits behind the section.
+ */
+( function () {
+	var wraps = [].slice.call( document.querySelectorAll( '[data-lis-v2-fade]' ) );
+	if ( ! wraps.length ) {
+		return;
+	}
+	function bg( el ) {
+		while ( el ) {
+			var c = getComputedStyle( el ).backgroundColor;
+			if ( c && 'transparent' !== c && ! /rgba\([^)]*,\s*0\)$/.test( c ) ) {
+				return c;
+			}
+			el = el.parentElement;
+		}
+		return '#fff';
+	}
+	function clip( w ) {
+		var g = w.querySelector( '.lis-v2-grid' );
+		var cols = g.classList.contains( 'is-mason' ) ? [].slice.call( g.children ) : [];
+		if ( cols.length < 2 ) {
+			w.classList.remove( 'is-clipped' );
+			return;
+		}
+		var hs = cols.map( function ( c ) {
+			return c.offsetHeight;
+		} );
+		var lo = Math.min.apply( null, hs );
+		var hi = Math.max.apply( null, hs );
+		if ( hi - lo < 24 ) {
+			w.classList.remove( 'is-clipped' );
+			return;
+		}
+		w.style.setProperty( '--v2-clip', ( lo + 90 ) + 'px' );
+		w.classList.add( 'is-clipped' );
+	}
+	wraps.forEach( function ( w ) {
+		w.style.setProperty( '--v2-fadebg', bg( w.parentElement ) );
+		clip( w );
+	} );
+	var t;
+	window.addEventListener( 'resize', function () {
+		clearTimeout( t );
+		t = setTimeout( function () {
+			wraps.forEach( clip );
+		}, 180 );
+	} );
+} )();

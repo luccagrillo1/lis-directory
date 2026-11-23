@@ -302,8 +302,11 @@ function lis_directory_render_home_shortcode( $atts ) {
 					<div><p class="lis-v2-kick">Locals’ favourites</p><h2>The places people keep sending their friends to.</h2></div>
 					<a class="lis-v2-link" href="<?php echo esc_url( $all ); ?>"><?php echo esc_html( sprintf( 'See all %d', $total ) ); ?> <?php echo lis_directory_v2_svg( 'arrow', 16 ); // phpcs:ignore ?></a>
 				</div>
-				<div class="lis-v2-grid">
-					<?php foreach ( $favs as $p ) { echo lis_directory_render_photo_card( $p, '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw', false ); } // phpcs:ignore -- escaped inside helper. ?>
+				<div class="lis-v2-fadewrap" data-lis-v2-fade>
+					<div class="lis-v2-grid">
+						<?php foreach ( $favs as $p ) { echo lis_directory_render_photo_card( $p, '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw', false ); } // phpcs:ignore -- escaped inside helper. ?>
+					</div>
+					<div class="lis-v2-fade"><a class="lis-v2-fade-link" href="<?php echo esc_url( $all ); ?>"><?php echo esc_html( sprintf( 'See all %d places', $total ) ); ?> <?php echo lis_directory_v2_svg( 'arrow', 16 ); // phpcs:ignore ?></a></div>
 				</div>
 			</section>
 		<?php endif; ?>

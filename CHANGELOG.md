@@ -1,3 +1,7 @@
+## [0.74.7] — 2026-11-23 — Favourites fade out
+
+- Locals' favourites: the grid is cut a little below its shortest column and fades into the section background (colour read from the page), with a "See all N places" button on the fade. No more ragged column ends.
+
 ## [0.74.6] — 2026-11-23 — Even card tops
 
 - Photo grids: in the no-JS column fallback, cards are inline-block so Safari no longer pushes a column's first card down by the card gap (uneven tops).

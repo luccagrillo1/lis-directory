@@ -29,6 +29,12 @@
 .lis-v2-col{flex:1 1 0;min-width:0}
 /* no-JS column fallback: inline-block stops Safari carrying a card's bottom margin to the top of the next column (uneven tops) */
 .lis-v2-grid:not(.is-mason)>.lis-v2-card{display:inline-block;width:100%;vertical-align:top}
+/* Locals' favourites: grid is cut at the shortest column and fades into the page, with a link on the fade */
+.lis-v2-fadewrap{position:relative;--v2-fadebg:#fff}
+.lis-v2-fadewrap.is-clipped>.lis-v2-grid{max-height:var(--v2-clip);overflow:hidden}
+.lis-v2-fade{position:absolute;left:0;right:0;bottom:0;z-index:3;height:min(260px,60%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:18px;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--v2-fadebg) 0%,transparent) 0,color-mix(in srgb,var(--v2-fadebg) 82%,transparent) 55%,var(--v2-fadebg) 100%)}
+.lis-v2 .lis-v2-fade-link{pointer-events:auto;display:inline-flex;gap:8px;align-items:center;padding:14px 24px;border-radius:999px;background:var(--v2-pine-9);color:#fff!important;font:600 16px var(--v2-disp);text-decoration:none;box-shadow:0 12px 30px -12px rgba(22,40,31,.55);transition:transform .25s var(--v2-ease),background .2s}
+.lis-v2 .lis-v2-fade-link:hover{background:var(--v2-pine-7);transform:translateY(-2px)}
 .lis-v2-card{position:relative;display:block;break-inside:avoid;margin:0 0 16px;border-radius:18px;overflow:hidden;color:#fff!important;isolation:isolate;transform:translateZ(0);background:#E9E6DC}
 .lis-v2-card-ph{display:block;position:relative;aspect-ratio:var(--lis-v2-ar,1.333)}
 .lis-v2 .lis-v2-card-ph img,.lis-v2 .lis-v2-card-ph .lis-listing-fallback-img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;display:block;margin:0;transition:transform .7s var(--v2-ease)}
