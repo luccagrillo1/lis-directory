@@ -1,3 +1,8 @@
+## [0.73.1] — 2026-11-23 — rel=next guard fix
+
+- `archive-meta.php`: live 0.73.0 still printed `rel="next"` to /page/2/ on community-public-services (13 listings), because on these archives `$wp_query->max_num_pages` itself is 2 (worked out at 10 a page) while the page renders 36 a page. The guard now counts pages as ceil(found_posts / LIS_DIRECTORY_LISTINGS_PER_PAGE) (1 for an open-now search).
+- Verified live on 0.73.0: Sign In link no longer has the "Account icon link" label; thin categories print noindex and the category sitemap dropped from 82 to 16 URLs.
+
 ## [0.73.0] — 2026-11-23 — Site audit follow-ups
 
 - New `site-audit.php`:

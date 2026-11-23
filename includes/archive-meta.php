@@ -118,7 +118,11 @@ add_action( 'wp_head', function () {
 	}
 	$GLOBALS['lis_directory_head_buffer'] = false;
 	$html  = (string) ob_get_clean();
-	$max   = max( 1, (int) $GLOBALS['wp_query']->max_num_pages );
+	// Count pages the way the archive shows them (36 a page), not by the query's
+	// own max_num_pages, which on these archives comes out at 10 a page.
+	$found = (int) $GLOBALS['wp_query']->found_posts;
+	$per   = defined( 'LIS_DIRECTORY_LISTINGS_PER_PAGE' ) ? LIS_DIRECTORY_LISTINGS_PER_PAGE : 36;
+	$max   = empty( $_GET['lis_open_now'] ) ? max( 1, (int) ceil( $found / $per ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only.
 	$html  = preg_replace_callback( '/<link[^>]+rel=["\'](?:next|prev)["\'][^>]*>\s*/i', function ( $m ) use ( $max ) {
 		$page = preg_match( '#/page/(\d+)/?#', $m[0], $p ) ? (int) $p[1] : ( preg_match( '/[?&]paged=(\d+)/', $m[0], $p ) ? (int) $p[1] : 1 );
 		return $page > $max ? '' : $m[0];
