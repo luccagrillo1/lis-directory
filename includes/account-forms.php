@@ -240,12 +240,17 @@ function lis_directory_render_account_settings_shortcode() {
 
 		<section class="lis-account-settings-section">
 			<h2>Email preferences</h2>
-			<label class="lis-account-settings-check is-disabled">
-				<input type="checkbox" disabled>
-				<span>Weekly &ldquo;This weekend in Sandpoint&rdquo; email</span>
-				<em class="lis-account-settings-tag">Coming soon</em>
-			</label>
-			<p class="lis-account-settings-note">We only email you about your account, listings and events you submit.</p>
+			<?php if ( function_exists( 'lis_events_weekly_account_row' ) ) : ?>
+				<?php echo lis_events_weekly_account_row(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in LIS Events. ?>
+				<p class="lis-account-settings-note">Otherwise we only email you about your account, listings and events you submit.</p>
+			<?php else : ?>
+				<label class="lis-account-settings-check is-disabled">
+					<input type="checkbox" disabled>
+					<span>Weekly &ldquo;This weekend in Sandpoint&rdquo; email</span>
+					<em class="lis-account-settings-tag">Coming soon</em>
+				</label>
+				<p class="lis-account-settings-note">We only email you about your account, listings and events you submit.</p>
+			<?php endif; ?>
 		</section>
 
 		<section class="lis-account-settings-section lis-account-settings-danger">

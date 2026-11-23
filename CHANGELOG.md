@@ -1,3 +1,7 @@
+## [0.71.0] — 2026-11-22 — Weekly email checkbox works
+
+- `account-forms.php`: when LIS Events 1.24.0+ is active, Account → Settings prints `lis_events_weekly_account_row()`, a real checkbox that subscribes the account email and saves as soon as it's ticked. The "Coming soon" row stays as the fallback without it. The note reads "Otherwise we only email you about…".
+
 ## [0.70.1] — 2026-11-22 — Bottom bar stays out of the way
 
 - `phone-tabbar.php`: the bar hides while a text field has focus (phone keyboard up), and on pages with the Submit an Event step buttons (`.lis-st-nav`, sticky at the bottom), where body padding is dropped too. lis-events' "Saved" toast is lifted above the bar.
