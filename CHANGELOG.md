@@ -1,3 +1,7 @@
+## [0.72.0] — 2026-11-23 — Descriptions for category pages and /jobs/
+
+- New `archive-meta.php` (site audit 2026-11-23): all 82 listing category pages and the /jobs/ board had no meta description. Category pages now get "<Category> in the Sandpoint area: A, B and C. Hours, phone numbers and directions in the Living in Sandpoint directory." (up to three listings); /jobs/ gets a fixed line about the board (filter `lis_directory_jobs_meta_desc`). A SEOPress description typed on the term wins. Fed through `seopress_titles_desc`; `wp_head` fallback only if SEOPress never called the filter.
+
 ## [0.71.1] — 2026-11-22 — Weekly email shelved
 
 - `account-forms.php`: the user shelved the weekly email ("not ready yet"), so Account → Settings shows the "Coming soon" row again. The working checkbox from 0.71.0 only appears when the filter `lis_directory_weekly_email_live` returns true. LIS Events keeps the email code with sending off.
