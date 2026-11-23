@@ -1,3 +1,7 @@
+## [0.74.3] — 2026-11-23 — No addresses on Locals' favourites
+
+- Locals' favourites cards drop the street address (open/closed status stays). All Listings cards keep it.
+
 ## [0.74.2] — 2026-11-23 — Even photo grids
 
 - Locals' favourites and All Listings: cards go under the shortest column (small script in directory-pages.js) instead of CSS columns, which in Safari left one tall column and an empty one. CSS columns stay as the no-JS fallback.

@@ -124,7 +124,7 @@ function lis_directory_v2_photo( $post, $sizes = '(max-width: 640px) 50vw, 25vw'
 }
 
 /** True-shape photo card with the text on a dark fade. */
-function lis_directory_render_photo_card( $post, $sizes = '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw' ) {
+function lis_directory_render_photo_card( $post, $sizes = '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw', $show_street = true ) {
 	$post_id  = $post->ID;
 	$photo    = lis_directory_v2_photo( $post, $sizes );
 	$cats     = get_the_terms( $post_id, 'lis_listing_category' );
@@ -132,7 +132,7 @@ function lis_directory_render_photo_card( $post, $sizes = '(max-width: 640px) 50
 	$is_open  = lis_directory_is_listing_open_now( $post_id );
 	$featured = (bool) get_post_meta( $post_id, '_lis_listing_featured', true );
 	$popular  = lis_directory_is_listing_popular( $post_id );
-	$street   = lis_directory_v2_street( $post_id );
+	$street   = $show_street ? lis_directory_v2_street( $post_id ) : '';
 	$blurb    = lis_directory_v2_blurb( $post );
 	$ratio    = $photo ? max( 0.72, min( 1.42, $photo[1] ) ) : 0.8;
 	$badge    = $featured ? 'Featured' : ( $popular ? 'Popular' : '' );
@@ -297,7 +297,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 					<a class="lis-v2-link" href="<?php echo esc_url( $all ); ?>"><?php echo esc_html( sprintf( 'See all %d', $total ) ); ?> <?php echo lis_directory_v2_svg( 'arrow', 16 ); // phpcs:ignore ?></a>
 				</div>
 				<div class="lis-v2-grid">
-					<?php foreach ( $favs as $p ) { echo lis_directory_render_photo_card( $p ); } // phpcs:ignore -- escaped inside helper. ?>
+					<?php foreach ( $favs as $p ) { echo lis_directory_render_photo_card( $p, '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw', false ); } // phpcs:ignore -- escaped inside helper. ?>
 				</div>
 			</section>
 		<?php endif; ?>
