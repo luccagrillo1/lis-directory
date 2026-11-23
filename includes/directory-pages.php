@@ -392,7 +392,7 @@ function lis_directory_render_photo_grid( $grid_query, $query_args, $paged ) {
 			<p class="lis-listing-empty"><?php echo esc_html( lis_directory_listing_empty_message() ); ?></p>
 		<?php else : ?>
 			<div class="lis-v2-grid" data-lis-listing-results>
-				<?php foreach ( $grid_query->posts as $p ) { echo lis_directory_render_photo_card( $p ); } // phpcs:ignore -- escaped inside helper. ?>
+				<?php foreach ( $grid_query->posts as $p ) { echo lis_directory_render_photo_card( $p, '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw', false ); } // phpcs:ignore -- escaped inside helper. ?>
 			</div>
 			<?php if ( $paged ) : ?>
 				<?php echo lis_directory_render_listing_pagination( $grid_query->max_num_pages, $query_args['paged'] ); // phpcs:ignore -- built by paginate_links(). ?>
