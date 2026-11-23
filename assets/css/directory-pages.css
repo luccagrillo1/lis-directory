@@ -27,6 +27,8 @@
 .lis-v2-grid{columns:4 240px;column-gap:16px}
 .lis-v2-grid.is-mason{columns:auto;display:flex;gap:16px;align-items:flex-start}
 .lis-v2-col{flex:1 1 0;min-width:0}
+/* no-JS column fallback: inline-block stops Safari carrying a card's bottom margin to the top of the next column (uneven tops) */
+.lis-v2-grid:not(.is-mason)>.lis-v2-card{display:inline-block;width:100%;vertical-align:top}
 .lis-v2-card{position:relative;display:block;break-inside:avoid;margin:0 0 16px;border-radius:18px;overflow:hidden;color:#fff!important;isolation:isolate;transform:translateZ(0);background:#E9E6DC}
 .lis-v2-card-ph{display:block;position:relative;aspect-ratio:var(--lis-v2-ar,1.333)}
 .lis-v2 .lis-v2-card-ph img,.lis-v2 .lis-v2-card-ph .lis-listing-fallback-img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;display:block;margin:0;transition:transform .7s var(--v2-ease)}

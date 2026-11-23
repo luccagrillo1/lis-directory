@@ -1,3 +1,7 @@
+## [0.74.6] — 2026-11-23 — Even card tops
+
+- Photo grids: in the no-JS column fallback, cards are inline-block so Safari no longer pushes a column's first card down by the card gap (uneven tops).
+
 ## [0.74.5] — 2026-11-23 — No addresses on All Listings
 
 - All Listings photo cards drop the street address too (open/closed status stays).
