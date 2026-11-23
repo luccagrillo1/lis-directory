@@ -1,3 +1,29 @@
+/* Category tiles (0.74.1): the More list closes on an outside click or Escape. */
+( function () {
+	var mores = [].slice.call( document.querySelectorAll( '[data-lis-v2-more]' ) );
+	if ( ! mores.length ) {
+		return;
+	}
+	document.addEventListener( 'click', function ( e ) {
+		mores.forEach( function ( d ) {
+			if ( d.open && ! d.contains( e.target ) ) {
+				d.open = false;
+			}
+		} );
+	} );
+	document.addEventListener( 'keydown', function ( e ) {
+		if ( 'Escape' !== e.key ) {
+			return;
+		}
+		mores.forEach( function ( d ) {
+			if ( d.open ) {
+				d.open = false;
+				d.querySelector( 'summary' ).focus();
+			}
+		} );
+	} );
+} )();
+
 /* A–Z Index (0.74.0): search box + category buttons filter the rows; empty letters hide. */
 ( function () {
 	var root = document.querySelector( '[data-lis-index]' );

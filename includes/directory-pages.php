@@ -168,9 +168,9 @@ function lis_directory_render_photo_card( $post, $sizes = '(max-width: 640px) 50
 /**
  * Category tiles from lis_directory_browse_data() (top-level categories, children
  * counted). Everything + the five biggest, then a "More" tile that opens the rest.
- * $current: slug of the selected category ('' = Everything).
+ * $current: slug of the selected category ('' = Everything, null = nothing selected, as on the home page).
  */
-function lis_directory_render_category_tiles( $base_url, $current = '' ) {
+function lis_directory_render_category_tiles( $base_url, $current = null ) {
 	$data  = lis_directory_browse_data();
 	$tiles = isset( $data['tiles'] ) ? $data['tiles'] : array();
 	if ( ! $tiles ) {
@@ -178,9 +178,14 @@ function lis_directory_render_category_tiles( $base_url, $current = '' ) {
 	}
 	$top    = array_slice( $tiles, 0, 5 );
 	$rest   = array_slice( $tiles, 5 );
-	$in_top = '' === $current || in_array( $current, wp_list_pluck( $top, 'slug' ), true );
+	$in_rest = null;
+	foreach ( $rest as $t ) {
+		if ( $t['slug'] === $current ) {
+			$in_rest = $t;
+		}
+	}
 	$tile   = function ( $slug, $name, $count, $icon ) use ( $base_url, $current ) {
-		$on   = $slug === $current;
+		$on   = null !== $current && $slug === $current;
 		$href = $slug ? add_query_arg( 'lis_category', $slug, $base_url ) : $base_url;
 		return '<a class="lis-v2-tile" href="' . esc_url( $href ) . '"' . ( $on ? ' aria-current="page"' : '' ) . '>'
 			. lis_directory_v2_svg( $icon, 26 )
@@ -193,8 +198,9 @@ function lis_directory_render_category_tiles( $base_url, $current = '' ) {
 		$out .= $tile( $t['slug'], $t['name'], (int) $t['count'], $t['slug'] );
 	}
 	if ( $rest ) {
-		$out .= '<details class="lis-v2-more"' . ( $in_top ? '' : ' open' ) . '><summary class="lis-v2-tile">' . lis_directory_v2_svg( 'more', 26 )
-			. '<b>More</b><small>' . esc_html( sprintf( '%d categories', count( $rest ) ) ) . '</small></summary><div class="lis-v2-more-list">';
+		// A category from the More list shows as the selected More tile, closed.
+		$out .= '<details class="lis-v2-more" data-lis-v2-more><summary class="lis-v2-tile"' . ( $in_rest ? ' aria-current="page"' : '' ) . '>' . lis_directory_v2_svg( 'more', 26 )
+			. '<b>' . esc_html( $in_rest ? $in_rest['name'] : 'More' ) . '</b><small>' . esc_html( $in_rest ? sprintf( _n( '%d place', '%d places', (int) $in_rest['count'], 'lis-directory' ), (int) $in_rest['count'] ) . ' · change' : sprintf( '%d categories', count( $rest ) ) ) . '</small></summary><div class="lis-v2-more-list">';
 		foreach ( $rest as $t ) {
 			$on   = $t['slug'] === $current;
 			$out .= '<a href="' . esc_url( add_query_arg( 'lis_category', $t['slug'], $base_url ) ) . '"' . ( $on ? ' aria-current="page"' : '' ) . '>' . esc_html( $t['name'] ) . ' <small>' . (int) $t['count'] . '</small></a>';
@@ -233,7 +239,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 		'favourites' => 12,
 		'quick'      => 'Pizza,Coffee,Golf,Church,Farm',
 	), $atts, 'lis_directory_home' );
-	lis_directory_v2_assets();
+	lis_directory_v2_assets( true );
 
 	$all   = lis_directory_v2_url( 'all' );
 	$index = lis_directory_v2_url( 'index' );
@@ -323,7 +329,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 /* ---------- [lis_listing_grid layout="photo"] (called from the grid shortcode) ---------- */
 
 function lis_directory_render_photo_grid( $grid_query, $query_args, $paged ) {
-	lis_directory_v2_assets();
+	lis_directory_v2_assets( true );
 	$all      = get_permalink() ? get_permalink() : lis_directory_v2_url( 'all' );
 	$filters  = lis_directory_listing_request_filters();
 	$current  = isset( $_GET['lis_category'] ) ? sanitize_title( wp_unslash( $_GET['lis_category'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended

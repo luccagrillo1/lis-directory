@@ -1,3 +1,8 @@
+## [0.74.1] — 2026-11-23 — Directory pages fixes
+
+- Home: no category tile shows as selected (Everything was highlighted); the All Listings photo mosaic's second row no longer collapses to a sliver.
+- Category tiles: a category from the More list no longer opens the list on load over the grid. The More tile shows that category selected ("Lodging · 3 places · change"); the list closes on an outside click or Escape.
+
 ## [0.74.0] — 2026-11-23 — Directory pages redesign
 
 From the lis-dir-lab mockups (round 2: 09 / 10 / 11). New `includes/directory-pages.php`, `assets/css/directory-pages.css`, `assets/js/directory-pages.js`.

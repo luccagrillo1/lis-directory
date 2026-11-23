@@ -90,8 +90,8 @@
 .lis-v2-door em{font-style:normal;font-size:16px;display:inline-flex;gap:8px;align-items:center}
 .lis-v2-door--all{background:var(--v2-pine-9);color:#fff!important}
 .lis-v2-door--all .lis-v2-kick{color:var(--v2-clay-2)}.lis-v2-door--all em{color:rgba(255,255,255,.82)}
-.lis-v2-mos{position:absolute;inset:0;z-index:-1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);opacity:.45}
-.lis-v2 .lis-v2-mos img{width:100%;height:100%;max-width:none;object-fit:cover;display:block}
+.lis-v2-mos{position:absolute;inset:0;z-index:-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));opacity:.45}
+.lis-v2 .lis-v2-mos img{width:100%;height:100%;min-height:0;max-width:none;object-fit:cover;display:block}
 .lis-v2-door--all::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(22,40,31,.2),rgba(22,40,31,.95) 75%)}
 .lis-v2-door--idx{background:#fff;border:1px solid var(--v2-line);color:var(--v2-ink)!important}
 .lis-v2-door--idx em{color:var(--v2-soft)}
