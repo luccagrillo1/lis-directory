@@ -279,7 +279,7 @@
 /*
  * Typewriter (0.75.2): [lis_directory_home typewriter="<selector>"] types that
  * text out once it scrolls into view. Whole thing takes ~1.8s however long the
- * text is, with a blinking caret riding the last letter. Reduced motion: skipped.
+ * text is. Reduced motion: skipped.
  */
 ( function () {
 	if ( window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) {
@@ -342,10 +342,7 @@
 			} );
 			node.parentNode.replaceChild( frag, node );
 		} );
-		var caret = document.createElement( 'span' );
-		caret.className = 'lis-v2-tw-caret';
-		caret.setAttribute( 'aria-hidden', 'true' );
-		return { chars: chars, caret: caret };
+		return { chars: chars };
 	}
 	function type( el ) {
 		var t = el._lisTw;
@@ -359,12 +356,8 @@
 			while ( shown < want ) {
 				t.chars[ shown++ ].classList.add( 'is-on' );
 			}
-			var last = t.chars[ Math.max( 0, shown - 1 ) ];
-			last.parentNode.insertBefore( t.caret, last.nextSibling );
 			if ( p < 1 ) {
 				requestAnimationFrame( frame );
-			} else {
-				setTimeout( function () { t.caret.classList.add( 'is-done' ); }, 1400 );
 			}
 		}
 		requestAnimationFrame( frame );

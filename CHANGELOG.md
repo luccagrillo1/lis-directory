@@ -1,3 +1,7 @@
+## [0.75.3] — 2026-11-23 — Typewriter without cursor
+
+- Testimonial typewriter: no blinking cursor, just the text typing out.
+
 ## [0.75.2] — 2026-11-23 — Typewriter testimonial
 
 - `[lis_directory_home typewriter="<selector>"]` types that text out when it scrolls into view: ~1.8s total, blinking caret, no reflow (characters are laid out invisible first). Skipped for reduced motion and when already on screen at load.

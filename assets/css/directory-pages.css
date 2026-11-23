@@ -184,9 +184,6 @@
 /* typewriter (0.75.2): every character is already laid out, just invisible, so nothing reflows while it types */
 .lis-v2-tw-c{opacity:0}
 .lis-v2-tw-c.is-on{opacity:1}
-.lis-v2-tw-caret{display:inline-block;width:.08em;height:1.05em;margin-left:.04em;vertical-align:-.15em;background:currentColor;animation:lisV2Caret .9s steps(1) infinite;transition:opacity .4s}
-.lis-v2-tw-caret.is-done{opacity:0}
-@keyframes lisV2Caret{50%{background:transparent}}/* the fanned photos may drift past the edge; never let the page scroll sideways */
 
 /* scroll reveals: JS sets data-v2-rv only on things below the fold, and removes it once in */
 .lis-v2-motion [data-v2-rv]{opacity:0;translate:0 26px;transition:opacity .7s var(--v2-ease) var(--v2-d,0ms),translate .9s var(--v2-ease) var(--v2-d,0ms),scale .9s var(--v2-ease) var(--v2-d,0ms),clip-path 1.1s var(--v2-ease) var(--v2-d,0ms)}
