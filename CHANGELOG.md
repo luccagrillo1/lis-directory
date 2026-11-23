@@ -1,3 +1,7 @@
+## [0.75.1] — 2026-11-23 — No sideways scroll on phones
+
+- Hero clips horizontally so the fanned-out photos can't push the page 28px wide on phones.
+
 ## [0.75.0] — 2026-11-23 — Directory home: bands + motion
 
 - "What are you after?" + the All listings / A–Z doors sit on a full-bleed soft green band, so the page reads as separate sections. Locals' favourites gets its own roomier section.
