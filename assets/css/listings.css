@@ -3058,17 +3058,44 @@ a.lis-account-stat:focus-visible {
 .lis-account-settings-section:last-child {
 	border-bottom: 0;
 }
-.lis-account-settings-section h2 {
-	font-size: 1.15em;
+/* 0.70.0 (audit item 43): plain section titles — body font, semibold, normal spacing. */
+.lis-account-settings .lis-account-settings-section h2 {
+	font-family: 'Source Sans 3', system-ui, sans-serif;
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 1.25;
+	letter-spacing: 0;
 	margin: 0 0 10px;
 }
+/* Quiet row: small grey checkbox + text and a Coming soon tag, no box. */
 .lis-account-settings-check {
 	display: flex;
-	gap: 10px;
+	gap: 8px;
 	align-items: center;
+	font-size: 15px;
+	line-height: 1.35;
+}
+.lis-account-settings-check input {
+	width: 16px;
+	height: 16px;
+	margin: 0;
+	flex: none;
 }
 .lis-account-settings-check.is-disabled {
-	opacity: .65;
+	color: #5C6159;
+	opacity: .8;
+	cursor: not-allowed;
+}
+.lis-account-settings-tag {
+	font-style: normal;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: .02em;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: #EEEDE6;
+	color: #5C6159;
+	white-space: nowrap;
 }
 .lis-account-settings-note {
 	font-size: .9em;

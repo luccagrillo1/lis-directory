@@ -1,3 +1,8 @@
+## [0.70.0] — 2026-11-22 — Phone bottom bar, quieter email setting
+
+- New `includes/phone-tabbar.php`: on phones (≤767px) a floating green-glass pill at the bottom — Directory · Events · Jobs · Search · Account — that hides scrolling down and returns scrolling up. Current section gets a clay dot. Search opens a sheet with the site search box. Hidden while the Astra mobile menu is open, or with `body.lis-tabbar-off`. Body gets 84px bottom padding on phones. Filters `lis_directory_phone_tabbar_enabled`, `lis_directory_phone_tabbar_tabs`. Audit item 38 (mockup: pill, tabs a, glass 2, hides on scroll).
+- Settings: the Weekly email row is a quiet line (15px grey text, 16px disabled checkbox, small "Coming soon" tag) instead of "(coming soon)" in italics; section titles use the body font, 18px semibold, normal letter-spacing (the theme's heading tracking looked squeezed). Item 43.
+
 ## [0.69.1] — 2026-11-22 — One h1 on Add Listing, not zero
 
 - Add Listing hides the theme's page title, so after 0.69.0 turned the link dialog's heading into an h2 the page had no h1. The same footer script now adds a screen-reader-only h1 (the page title) above a listing form when the page has none. Item 29.

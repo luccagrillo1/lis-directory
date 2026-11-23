@@ -242,7 +242,8 @@ function lis_directory_render_account_settings_shortcode() {
 			<h2>Email preferences</h2>
 			<label class="lis-account-settings-check is-disabled">
 				<input type="checkbox" disabled>
-				<span>Weekly &ldquo;This weekend in Sandpoint&rdquo; email <em>(coming soon)</em></span>
+				<span>Weekly &ldquo;This weekend in Sandpoint&rdquo; email</span>
+				<em class="lis-account-settings-tag">Coming soon</em>
 			</label>
 			<p class="lis-account-settings-note">We only email you about your account, listings and events you submit.</p>
 		</section>
