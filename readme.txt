@@ -4,7 +4,7 @@ Tags: directory, vendor showcase, custom post type
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.72.0
+Stable tag: 0.73.0
 
 Vendor Showcase for Living in Sandpoint. Runs alongside Directorist without touching it.
 
@@ -176,6 +176,9 @@ needs to change — only the setup steps below.
    automatically, and buyers get a submission link on the thank-you page.
 
 == Changelog ==
+
+= 0.73.0 =
+* Thin listing categories (under 3 listings) leave search; header Sign In link reads "Sign in" to screen readers; listing archives stop advertising a page 2 that 404s.
 
 = 0.72.0 =
 * Meta descriptions for listing category pages and the /jobs/ board.

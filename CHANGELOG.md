@@ -1,3 +1,10 @@
+## [0.73.0] — 2026-11-23 — Site audit follow-ups
+
+- New `site-audit.php`:
+  - **Thin categories out of search (audit item 6).** 51 of 82 listing categories had a single listing. A category with fewer than 3 published listings (child categories included) gets SEOPress term meta `_seopress_robots_index = yes` (noindex + out of /sitemaps.xml), marked `_lis_auto_noindex` so only our own flags are cleared when a category grows; a hand-set SEOPress noindex is untouched. Filter `lis_directory_thin_category_min` (default 3, 0 = off). Runs daily, once after each version change, and a minute after any listing is published or unpublished. Last run in option `lis_directory_thin_categories_synced`.
+  - **Sign In link name (item 10).** Astra's header account link has `aria-label="Account icon link"`, so screen readers didn't say "Sign in" (Lighthouse label-content-name-mismatch on every page). `gettext_astra` blanks that string; an empty aria-label is ignored, so the link's text is its name.
+- `archive-meta.php`: listing archives drop a `<link rel="next|prev">` that points past the last page. Something in the head works rel=next out from the site's 10-per-page setting while listing archives show 36 a page, so community-public-services (13 listings) advertised `/page/2/`, a 404.
+
 ## [0.72.0] — 2026-11-23 — Descriptions for category pages and /jobs/
 
 - New `archive-meta.php` (site audit 2026-11-23): all 82 listing category pages and the /jobs/ board had no meta description. Category pages now get "<Category> in the Sandpoint area: A, B and C. Hours, phone numbers and directions in the Living in Sandpoint directory." (up to three listings); /jobs/ gets a fixed line about the board (filter `lis_directory_jobs_meta_desc`). A SEOPress description typed on the term wins. Fed through `seopress_titles_desc`; `wp_head` fallback only if SEOPress never called the filter.

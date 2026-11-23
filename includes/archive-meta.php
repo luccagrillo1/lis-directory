@@ -97,3 +97,31 @@ add_action( 'wp_head', function () {
 	}
 	echo '<meta name="description" content="' . esc_attr( $desc ) . '" />' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped.
 }, 99 );
+
+/**
+ * Listing archives: drop a <link rel="next|prev"> that points past the last page.
+ * Something in the head (SEOPress/Jetpack) works out rel=next from the site's
+ * 10-posts-per-page setting, but listing archives show 36 a page (D15), so a
+ * 13-listing category advertised /page/2/, which is a 404 (site audit 2026-11-23).
+ * Buffers only the head of listing archives and keeps links that are in range.
+ */
+add_action( 'wp_head', function () {
+	if ( is_post_type_archive( 'lis_listing' ) || is_tax( array( 'lis_listing_category', 'lis_listing_feature' ) ) ) {
+		$GLOBALS['lis_directory_head_buffer'] = true;
+		ob_start();
+	}
+}, 0 );
+
+add_action( 'wp_head', function () {
+	if ( empty( $GLOBALS['lis_directory_head_buffer'] ) ) {
+		return;
+	}
+	$GLOBALS['lis_directory_head_buffer'] = false;
+	$html  = (string) ob_get_clean();
+	$max   = max( 1, (int) $GLOBALS['wp_query']->max_num_pages );
+	$html  = preg_replace_callback( '/<link[^>]+rel=["\'](?:next|prev)["\'][^>]*>\s*/i', function ( $m ) use ( $max ) {
+		$page = preg_match( '#/page/(\d+)/?#', $m[0], $p ) ? (int) $p[1] : ( preg_match( '/[?&]paged=(\d+)/', $m[0], $p ) ? (int) $p[1] : 1 );
+		return $page > $max ? '' : $m[0];
+	}, $html );
+	echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- other plugins' head output, unchanged apart from removed tags.
+}, PHP_INT_MAX );
