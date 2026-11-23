@@ -1,3 +1,7 @@
+## [0.74.2] — 2026-11-23 — Even photo grids
+
+- Locals' favourites and All Listings: cards go under the shortest column (small script in directory-pages.js) instead of CSS columns, which in Safari left one tall column and an empty one. CSS columns stay as the no-JS fallback.
+
 ## [0.74.1] — 2026-11-23 — Directory pages fixes
 
 - Home: no category tile shows as selected (Everything was highlighted); the All Listings photo mosaic's second row no longer collapses to a sliver.
