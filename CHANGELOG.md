@@ -1,3 +1,7 @@
+## [0.74.4] — 2026-11-23 — Directory home in parts
+
+- `[lis_directory_home parts="…"]` prints only the listed sections (hero, favourites, tiles, doors), so page blocks like the Vendor Showcase can sit between them. Default is all four, same order as before.
+
 ## [0.74.3] — 2026-11-23 — No addresses on Locals' favourites
 
 - Locals' favourites cards drop the street address (open/closed status stays). All Listings cards keep it.

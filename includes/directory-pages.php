@@ -238,7 +238,11 @@ function lis_directory_render_home_shortcode( $atts ) {
 	$atts = shortcode_atts( array(
 		'favourites' => 12,
 		'quick'      => 'Pizza,Coffee,Golf,Church,Farm',
+		// Which sections to print, so other page blocks can sit between them:
+		// [lis_directory_home parts="hero,tiles,doors"] … [lis_directory_home parts="favourites"]
+		'parts'      => 'hero,favourites,tiles,doors',
 	), $atts, 'lis_directory_home' );
+	$show = array_flip( array_map( 'trim', explode( ',', strtolower( $atts['parts'] ) ) ) );
 	lis_directory_v2_assets( true );
 
 	$all   = lis_directory_v2_url( 'all' );
@@ -260,6 +264,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 	ob_start();
 	?>
 	<div class="lis-v2 lis-v2-home">
+		<?php if ( isset( $show['hero'] ) ) : ?>
 		<section class="lis-v2-hero<?php echo count( $stack ) < 3 ? ' is-nostack' : ''; ?>">
 			<div class="lis-v2-hero-copy">
 				<p class="lis-v2-kick">Local Directory</p>
@@ -289,8 +294,9 @@ function lis_directory_render_home_shortcode( $atts ) {
 				</div>
 			<?php endif; ?>
 		</section>
+		<?php endif; ?>
 
-		<?php if ( $favs ) : ?>
+		<?php if ( $favs && isset( $show['favourites'] ) ) : ?>
 			<section class="lis-v2-sec">
 				<div class="lis-v2-sec-h">
 					<div><p class="lis-v2-kick">Locals’ favourites</p><h2>The places people keep sending their friends to.</h2></div>
@@ -302,11 +308,14 @@ function lis_directory_render_home_shortcode( $atts ) {
 			</section>
 		<?php endif; ?>
 
+		<?php if ( isset( $show['tiles'] ) ) : ?>
 		<section class="lis-v2-sec">
 			<div class="lis-v2-sec-h"><div><p class="lis-v2-kick">Browse by kind</p><h2>What are you after?</h2></div></div>
 			<?php echo lis_directory_render_category_tiles( $all ); // phpcs:ignore -- escaped inside helper. ?>
 		</section>
+		<?php endif; ?>
 
+		<?php if ( isset( $show['doors'] ) ) : ?>
 		<section class="lis-v2-sec lis-v2-doors">
 			<a class="lis-v2-door lis-v2-door--all" href="<?php echo esc_url( $all ); ?>">
 				<span class="lis-v2-mos" aria-hidden="true"><?php foreach ( $mos as $p ) { echo get_the_post_thumbnail( $p, 'medium_large', array( 'alt' => '', 'loading' => 'lazy' ) ); } // phpcs:ignore ?></span>
@@ -321,6 +330,7 @@ function lis_directory_render_home_shortcode( $atts ) {
 				<em>Every place, alphabetical, one line each. <?php echo lis_directory_v2_svg( 'arrow', 16 ); // phpcs:ignore ?></em>
 			</a>
 		</section>
+		<?php endif; ?>
 	</div>
 	<?php
 	return ob_get_clean();
