@@ -240,7 +240,11 @@ function lis_directory_render_account_settings_shortcode() {
 
 		<section class="lis-account-settings-section">
 			<h2>Email preferences</h2>
-			<?php if ( function_exists( 'lis_events_weekly_account_row' ) ) : ?>
+			<?php
+			// Weekly email is shelved (2026-11-22): the real checkbox only shows once
+			// the filter is turned on. Sending is off in LIS Events too.
+			if ( function_exists( 'lis_events_weekly_account_row' ) && apply_filters( 'lis_directory_weekly_email_live', false ) ) :
+				?>
 				<?php echo lis_events_weekly_account_row(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in LIS Events. ?>
 				<p class="lis-account-settings-note">Otherwise we only email you about your account, listings and events you submit.</p>
 			<?php else : ?>

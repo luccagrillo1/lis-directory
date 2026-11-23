@@ -1,3 +1,7 @@
+## [0.71.1] — 2026-11-22 — Weekly email shelved
+
+- `account-forms.php`: the user shelved the weekly email ("not ready yet"), so Account → Settings shows the "Coming soon" row again. The working checkbox from 0.71.0 only appears when the filter `lis_directory_weekly_email_live` returns true. LIS Events keeps the email code with sending off.
+
 ## [0.71.0] — 2026-11-22 — Weekly email checkbox works
 
 - `account-forms.php`: when LIS Events 1.24.0+ is active, Account → Settings prints `lis_events_weekly_account_row()`, a real checkbox that subscribes the account email and saves as soon as it's ticked. The "Coming soon" row stays as the fallback without it. The note reads "Otherwise we only email you about…".
