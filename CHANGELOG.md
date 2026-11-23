@@ -1,3 +1,7 @@
+## [0.70.1] — 2026-11-22 — Bottom bar stays out of the way
+
+- `phone-tabbar.php`: the bar hides while a text field has focus (phone keyboard up), and on pages with the Submit an Event step buttons (`.lis-st-nav`, sticky at the bottom), where body padding is dropped too. lis-events' "Saved" toast is lifted above the bar.
+
 ## [0.70.0] — 2026-11-22 — Phone bottom bar, quieter email setting
 
 - New `includes/phone-tabbar.php`: on phones (≤767px) a floating green-glass pill at the bottom — Directory · Events · Jobs · Search · Account — that hides scrolling down and returns scrolling up. Current section gets a clay dot. Search opens a sheet with the site search box. Hidden while the Astra mobile menu is open, or with `body.lis-tabbar-off`. Body gets 84px bottom padding on phones. Filters `lis_directory_phone_tabbar_enabled`, `lis_directory_phone_tabbar_tabs`. Audit item 38 (mockup: pill, tabs a, glass 2, hides on scroll).

@@ -6,7 +6,8 @@
  * Directory · Events · Jobs · Search · Account. It hides while scrolling down
  * and comes back scrolling up. Search opens a small sheet with the site search
  * box. Picked from mockup 38: pill, tabs a, glass 2, hides on scroll.
- * Filter lis_directory_phone_tabbar_enabled turns it off.
+ * Hidden while typing in a field and on pages with the event form's sticky
+ * step buttons (0.70.1). Filter lis_directory_phone_tabbar_enabled turns it off.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -83,7 +84,9 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 .lis-tabbar a[aria-current]{color:#fff!important}
 .lis-tabbar a[aria-current]::before{content:"";position:absolute;bottom:3px;width:5px;height:5px;border-radius:50%;background:#D07B4F}
 .lis-tabbar a:active{transform:scale(.94)}
-body:has(.ast-mobile-popup-drawer.active) .lis-tabbar,body.lis-tabbar-off .lis-tabbar{display:none}
+body:has(.ast-mobile-popup-drawer.active) .lis-tabbar,body:has(.lis-st-nav) .lis-tabbar,body.lis-tabbar-off .lis-tabbar,.lis-tabbar.is-typing{display:none}
+body:has(.lis-st-nav){padding-bottom:0}
+body:has(.lis-tabbar) .lis-save-toast{bottom:calc(84px + env(safe-area-inset-bottom))}
 .lis-tabbar-sheet:not([hidden]){display:block;position:fixed;inset:0;z-index:99980}
 .lis-tabbar-sheet-bg{position:absolute;inset:0;background:rgba(10,18,14,.45)}
 .lis-tabbar-sheet-panel{position:absolute;left:0;right:0;bottom:0;margin:0;background:#FBFAF6;border-radius:20px 20px 0 0;padding:10px 16px calc(22px + env(safe-area-inset-bottom));animation:lisTabUp .3s cubic-bezier(.2,.8,.2,1)}
@@ -112,6 +115,11 @@ body:has(.ast-mobile-popup-drawer.active) .lis-tabbar,body.lis-tabbar-off .lis-t
 			lastY = y;
 		} );
 	}, { passive: true } );
+	// Keyboard up: get out of the way of the field being typed in.
+	document.addEventListener( 'focusin', function ( e ) {
+		if ( e.target.matches && e.target.matches( 'input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]), textarea, select, [contenteditable]' ) && ! e.target.closest( '.lis-tabbar-sheet' ) ) bar.classList.add( 'is-typing' );
+	} );
+	document.addEventListener( 'focusout', function () { bar.classList.remove( 'is-typing' ); } );
 	function close() { sheet.hidden = true; }
 	bar.querySelector( '.lis-tabbar-search' ).addEventListener( 'click', function ( e ) {
 		if ( ! sheet ) return;
